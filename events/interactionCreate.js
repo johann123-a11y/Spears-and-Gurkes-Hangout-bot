@@ -59,6 +59,26 @@ module.exports = {
         return;
       }
 
+      // Ticket description modal
+      if (interaction.customId === 'ticket_description_modal') {
+        const title   = interaction.fields.getTextInputValue('desc_title');
+        const text    = interaction.fields.getTextInputValue('desc_text') || null;
+        const tickets = readData('tickets.json');
+        tickets.description = { title, text };
+        writeData('tickets.json', tickets);
+        return interaction.reply({
+          embeds: [new EmbedBuilder()
+            .setColor('#57F287').setTitle('✅ Description Updated')
+            .addFields(
+              { name: 'Title', value: title },
+              ...(text ? [{ name: 'Preview', value: text }] : []),
+            )
+            .setFooter({ text: 'Use /ticket group or /ticket send to post the updated panel' })
+            .setTimestamp()],
+          ephemeral: true,
+        });
+      }
+
       // Ticket pre-open questions modal
       if (interaction.customId.startsWith('ticket_questions:'))
         return handleTicketQuestionsModal(interaction);

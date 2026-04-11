@@ -2,6 +2,7 @@ const {
   SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle,
   ActionRowBuilder, ChannelType, PermissionFlagsBits,
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
+  ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
@@ -96,9 +97,7 @@ module.exports = {
     // ── /ticket description ───────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('description')
-        .setDescription('Set the title and text shown above panels [Admin Only]')
-        .addStringOption(o => o.setName('title').setDescription('Embed title').setRequired(true))
-        .addStringOption(o => o.setName('text').setDescription('Description text — use \\n for line breaks').setRequired(false))
+        .setDescription('Set the title and description shown above panels [Admin Only]')
     )
 
     // ── /ticket group ─────────────────────────────────────────────────────────
@@ -268,23 +267,33 @@ async function handleRemoveQuestion(interaction) {
 }
 
 async function handleDescription(interaction) {
-  const title   = interaction.options.getString('title');
-  const text    = interaction.options.getString('text') || null;
   const tickets = readData('tickets.json');
-  tickets.description = { title, text };
-  writeData('tickets.json', tickets);
+  const current = tickets.description || {};
 
-  interaction.reply({
-    embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('✅ Description Updated')
-      .addFields(
-        { name: 'Title', value: title },
-        ...(text ? [{ name: 'Text', value: text.replace(/\\n/g, '\n') }] : []),
-      )
-      .setFooter({ text: 'Use /ticket group or /ticket send to post the updated panel' })
-      .setTimestamp()],
-    ephemeral: true,
-  });
+  const modal = new ModalBuilder()
+    .setCustomId('ticket_description_modal')
+    .setTitle('Set Ticket Panel Description')
+    .addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('desc_title')
+          .setLabel('Title (e.g. Create Ticket)')
+          .setStyle(TextInputStyle.Short)
+          .setValue(current.title || 'Create Ticket')
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('desc_text')
+          .setLabel('Description (supports multiple lines & bullet points)')
+          .setStyle(TextInputStyle.Paragraph)
+          .setValue(current.text || '')
+          .setPlaceholder('Ticket Rules\n• Respond within 24h\n• No spam\n• Be respectful')
+          .setRequired(false)
+      ),
+    );
+
+  await interaction.showModal(modal);
 }
 
 async function handleGroup(interaction) {
