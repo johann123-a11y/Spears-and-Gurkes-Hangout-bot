@@ -11,6 +11,17 @@ function getPanelId(name) {
   return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
 }
 
+function buildDescEmbed(desc) {
+  const embed = new EmbedBuilder().setColor('#5865F2').setTimestamp();
+  embed.setTitle(desc?.title || 'Create Ticket');
+  let content = '';
+  if (desc?.subtitle) content += `**${desc.subtitle}**\n\n`;
+  if (desc?.text)     content += desc.text;
+  if (content)        embed.setDescription(content);
+  if (desc?.footer)   embed.setFooter({ text: desc.footer });
+  return embed;
+}
+
 function isStaff(member) {
   return member.permissions.has(PermissionFlagsBits.ManageChannels)
     || member.permissions.has(PermissionFlagsBits.Administrator);
@@ -284,11 +295,28 @@ async function handleDescription(interaction) {
       ),
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
+          .setCustomId('desc_subtitle')
+          .setLabel('Subtitle — shown bold (e.g. Ticket Rules)')
+          .setStyle(TextInputStyle.Short)
+          .setValue(current.subtitle || '')
+          .setPlaceholder('Ticket Rules')
+          .setRequired(false)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
           .setCustomId('desc_text')
-          .setLabel('Description (supports multiple lines & bullet points)')
+          .setLabel('Description — multiple lines & bullet points')
           .setStyle(TextInputStyle.Paragraph)
           .setValue(current.text || '')
-          .setPlaceholder('Ticket Rules\n• Respond within 24h\n• No spam\n• Be respectful')
+          .setPlaceholder('• Respond within 24h\n• Trolling = 1 week timeout\n• No spam pinging')
+          .setRequired(false)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('desc_footer')
+          .setLabel('Footer text (optional, e.g. Powered by MyBot)')
+          .setStyle(TextInputStyle.Short)
+          .setValue(current.footer || '')
           .setRequired(false)
       ),
     );
@@ -302,34 +330,24 @@ async function handleGroup(interaction) {
   if (panels.length === 0)
     return interaction.reply({ content: '❌ No panels configured. Use `/ticket setup` first.', ephemeral: true });
 
-  const desc  = tickets.description;
-  const embed = new EmbedBuilder()
-    .setColor('#5865F2')
-    .setTitle(desc?.title || 'Create Ticket')
-    .setTimestamp();
-  if (desc?.text) embed.setDescription(desc.text.replace(/\\n/g, '\n'));
+  // Show multi-select dropdown so admin picks which panels to combine
+  const selectMenu = new StringSelectMenuBuilder()
+    .setCustomId('ticket_group_select')
+    .setPlaceholder('Select panels to combine...')
+    .setMinValues(1)
+    .setMaxValues(panels.length)
+    .addOptions(panels.map(p =>
+      new StringSelectMenuOptionBuilder()
+        .setLabel(p.name)
+        .setValue(p.id)
+        .setDescription(`${p.buttonLabel} — ${p.buttonStyle}`)
+    ));
 
-  const rows    = [];
-  let curRow    = new ActionRowBuilder();
-  let btnCount  = 0;
-
-  for (const panel of panels) {
-    if (btnCount > 0 && btnCount % 5 === 0) { rows.push(curRow); curRow = new ActionRowBuilder(); }
-    curRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`ticket_open:${panel.id}`)
-        .setLabel(panel.buttonLabel)
-        .setStyle(STYLES[panel.buttonStyle] || ButtonStyle.Primary)
-    );
-    btnCount++;
-  }
-  rows.push(curRow);
-
-  await interaction.reply({ content: '✅ Grouped panel sent!', ephemeral: true });
-  const sent = await interaction.channel.send({ embeds: [embed], components: rows });
-
-  tickets.group = { enabled: true, channelId: interaction.channelId, messageId: sent.id };
-  writeData('tickets.json', tickets);
+  return interaction.reply({
+    content: '**Select which panels to combine into one message:**\nThe grouped panel will be sent to this channel.',
+    components: [new ActionRowBuilder().addComponents(selectMenu)],
+    ephemeral: true,
+  });
 }
 
 async function handleSend(interaction) {
@@ -338,10 +356,7 @@ async function handleSend(interaction) {
   const panel     = tickets.panels?.[getPanelId(panelName)];
   if (!panel) return interaction.reply({ content: `❌ Panel \`${panelName}\` not found.`, ephemeral: true });
 
-  const desc  = tickets.description;
-  const embed = new EmbedBuilder().setColor('#5865F2').setTitle(desc?.title || 'Create Ticket').setTimestamp();
-  if (desc?.text) embed.setDescription(desc.text.replace(/\\n/g, '\n'));
-
+  const embed  = buildDescEmbed(tickets.description);
   const button = new ButtonBuilder()
     .setCustomId(`ticket_open:${panel.id}`)
     .setLabel(panel.buttonLabel)
@@ -614,5 +629,6 @@ async function handlePermsClear(interaction) {
   interaction.reply({ content: '✅ All ticket ping and view role settings have been cleared.', ephemeral: true });
 }
 
-module.exports.handleClose  = handleClose;
-module.exports.getPanelId   = getPanelId;
+module.exports.handleClose    = handleClose;
+module.exports.getPanelId     = getPanelId;
+module.exports.buildDescEmbed = buildDescEmbed;

@@ -7,10 +7,14 @@ const {
   handleCloseButton,
   handleCloseModal,
 } = require('../utils/ticketHandler');
+const { buildDescEmbed } = require('../commands/tickets/ticket');
 const {
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder,
+  ButtonBuilder, ButtonStyle,
 } = require('discord.js');
+
+const BTN_STYLES = { blue: ButtonStyle.Primary, grey: ButtonStyle.Secondary, green: ButtonStyle.Success, red: ButtonStyle.Danger };
 
 module.exports = {
   name: 'interactionCreate',
@@ -61,22 +65,23 @@ module.exports = {
 
       // Ticket description modal
       if (interaction.customId === 'ticket_description_modal') {
-        const title   = interaction.fields.getTextInputValue('desc_title');
-        const text    = interaction.fields.getTextInputValue('desc_text') || null;
-        const tickets = readData('tickets.json');
-        tickets.description = { title, text };
+        const title    = interaction.fields.getTextInputValue('desc_title');
+        const subtitle = interaction.fields.getTextInputValue('desc_subtitle') || null;
+        const text     = interaction.fields.getTextInputValue('desc_text')     || null;
+        const footer   = interaction.fields.getTextInputValue('desc_footer')   || null;
+        const tickets  = readData('tickets.json');
+        tickets.description = { title, subtitle, text, footer };
         writeData('tickets.json', tickets);
-        return interaction.reply({
-          embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('✅ Description Updated')
-            .addFields(
-              { name: 'Title', value: title },
-              ...(text ? [{ name: 'Preview', value: text }] : []),
-            )
-            .setFooter({ text: 'Use /ticket group or /ticket send to post the updated panel' })
-            .setTimestamp()],
-          ephemeral: true,
-        });
+
+        // Show preview
+        const previewEmbed = buildDescEmbed(tickets.description);
+        const infoEmbed = new EmbedBuilder()
+          .setColor('#57F287').setTitle('✅ Description Updated')
+          .setDescription('**Preview:**')
+          .setFooter({ text: 'Use /ticket group or /ticket send to post the panel' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [infoEmbed, previewEmbed], ephemeral: true });
       }
 
       // Ticket pre-open questions modal
@@ -122,6 +127,39 @@ module.exports = {
         }
         return;
       }
+    }
+
+    // ── Select Menu: ticket group panel picker ────────────────────────────────
+    if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_group_select') {
+      const selectedIds = interaction.values;
+      const tickets     = readData('tickets.json');
+      const selected    = selectedIds.map(id => tickets.panels?.[id]).filter(Boolean);
+
+      if (selected.length === 0)
+        return interaction.update({ content: '❌ No valid panels selected.', components: [] });
+
+      const embed = buildDescEmbed(tickets.description);
+      const rows  = [];
+      let curRow  = new ActionRowBuilder();
+      let count   = 0;
+
+      for (const panel of selected) {
+        if (count > 0 && count % 5 === 0) { rows.push(curRow); curRow = new ActionRowBuilder(); }
+        curRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`ticket_open:${panel.id}`)
+            .setLabel(panel.buttonLabel)
+            .setStyle(BTN_STYLES[panel.buttonStyle] || ButtonStyle.Primary)
+        );
+        count++;
+      }
+      rows.push(curRow);
+
+      const sent = await interaction.channel.send({ embeds: [embed], components: rows });
+      tickets.group = { enabled: true, channelId: interaction.channelId, messageId: sent.id };
+      writeData('tickets.json', tickets);
+
+      return interaction.update({ content: `✅ Grouped panel with **${selected.length}** panel(s) sent!`, components: [] });
     }
 
     // ── Select Menus: ticket info edit picker ────────────────────────────────
