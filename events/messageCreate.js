@@ -1,0 +1,82 @@
+const { EmbedBuilder } = require('discord.js');
+const { readData, writeData, formatTime } = require('../utils');
+const config = require('../config.json');
+
+module.exports = {
+  name: 'messageCreate',
+  async execute(message, client) {
+    if (message.author.bot || !message.guild) return;
+
+    // --- AFK: author sent a message, remove their AFK ---
+    const afk = readData('afk.json');
+    if (afk[message.author.id]) {
+      const since = afk[message.author.id].since;
+      delete afk[message.author.id];
+      writeData('afk.json', afk);
+      const awayFor = formatTime(Date.now() - since);
+      message.reply(`👋 Welcome back! Your AFK has been removed. You were away for **${awayFor}**.`).then(m => {
+        setTimeout(() => m.delete().catch(() => {}), 5000);
+      });
+    }
+
+    // --- AFK / LOA: check mentions ---
+    const loa = readData('loa.json');
+    const freshAfk = readData('afk.json');
+
+    for (const mentioned of message.mentions.users.values()) {
+      if (mentioned.bot) continue;
+
+      // LOA check
+      if (loa[mentioned.id]) {
+        const data = loa[mentioned.id];
+        const remaining = data.endTime - Date.now();
+        if (remaining > 0) {
+          const embed = new EmbedBuilder()
+            .setColor('#5865F2')
+            .setTitle('🏖️ User is on LOA')
+            .setDescription(`<@${mentioned.id}> is currently on **Leave of Absence**.`)
+            .addFields(
+              { name: 'Reason', value: data.reason },
+              { name: 'Returns in', value: formatTime(remaining) }
+            )
+            .setTimestamp();
+          message.channel.send({ embeds: [embed] });
+        }
+      }
+
+      // AFK check
+      if (freshAfk[mentioned.id]) {
+        const data = freshAfk[mentioned.id];
+        const awayFor = formatTime(Date.now() - data.since);
+        const embed = new EmbedBuilder()
+          .setColor('#FEE75C')
+          .setTitle('💤 User is AFK')
+          .setDescription(`<@${mentioned.id}> is currently AFK.`)
+          .addFields(
+            { name: 'Reason', value: data.reason },
+            { name: 'Away for', value: awayFor },
+            ...(data.until ? [{ name: 'Returns in', value: formatTime(data.until - Date.now()) }] : [])
+          )
+          .setTimestamp();
+        message.channel.send({ embeds: [embed] });
+      }
+    }
+
+    // --- Prefix command handling ---
+    const prefix = config.prefix;
+    if (!message.content.startsWith(prefix)) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/\s+/);
+    const commandName = args.shift().toLowerCase();
+
+    const command = client.commands.get(commandName);
+    if (!command) return;
+
+    try {
+      await command.execute(message, args, client);
+    } catch (err) {
+      console.error(`Error in command ${commandName}:`, err);
+      message.reply('❌ An error occurred while running that command.').catch(() => {});
+    }
+  },
+};
