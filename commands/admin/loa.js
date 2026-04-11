@@ -102,7 +102,7 @@ function clearLOA(user, by, channel, interaction) {
   const loa = readData('loa.json');
 
   if (!loa[user.id]) {
-    const msg = `❌ ${user.tag} ist nicht auf LOA.`;
+    const msg = `❌ ${user.tag} is not on LOA.`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
   }
 
@@ -111,10 +111,10 @@ function clearLOA(user, by, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('✅ LOA beendet')
+    .setTitle('✅ LOA Ended')
     .addFields(
       { name: 'Staff Member', value: user.tag, inline: true },
-      { name: 'Beendet von', value: by, inline: true }
+      { name: 'Ended by', value: by, inline: true }
     )
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();

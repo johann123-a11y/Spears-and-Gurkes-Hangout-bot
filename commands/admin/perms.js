@@ -6,61 +6,61 @@ const {
 const { readData, writeData, COMMAND_DEFAULTS, COMMAND_LABELS } = require('../../utils');
 
 const COMMAND_DESCRIPTIONS = {
-  mute:           'Timeoutet einen User',
-  unmute:         'Entfernt einen Timeout',
-  ban:            'Bannt einen User permanent',
-  kick:           'Kickt einen User vom Server',
-  strike:         'Gibt einem Staff Member einen Strike / entfernt ihn',
-  strikes:        'Zeigt alle Strikes eines Users',
-  loa:            'Setzt einen User auf Leave of Absence',
-  checkloa:       'Zeigt die verbleibende LOA-Zeit',
-  demote:         'Demoted einen Staff Member zu einer Rolle',
-  promote:        'Promoted einen Staff Member zu einer Rolle',
-  staffkick:      'Entfernt alle Staff-Rollen von einem User',
-  pingperm:       'Gibt einer Rolle Ping-Rechte',
-  setrole:        'Setzt eine Rollen-ID im Bot-Config',
-  stick:          'Klebt eine Nachricht ans Ende des Channels',
-  welcome:        'Welcome-Nachricht an-/ausschalten',
-  welcomechannel: 'Setzt den Welcome-Channel',
-  welcomemessage: 'Ändert den Welcome-Nachrichtentext',
-  gstart:         'Startet ein Giveaway',
-  gend:           'Beendet ein Giveaway frühzeitig',
-  greroll:        'Rerollt Giveaway-Winner',
-  afk:            'Setzt dich als AFK',
-  help:           'Zeigt alle Commands',
-  perms:          'Verwaltet Command-Berechtigungen',
+  mute:           'Timeouts a user',
+  unmute:         'Removes a timeout',
+  ban:            'Permanently bans a user',
+  kick:           'Kicks a user from the server',
+  strike:         'Gives or removes a strike from a staff member',
+  strikes:        'Shows all strikes of a user',
+  loa:            'Puts a user on Leave of Absence',
+  checkloa:       'Shows the remaining LOA time',
+  demote:         'Demotes a staff member to a role',
+  promote:        'Promotes a staff member to a role',
+  staffkick:      'Removes all staff roles from a user',
+  pingperm:       'Grants a role ping permissions',
+  setrole:        'Sets a role ID in the bot config',
+  stick:          'Sticks a message to the bottom of a channel',
+  welcome:        'Toggle welcome messages on/off',
+  welcomechannel: 'Sets the welcome channel',
+  welcomemessage: 'Changes the welcome message text',
+  gstart:         'Starts a giveaway',
+  gend:           'Ends a giveaway early',
+  greroll:        'Rerolls giveaway winners',
+  afk:            'Sets yourself as AFK',
+  help:           'Shows all commands',
+  perms:          'Manages command permissions',
 };
 
 const LEVEL_CHOICES = [
-  { label: '🌍 Everyone — Jeder', value: 'everyone' },
-  { label: '🟢 JrHelper+ — JrHelper und höher', value: 'jrHelper' },
-  { label: '🟠 SrMod+ — SrMod und höher', value: 'srMod' },
-  { label: '🔵 Staff Team — Alle Staff-Mitglieder', value: 'staffTeam' },
-  { label: '🔴 Admin Only — Nur Admins', value: 'admin' },
+  { label: '🌍 Everyone', value: 'everyone' },
+  { label: '🟢 JrHelper+', value: 'jrHelper' },
+  { label: '🟠 SrMod+', value: 'srMod' },
+  { label: '🔵 Staff Team', value: 'staffTeam' },
+  { label: '🔴 Admin Only', value: 'admin' },
 ];
 
 module.exports = {
   name: 'perms',
-  description: 'Verwaltet welche Rolle welchen Command benutzen kann. [Administrator Only]',
+  description: 'Manages which role can use which command. [Administrator Only]',
   data: new SlashCommandBuilder()
     .setName('perms')
-    .setDescription('Verwaltet Command-Berechtigungen [Administrator Only]')
+    .setDescription('Manage command permissions [Administrator Only]')
     .addSubcommand(sub =>
       sub.setName('list')
-        .setDescription('Zeigt alle Commands mit ihren aktuellen Berechtigungen (interaktiv änderbar)')
+        .setDescription('Show all commands with their current permissions (interactive)')
     )
     .addSubcommand(sub =>
       sub.setName('set')
-        .setDescription('Ändert die Berechtigung für einen Command')
+        .setDescription('Change the permission level for a command')
         .addStringOption(o =>
           o.setName('command')
-            .setDescription('Welcher Command')
+            .setDescription('Which command to update')
             .setRequired(true)
             .addChoices(...Object.keys(COMMAND_DEFAULTS).map(k => ({ name: k, value: k })))
         )
         .addStringOption(o =>
           o.setName('level')
-            .setDescription('Welche Berechtigung benötigt wird')
+            .setDescription('Required permission level')
             .setRequired(true)
             .addChoices(...LEVEL_CHOICES.map(l => ({ name: l.label, value: l.value })))
         )
@@ -68,7 +68,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has('Administrator'))
-      return message.reply('❌ Nur **Administratoren** können diesen Command benutzen.');
+      return message.reply('❌ Only **Administrators** can use this command.');
 
     const sub = args[0]?.toLowerCase();
 
@@ -80,25 +80,25 @@ module.exports = {
       const cmd = args[1]?.toLowerCase();
       const level = args[2]?.toLowerCase();
       if (!cmd || !level) return message.reply('Usage: `?perms set {command} {level}`');
-      if (!COMMAND_DEFAULTS[cmd]) return message.reply(`❌ Unbekannter Command: \`${cmd}\``);
-      if (!LEVEL_CHOICES.find(l => l.value === level)) return message.reply(`❌ Ungültiges Level.`);
+      if (!COMMAND_DEFAULTS[cmd]) return message.reply(`❌ Unknown command: \`${cmd}\``);
+      if (!LEVEL_CHOICES.find(l => l.value === level)) return message.reply(`❌ Invalid level.`);
       setPerm(cmd, level);
       return message.channel.send({ embeds: [buildSetEmbed(cmd, level)] });
     }
 
-    message.reply('Usage: `?perms list` oder `?perms set {command} {level}`');
+    message.reply('Usage: `?perms list` or `?perms set {command} {level}`');
   },
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Nur **Administratoren** können diesen Command benutzen.', ephemeral: true });
+      return interaction.reply({ content: '❌ Only **Administrators** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'list') {
       const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('perms_select_command')
-        .setPlaceholder('Command auswählen zum Bearbeiten...')
+        .setPlaceholder('Select a command to edit...')
         .addOptions(
           Object.keys(COMMAND_DEFAULTS).map(cmd =>
             new StringSelectMenuOptionBuilder()
@@ -135,11 +135,11 @@ function setPerm(cmd, level) {
 function buildSetEmbed(cmd, level) {
   return new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('✅ Berechtigung geändert')
+    .setTitle('✅ Permission Updated')
     .addFields(
       { name: 'Command', value: `\`${cmd}\``, inline: true },
-      { name: 'Neue Berechtigung', value: COMMAND_LABELS[level] ?? level, inline: true },
-      { name: 'Beschreibung', value: COMMAND_DESCRIPTIONS[cmd] ?? '—' }
+      { name: 'New Permission', value: COMMAND_LABELS[level] ?? level, inline: true },
+      { name: 'Description', value: COMMAND_DESCRIPTIONS[cmd] ?? '—' }
     )
     .setTimestamp();
 }
@@ -157,8 +157,8 @@ function buildListEmbed() {
 
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('🔐 Command-Berechtigungen')
-    .setDescription('Wähle unten einen Command aus um die Berechtigung zu ändern.\n\u200b')
+    .setTitle('🔐 Command Permissions')
+    .setDescription('Select a command below to change its permission level.\n\u200b')
     .addFields(fields)
     .setTimestamp();
 }

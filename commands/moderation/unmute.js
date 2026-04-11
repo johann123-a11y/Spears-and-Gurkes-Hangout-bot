@@ -12,7 +12,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!checkPerm(message.member, 'unmute'))
-      return message.reply('❌ Du hast keine Berechtigung für diesen Command.');
+      return message.reply('❌ You do not have permission to use this command.');
 
     const target = message.mentions.members.first();
     if (!target) return message.reply('Usage: `?unmute @user`');
@@ -28,7 +28,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'unmute'))
-      return interaction.reply({ content: '❌ Du hast keine Berechtigung für diesen Command.', ephemeral: true });
+      return interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
 
     const user = interaction.options.getUser('user');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);

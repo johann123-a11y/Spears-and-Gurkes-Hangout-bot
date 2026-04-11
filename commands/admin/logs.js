@@ -6,15 +6,15 @@ module.exports = {
   description: 'Sets the log channel. [Admin Only]',
   data: new SlashCommandBuilder()
     .setName('logs')
-    .setDescription('Setzt den Log-Channel [Admin Only]')
+    .setDescription('Set the log channel [Admin Only]')
     .addSubcommand(sub =>
       sub.setName('set')
-        .setDescription('Setzt den Channel für alle Bot-Logs')
-        .addChannelOption(o => o.setName('channel').setDescription('Log Channel').setRequired(true))
+        .setDescription('Set the channel for all bot logs')
+        .addChannelOption(o => o.setName('channel').setDescription('Log channel').setRequired(true))
     )
     .addSubcommand(sub =>
       sub.setName('disable')
-        .setDescription('Deaktiviert das Logging')
+        .setDescription('Disable logging')
     ),
 
   async execute(message, args) {
@@ -22,7 +22,6 @@ module.exports = {
       return message.reply('❌ Only **Admins** can use this command.');
 
     const sub = args[0]?.toLowerCase();
-
     if (sub === 'disable') return disableLogs(message.channel);
 
     const ch = message.mentions.channels.first();
@@ -35,7 +34,6 @@ module.exports = {
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
-
     if (sub === 'disable') return disableLogs(null, interaction);
 
     const ch = interaction.options.getChannel('channel');
@@ -50,8 +48,8 @@ function setLogChannel(channelId, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('✅ Log Channel gesetzt')
-    .setDescription(`Alle Logs werden ab jetzt in <#${channelId}> geschickt.`)
+    .setTitle('✅ Log Channel Set')
+    .setDescription(`All logs will now be sent to <#${channelId}>.`)
     .setTimestamp();
 
   if (channel) channel.send({ embeds: [embed] });
@@ -63,7 +61,7 @@ function disableLogs(channel, interaction) {
   data.channelId = null;
   writeData('logs.json', data);
 
-  const msg = '✅ Logging deaktiviert.';
+  const msg = '✅ Logging disabled.';
   if (channel) channel.send(msg);
   else if (interaction) interaction.reply({ content: msg, ephemeral: true });
 }

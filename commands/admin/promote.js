@@ -37,7 +37,7 @@ module.exports = {
 
     const matched = promoteOrder.find(k => k.toLowerCase() === roleKey);
     if (!matched)
-      return message.reply(`❌ Unbekannte Rolle. Erlaubt: \`${promoteOrder.slice(1).join('`, `')}\``);
+      return message.reply(`❌ Unknown role. Allowed: \`${promoteOrder.slice(1).join('`, `')}\``);
 
     await performPromote(target, matched, reason, message.author.tag, message.channel);
   },
@@ -63,7 +63,7 @@ async function performPromote(member, newRoleKey, reason, by, channel, interacti
   const newRoleId = config.roles[newRoleKey];
 
   if (!newRoleId || newRoleId.endsWith('_ROLE_ID')) {
-    const msg = `❌ Die Rolle \`${newRoleKey}\` ist noch nicht konfiguriert. Benutze \`?setrole set ${newRoleKey} @role\`.`;
+    const msg = `❌ The role \`${newRoleKey}\` is not configured yet. Use \`?setrole set ${newRoleKey} @role\`.`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
   }
 
@@ -77,7 +77,7 @@ async function performPromote(member, newRoleKey, reason, by, channel, interacti
     }
     await member.roles.add(newRoleId);
   } catch (err) {
-    const msg = `❌ Konnte Rollen nicht ändern: ${err.message}`;
+    const msg = `❌ Could not change roles: ${err.message}`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
   }
 
@@ -96,9 +96,9 @@ async function performPromote(member, newRoleKey, reason, by, channel, interacti
 
   if (channel) {
     channel.send({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
-    sendLog(channel.client, { action: 'Staff Promoted', executor: by, target: member.user.tag, fields: { 'Alte Rolle': oldRoleKey, 'Neue Rolle': newRoleKey, Grund: reason }, color: '#57F287' });
+    sendLog(channel.client, { action: 'Staff Promoted', executor: by, target: member.user.tag, fields: { 'Old Role': oldRoleKey, 'New Role': newRoleKey, Reason: reason }, color: '#57F287' });
   } else if (interaction) {
     interaction.editReply({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
-    sendLog(interaction.client, { action: 'Staff Promoted', executor: by, target: member.user.tag, fields: { 'Alte Rolle': oldRoleKey, 'Neue Rolle': newRoleKey, Grund: reason }, color: '#57F287' });
+    sendLog(interaction.client, { action: 'Staff Promoted', executor: by, target: member.user.tag, fields: { 'Old Role': oldRoleKey, 'New Role': newRoleKey, Reason: reason }, color: '#57F287' });
   }
 }

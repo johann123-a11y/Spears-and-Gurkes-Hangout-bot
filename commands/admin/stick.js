@@ -76,7 +76,7 @@ async function removeStick(channel, replyChannel, interaction) {
   const sticky = readData('sticky.json');
 
   if (!sticky[channel.id]) {
-    const msg = '❌ Kein Sticky in diesem Channel.';
+    const msg = '❌ No sticky message in this channel.';
     return interaction ? interaction.editReply(msg) : replyChannel?.send(msg);
   }
 
@@ -86,7 +86,7 @@ async function removeStick(channel, replyChannel, interaction) {
   delete sticky[channel.id];
   writeData('sticky.json', sticky);
 
-  const msg = '✅ Sticky entfernt.';
+  const msg = '✅ Sticky message removed.';
   if (interaction) interaction.editReply(msg);
   else if (replyChannel) replyChannel.send(msg);
 }

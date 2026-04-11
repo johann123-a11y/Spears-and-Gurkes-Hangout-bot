@@ -20,83 +20,86 @@ function buildEmbed() {
   return new EmbedBuilder()
     .setColor('#5865F2')
     .setTitle('📖 Spears and Gurkes Hangout — Command List')
-    .setDescription('Alle Commands funktionieren mit `?` und `/`.\n\u200b')
+    .setDescription('All commands work with both `?` prefix and `/` slash.\n\u200b')
     .addFields(
       {
         name: '🔇 Moderation [JrHelper+]',
         value: [
-          '`?mute @user {time} {reason}` — Timeoutet einen User',
-          '`?unmute @user` — Entfernt den Timeout',
+          '`?mute @user {time} {reason}` — Timeouts a user',
+          '`?unmute @user` — Removes a timeout',
         ].join('\n'),
       },
       {
         name: '🔨 Moderation [Admin Only]',
         value: [
-          '`?ban @user {reason}` — Bannt einen User',
-          '`?kick @user {time} {reason}` — Kickt einen User',
+          '`?ban @user {reason}` — Permanently bans a user',
+          '`?kick @user {reason}` — Kicks a user from the server',
         ].join('\n'),
       },
       {
         name: '⚠️ Strikes [SrMod+]',
         value: [
-          '`?strike @user {reason}` — Gibt einem Staff Member einen Strike',
-          '`?strike remove @user {reason}` — Entfernt einen Strike',
-          '`?strikes @user` — Zeigt alle Strikes eines Users',
-          '*Bei 3 Strikes wird der User automatisch demoted.*',
+          '`?strike @user {reason}` — Adds a strike to a staff member',
+          '`?strike remove @user {reason}` — Removes a strike',
+          '`?strikes @user` — Shows all strikes of a user',
+          '*At 3 strikes the user is automatically demoted.*',
         ].join('\n'),
       },
       {
         name: '🛡️ Admin Commands [Admin Only]',
         value: [
-          '`?loa @user {time} {reason}` — Setzt einen User auf LOA',
-          '`?checkloa @user` — Zeigt die verbleibende LOA-Zeit',
-          '`?demote @user {reason}` — Demoted einen Staff Member',
-          '`?promote @user {reason}` — Promoted einen Staff Member',
-          '`?staffkick @user {reason}` — Entfernt alle Staff Rollen',
-          '`?pingperm add {ping} {role}` — Gibt einer Rolle Ping-Rechte',
+          '`?loa @user {time} {reason}` — Puts a user on Leave of Absence',
+          '`?loa clear @user` — Removes a user from LOA early',
+          '`?checkloa @user` — Shows the remaining LOA time',
+          '`?demote @user {role} {reason}` — Demotes a staff member to a role',
+          '`?promote @user {role} {reason}` — Promotes a staff member to a role',
+          '`?staffkick @user {reason}` — Removes all staff roles from a user',
+          '`?pingperm add {ping} {role}` — Grants a role ping permissions',
         ].join('\n'),
       },
       {
         name: '⚙️ Setup [Administrator Only]',
         value: [
-          '`?setrole set {slot} @role` — Setzt eine Rollen-ID im Bot',
-          '`?setrole list` — Zeigt alle konfigurierten Rollen',
-          '`?perms list` — Zeigt alle Commands mit ihren Berechtigungen',
-          '`?perms set {command} {level}` — Ändert die Berechtigung eines Commands',
+          '`?setrole set {slot} @role` — Sets a role ID in the bot config',
+          '`?setrole list` — Shows all configured roles',
+          '`?perms list` — Shows all commands with permissions (interactive)',
+          '`?perms set {command} {level}` — Changes the permission for a command',
+          '`?logs set #channel` — Sets the log channel',
+          '`?logs disable` — Disables logging',
           '*Levels: `everyone`, `jrHelper`, `srMod`, `staffTeam`, `admin`*',
         ].join('\n'),
       },
       {
         name: '📌 Sticky [Admin Only]',
         value: [
-          '`?stick {message}` — Klebt eine Nachricht ans Ende des Channels',
-          '`?stick remove` — Entfernt das Sticky',
+          '`?stick {message}` — Sticks a message to the bottom of a channel',
+          '`?stick remove` — Removes the sticky message',
         ].join('\n'),
       },
       {
         name: '👋 Welcome [Admin Only]',
         value: [
-          '`?welcome enable` / `?welcome disable` — Welcome an/aus',
-          '`?welcomechannel #channel` — Setzt den Welcome-Channel',
-          '`?welcomemessage {msg}` — Ändert die Welcome-Nachricht',
-          '*Variablen: `{member}` `{server}` `{membercount}`*',
+          '`?welcome enable` / `?welcome disable` — Toggle welcome messages',
+          '`?welcomechannel #channel` — Sets the welcome channel',
+          '`?welcomemessage {msg}` — Changes the welcome message text',
+          '*Variables: `{member}` `{server}` `{membercount}`*',
         ].join('\n'),
       },
       {
         name: '🎉 Giveaways [Staff Team]',
         value: [
-          '`/gstart` — Startet ein Giveaway via Menü',
-          '`?gstart {time} {winners} {prize}` — Schnelles Giveaway',
-          '`?gend {message_id}` — Beendet ein Giveaway',
-          '`?greroll {message_id} [count]` — Rerollt Winner',
+          '`/gstart` — Starts a giveaway via interactive menu',
+          '`?gstart {time} {winners} {prize}` — Quick giveaway',
+          '`?gend {message_id}` — Ends a giveaway early',
+          '`?greroll {message_id} [count]` — Rerolls winners',
         ].join('\n'),
       },
       {
         name: '💬 General',
         value: [
-          '`?afk {reason}` — Setzt dich als AFK',
-          '`?afk {time} {reason}` — AFK mit Zeitlimit',
-          '`?help` — Zeigt diese Command-Liste',
+          '`?afk {reason}` — Sets you as AFK',
+          '`?afk {time} {reason}` — AFK with a time limit',
+          '`?help` — Shows this command list',
         ].join('\n'),
       }
     )

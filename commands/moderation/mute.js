@@ -14,7 +14,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!checkPerm(message.member, 'mute'))
-      return message.reply('❌ Du hast keine Berechtigung für diesen Command.');
+      return message.reply('❌ You do not have permission to use this command.');
 
     const target = message.mentions.members.first();
     const time = args[1];
@@ -29,9 +29,8 @@ module.exports = {
 
     try {
       await target.timeout(ms, reason);
-      const embed = buildEmbed(target.user, formatTime(ms), reason, message.author.tag);
-      message.channel.send({ embeds: [embed] });
-      sendLog(message.client, { action: 'User Muted', executor: message.author.tag, target: target.user.tag, fields: { Dauer: formatTime(ms), Grund: reason }, color: '#FF6B35' });
+      message.channel.send({ embeds: [buildEmbed(target.user, formatTime(ms), reason, message.author.tag)] });
+      sendLog(message.client, { action: 'User Muted', executor: message.author.tag, target: target.user.tag, fields: { Duration: formatTime(ms), Reason: reason }, color: '#FF6B35' });
     } catch {
       message.reply('❌ Could not mute that user. Check my permissions and role hierarchy.');
     }
@@ -39,15 +38,13 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'mute'))
-      return interaction.reply({ content: '❌ Du hast keine Berechtigung für diesen Command.', ephemeral: true });
+      return interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
 
     const user = interaction.options.getUser('user');
     const time = interaction.options.getString('time');
     const reason = interaction.options.getString('reason');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-
-    if (!member)
-      return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+    if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
 
     const ms = parseTime(time);
     if (!ms || ms > 28 * 24 * 60 * 60 * 1000)
@@ -56,7 +53,7 @@ module.exports = {
     try {
       await member.timeout(ms, reason);
       interaction.reply({ embeds: [buildEmbed(user, formatTime(ms), reason, interaction.user.tag)] });
-      sendLog(interaction.client, { action: 'User Muted', executor: interaction.user.tag, target: user.tag, fields: { Dauer: formatTime(ms), Grund: reason }, color: '#FF6B35' });
+      sendLog(interaction.client, { action: 'User Muted', executor: interaction.user.tag, target: user.tag, fields: { Duration: formatTime(ms), Reason: reason }, color: '#FF6B35' });
     } catch {
       interaction.reply({ content: '❌ Could not mute that user.', ephemeral: true });
     }
