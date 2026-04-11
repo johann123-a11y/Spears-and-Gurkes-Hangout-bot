@@ -1,6 +1,7 @@
 const {
   SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle,
   ActionRowBuilder, ChannelType, PermissionFlagsBits,
+  StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
@@ -342,26 +343,41 @@ async function handleSend(interaction) {
 }
 
 async function handleInfo(interaction) {
-  const panelName  = interaction.options.getString('panel');
-  const tickets    = readData('tickets.json');
+  const panelName   = interaction.options.getString('panel');
+  const tickets     = readData('tickets.json');
   const openTickets = readData('openTickets.json');
 
-  // If panel name provided → show panel info
+  // If panel name provided → show panel info + edit menu
   if (panelName) {
     const panel = tickets.panels?.[getPanelId(panelName)];
     if (!panel) return interaction.reply({ content: `❌ Panel \`${panelName}\` not found.`, ephemeral: true });
 
+    const embed = new EmbedBuilder()
+      .setColor('#5865F2').setTitle(`🎫 Panel: ${panel.name}`)
+      .addFields(
+        { name: 'Button Label', value: panel.buttonLabel,        inline: true },
+        { name: 'Color',        value: panel.buttonStyle,        inline: true },
+        { name: 'Category',     value: `<#${panel.categoryId}>`, inline: true },
+        { name: 'Questions',    value: panel.questions.length > 0
+          ? panel.questions.map((q, i) => `${i + 1}. ${q}`).join('\n')
+          : 'None' },
+      ).setTimestamp();
+
+    const editMenu = new StringSelectMenuBuilder()
+      .setCustomId(`ticket_info_edit:${panel.id}`)
+      .setPlaceholder('✏️ Edit panel settings...')
+      .addOptions(
+        new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji('🏷️'),
+        new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji('🎨'),
+        new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji('📁'),
+        new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji('➕'),
+        new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji('➖'),
+        new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji('🗑️'),
+      );
+
     return interaction.reply({
-      embeds: [new EmbedBuilder()
-        .setColor('#5865F2').setTitle(`🎫 Panel: ${panel.name}`)
-        .addFields(
-          { name: 'Button Label', value: panel.buttonLabel,     inline: true },
-          { name: 'Color',        value: panel.buttonStyle,     inline: true },
-          { name: 'Category',     value: `<#${panel.categoryId}>`, inline: true },
-          { name: 'Questions',    value: panel.questions.length > 0
-            ? panel.questions.map((q, i) => `${i + 1}. ${q}`).join('\n')
-            : 'None' },
-        ).setTimestamp()],
+      embeds: [embed],
+      components: [new ActionRowBuilder().addComponents(editMenu)],
       ephemeral: true,
     });
   }

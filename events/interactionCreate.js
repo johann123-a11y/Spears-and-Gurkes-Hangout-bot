@@ -1,4 +1,4 @@
-const { parseTime } = require('../utils');
+const { parseTime, readData, writeData } = require('../utils');
 const { createGiveaway } = require('../commands/giveaways/gstart');
 const { setPerm, buildSetEmbed, LEVEL_CHOICES } = require('../commands/admin/perms');
 const {
@@ -9,6 +9,7 @@ const {
 } = require('../utils/ticketHandler');
 const {
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
+  ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder,
 } = require('discord.js');
 
 module.exports = {
@@ -65,6 +66,106 @@ module.exports = {
       // Ticket close reason modal
       if (interaction.customId === 'ticket_close_modal')
         return handleCloseModal(interaction);
+
+      // Ticket panel edit modal
+      if (interaction.customId.startsWith('ticket_edit_modal:')) {
+        const [, panelId, field] = interaction.customId.split(':');
+        const value   = interaction.fields.getTextInputValue('value');
+        const tickets = readData('tickets.json');
+        const panel   = tickets.panels?.[panelId];
+        if (!panel) return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
+
+        if (field === 'label') {
+          panel.buttonLabel = value;
+          writeData('tickets.json', tickets);
+          return interaction.reply({ content: `✅ Button label updated to **${value}**.`, ephemeral: true });
+        }
+        if (field === 'category') {
+          panel.categoryId = value.replace(/[<#>]/g, '');
+          writeData('tickets.json', tickets);
+          return interaction.reply({ content: `✅ Category updated.`, ephemeral: true });
+        }
+        if (field === 'addq') {
+          if (panel.questions.length >= 5)
+            return interaction.reply({ content: '❌ Maximum 5 questions per panel.', ephemeral: true });
+          panel.questions.push(value);
+          writeData('tickets.json', tickets);
+          return interaction.reply({ content: `✅ Question **#${panel.questions.length}** added:\n> ${value}`, ephemeral: true });
+        }
+        if (field === 'removeq') {
+          const num = parseInt(value);
+          if (isNaN(num) || num < 1 || num > panel.questions.length)
+            return interaction.reply({ content: `❌ Invalid number. Panel has **${panel.questions.length}** question(s).`, ephemeral: true });
+          const removed = panel.questions.splice(num - 1, 1)[0];
+          writeData('tickets.json', tickets);
+          return interaction.reply({ content: `✅ Removed question #${num}:\n> ${removed}`, ephemeral: true });
+        }
+        return;
+      }
+    }
+
+    // ── Select Menus: ticket info edit picker ────────────────────────────────
+    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('ticket_info_edit:')) {
+      const panelId = interaction.customId.split(':')[1];
+      const choice  = interaction.values[0];
+      const tickets = readData('tickets.json');
+      const panel   = tickets.panels?.[panelId];
+      if (!panel) return interaction.reply({ content: '❌ Panel no longer exists.', ephemeral: true });
+
+      if (choice === 'delete') {
+        delete tickets.panels[panelId];
+        writeData('tickets.json', tickets);
+        return interaction.update({ content: `✅ Panel **${panel.name}** deleted.`, embeds: [], components: [] });
+      }
+
+      if (choice === 'color') {
+        const colorMenu = new StringSelectMenuBuilder()
+          .setCustomId(`ticket_edit_color:${panelId}`)
+          .setPlaceholder('Select new button color...')
+          .addOptions(
+            new StringSelectMenuOptionBuilder().setLabel('🔵 Blue').setValue('blue'),
+            new StringSelectMenuOptionBuilder().setLabel('⚫ Grey').setValue('grey'),
+            new StringSelectMenuOptionBuilder().setLabel('🟢 Green').setValue('green'),
+            new StringSelectMenuOptionBuilder().setLabel('🔴 Red').setValue('red'),
+          );
+        return interaction.update({ content: 'Select the new button color:', embeds: [], components: [new ActionRowBuilder().addComponents(colorMenu)] });
+      }
+
+      // All other choices → modal
+      const modalMap = {
+        label:    { title: 'Edit Button Label',    inputLabel: 'New button label',          field: 'label'    },
+        category: { title: 'Edit Category',        inputLabel: 'New Category ID',           field: 'category' },
+        addq:     { title: 'Add Question',         inputLabel: 'Question text',             field: 'addq'     },
+        removeq:  { title: 'Remove Question',      inputLabel: 'Question number to remove', field: 'removeq'  },
+      };
+      const m = modalMap[choice];
+      if (!m) return;
+
+      const modal = new ModalBuilder()
+        .setCustomId(`ticket_edit_modal:${panelId}:${m.field}`)
+        .setTitle(m.title)
+        .addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('value')
+              .setLabel(m.inputLabel)
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+          )
+        );
+      await interaction.showModal(modal);
+      return;
+    }
+
+    // ── Select Menus: ticket color edit ──────────────────────────────────────
+    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('ticket_edit_color:')) {
+      const panelId = interaction.customId.split(':')[1];
+      const color   = interaction.values[0];
+      const tickets = readData('tickets.json');
+      if (!tickets.panels?.[panelId]) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
+      tickets.panels[panelId].buttonStyle = color;
+      writeData('tickets.json', tickets);
+      return interaction.update({ content: `✅ Button color updated to **${color}**.`, embeds: [], components: [] });
     }
 
     // ── Select Menus: perms command picker ────────────────────────────────────
