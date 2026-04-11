@@ -67,6 +67,13 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
+        name: '📌 Sticky [Admin Only]',
+        value: [
+          '`?stick {message}` — Klebt eine Nachricht ans Ende des Channels',
+          '`?stick remove` — Entfernt das Sticky',
+        ].join('\n'),
+      },
+      {
         name: '👋 Welcome [Admin Only]',
         value: [
           '`?welcome enable` / `?welcome disable` — Welcome an/aus',
