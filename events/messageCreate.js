@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { readData, writeData, formatTime } = require('../utils');
 const config = require('../config.json');
+const { setStick } = require('../commands/admin/stick');
 
 module.exports = {
   name: 'messageCreate',
@@ -60,6 +61,13 @@ module.exports = {
           .setTimestamp();
         message.channel.send({ embeds: [embed] });
       }
+    }
+
+    // --- Sticky message: repost at bottom ---
+    const sticky = readData('sticky.json');
+    const stickyData = sticky[message.channel.id];
+    if (stickyData && message.id !== stickyData.messageId) {
+      setStick(message.channel, stickyData.text, null).catch(() => {});
     }
 
     // --- Prefix command handling ---

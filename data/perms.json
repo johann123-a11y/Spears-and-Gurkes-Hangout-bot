@@ -20,5 +20,6 @@
   "greroll": "staffTeam",
   "afk": "everyone",
   "help": "everyone",
-  "perms": "admin"
+  "perms": "admin",
+  "stick": "admin"
 }
