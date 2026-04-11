@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { hasPermission, readData, formatTime } = require('../../utils');
+const { checkPerm, readData, formatTime } = require('../../utils');
 
 module.exports = {
   name: 'checkloa',
@@ -10,7 +10,7 @@ module.exports = {
     .addUserOption(o => o.setName('user').setDescription('Staff member').setRequired(true)),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'admin'))
+    if (!checkPerm(message.member, 'checkloa'))
       return message.reply('❌ Only **Admins** can use this command.');
 
     const target = message.mentions.members.first();
@@ -20,7 +20,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'admin'))
+    if (!checkPerm(interaction.member, 'checkloa'))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const user = interaction.options.getUser('user');

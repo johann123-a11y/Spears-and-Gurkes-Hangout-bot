@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { hasPermission, readData } = require('../../utils');
+const { checkPerm, readData } = require('../../utils');
 
 module.exports = {
   name: 'greroll',
@@ -15,7 +15,7 @@ module.exports = {
     ),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'staffTeam'))
+    if (!checkPerm(message.member, 'greroll'))
       return message.reply('❌ Only **Staff Team** members can use this command.');
 
     const msgId = args[0];
@@ -26,7 +26,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'staffTeam'))
+    if (!checkPerm(interaction.member, 'greroll'))
       return interaction.reply({ content: '❌ Only **Staff Team** members can use this command.', ephemeral: true });
 
     await interaction.deferReply();

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { hasPermission, readData, writeData } = require('../../utils');
+const { checkPerm, readData, writeData } = require('../../utils');
 
 module.exports = {
   name: 'welcomechannel',
@@ -10,7 +10,7 @@ module.exports = {
     .addChannelOption(o => o.setName('channel').setDescription('The welcome channel').setRequired(true)),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'admin'))
+    if (!checkPerm(message.member, 'welcomechannel'))
       return message.reply('❌ Only **Admins** can use this command.');
 
     const ch = message.mentions.channels.first();
@@ -20,7 +20,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'admin'))
+    if (!checkPerm(interaction.member, 'welcomechannel'))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const ch = interaction.options.getChannel('channel');

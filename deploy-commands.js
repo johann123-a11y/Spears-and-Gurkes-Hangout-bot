@@ -1,4 +1,4 @@
-const { REST, Routes } = require('@discordjs/rest');
+const { REST, Routes } = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
@@ -25,7 +25,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   try {
     console.log(`Registering ${slashCommands.length} slash commands...`);
     await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, config.guildId),
+      Routes.applicationCommands(process.env.CLIENT_ID),
       { body: slashCommands }
     );
     console.log('Slash commands registered successfully!');

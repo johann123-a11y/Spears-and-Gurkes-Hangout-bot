@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
-const { hasPermission } = require('../../utils');
+const { checkPerm } = require('../../utils');
 
 module.exports = {
   name: 'pingperm',
@@ -23,7 +23,7 @@ module.exports = {
     ),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'admin'))
+    if (!checkPerm(message.member, 'pingperm'))
       return message.reply('❌ Only **Admins** can use this command.');
 
     // ?pingperm add {ping} {role}
@@ -40,7 +40,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'admin'))
+    if (!checkPerm(interaction.member, 'pingperm'))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const pingTarget = interaction.options.getString('ping');

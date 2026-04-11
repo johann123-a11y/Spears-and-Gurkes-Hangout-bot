@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { readData, writeData, hasPermission, getMemberRoleLevel, promoteOrder } = require('../../utils');
+const { readData, writeData, checkPerm, getMemberRoleLevel, promoteOrder } = require('../../utils');
 const config = require('../../config.json');
 
 module.exports = {
@@ -22,7 +22,7 @@ module.exports = {
     ),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'srMod'))
+    if (!checkPerm(message.member, 'strike'))
       return message.reply('❌ Only **SrMod** or above can use this command.');
 
     // ?strike remove @user {reason}  OR  ?strike @user {reason}
@@ -44,7 +44,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'srMod'))
+    if (!checkPerm(interaction.member, 'strike'))
       return interaction.reply({ content: '❌ Only **SrMod** or above can use this command.', ephemeral: true });
 
     const action = interaction.options.getSubcommand();

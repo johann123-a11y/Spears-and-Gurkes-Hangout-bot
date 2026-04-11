@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { parseTime, formatTime, hasPermission } = require('../../utils');
+const { parseTime, formatTime, checkPerm } = require('../../utils');
 
 module.exports = {
   name: 'mute',
@@ -12,8 +12,8 @@ module.exports = {
     .addStringOption(o => o.setName('reason').setDescription('Reason for the mute').setRequired(true)),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'jrHelper'))
-      return message.reply('❌ You need to be **JrHelper** or above to use this command.');
+    if (!checkPerm(message.member, 'mute'))
+      return message.reply('❌ Du hast keine Berechtigung für diesen Command.');
 
     const target = message.mentions.members.first();
     const time = args[1];
@@ -36,8 +36,8 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'jrHelper'))
-      return interaction.reply({ content: '❌ You need to be **JrHelper** or above.', ephemeral: true });
+    if (!checkPerm(interaction.member, 'mute'))
+      return interaction.reply({ content: '❌ Du hast keine Berechtigung für diesen Command.', ephemeral: true });
 
     const user = interaction.options.getUser('user');
     const time = interaction.options.getString('time');

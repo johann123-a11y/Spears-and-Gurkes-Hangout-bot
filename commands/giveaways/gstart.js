@@ -6,7 +6,7 @@ const {
   TextInputStyle,
   ActionRowBuilder,
 } = require('discord.js');
-const { hasPermission, parseTime, formatTime, readData, writeData } = require('../../utils');
+const { checkPerm, parseTime, formatTime, readData, writeData } = require('../../utils');
 
 module.exports = {
   name: 'gstart',
@@ -16,7 +16,7 @@ module.exports = {
     .setDescription('Start a giveaway [Staff Team]'),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'staffTeam'))
+    if (!checkPerm(message.member, 'gstart'))
       return message.reply('❌ Only **Staff Team** members can use this command.');
 
     // Prefix fallback: ?gstart {time} {winners} {prize} | {description}
@@ -37,7 +37,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'staffTeam'))
+    if (!checkPerm(interaction.member, 'gstart'))
       return interaction.reply({ content: '❌ Only **Staff Team** members can use this command.', ephemeral: true });
 
     // Open modal

@@ -26,7 +26,6 @@ function formatTime(ms) {
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-
   const parts = [];
   if (days > 0) parts.push(`${days}d`);
   if (hours % 24 > 0) parts.push(`${hours % 24}h`);
@@ -41,11 +40,8 @@ function readData(filename) {
     fs.writeFileSync(filePath, JSON.stringify({}));
     return {};
   }
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); }
+  catch { return {}; }
 }
 
 function writeData(filename, data) {
@@ -53,15 +49,12 @@ function writeData(filename, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
-// Role hierarchy index for promote/demote
-const promoteOrder = config.promoteOrder; // ["member","helper","srHelper","jrMod","mod","srMod"]
+const promoteOrder = config.promoteOrder;
 
 function getMemberRoleLevel(member) {
   for (let i = promoteOrder.length - 1; i >= 0; i--) {
     const roleId = config.roles[promoteOrder[i]];
-    if (roleId && roleId !== `${promoteOrder[i].toUpperCase()}_ROLE_ID` && member.roles.cache.has(roleId)) {
-      return i;
-    }
+    if (roleId && !roleId.endsWith('_ROLE_ID') && member.roles.cache.has(roleId)) return i;
   }
   return -1;
 }
@@ -69,23 +62,51 @@ function getMemberRoleLevel(member) {
 function hasPermission(member, level) {
   if (!member) return false;
   if (member.permissions.has('Administrator')) return true;
-
   const { roles } = config;
-
-  const adminRoles = [roles.admin];
-  const srModRoles = [roles.admin, roles.srMod];
-  const staffTeamRoles = [roles.staffTeam, roles.admin, roles.srMod, roles.mod, roles.jrMod, roles.srHelper, roles.helper, roles.bot, roles.partnerManager, roles.builder];
-  const jrHelperRoles = [roles.admin, roles.srMod, roles.mod, roles.jrMod, roles.srHelper, roles.helper, roles.jrHelper, roles.bot];
-
-  const check = (roleList) => roleList.some(r => r && !r.endsWith('_ROLE_ID') && member.roles.cache.has(r));
-
+  const check = (list) => list.some(r => r && !r.endsWith('_ROLE_ID') && member.roles.cache.has(r));
   switch (level) {
-    case 'jrHelper': return check(jrHelperRoles);
-    case 'srMod': return check(srModRoles);
-    case 'admin': return check(adminRoles);
-    case 'staffTeam': return check(staffTeamRoles);
-    default: return false;
+    case 'everyone':   return true;
+    case 'jrHelper':   return check([roles.admin, roles.srMod, roles.mod, roles.jrMod, roles.srHelper, roles.helper, roles.jrHelper, roles.bot]);
+    case 'srMod':      return check([roles.admin, roles.srMod]);
+    case 'admin':      return check([roles.admin]);
+    case 'staffTeam':  return check([roles.staffTeam, roles.admin, roles.srMod, roles.mod, roles.jrMod, roles.srHelper, roles.helper, roles.bot, roles.partnerManager, roles.builder]);
+    default:           return false;
   }
 }
 
-module.exports = { parseTime, formatTime, readData, writeData, promoteOrder, getMemberRoleLevel, hasPermission };
+// --- Dynamic permission system ---
+const COMMAND_DEFAULTS = {
+  mute: 'jrHelper', unmute: 'jrHelper',
+  ban: 'admin', kick: 'admin',
+  strike: 'srMod', strikes: 'srMod',
+  loa: 'admin', checkloa: 'admin',
+  demote: 'admin', promote: 'admin',
+  staffkick: 'admin', pingperm: 'admin',
+  setrole: 'admin',
+  welcome: 'admin', welcomechannel: 'admin', welcomemessage: 'admin',
+  gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam',
+  afk: 'everyone', help: 'everyone', perms: 'admin',
+};
+
+const COMMAND_LABELS = {
+  everyone: '🌍 Everyone',
+  jrHelper: '🟢 JrHelper+',
+  srMod: '🟠 SrMod+',
+  admin: '🔴 Admin Only',
+  staffTeam: '🔵 Staff Team',
+};
+
+function checkPerm(member, commandName) {
+  if (!member) return false;
+  if (member.permissions.has('Administrator')) return true;
+  const perms = readData('perms.json');
+  const level = perms[commandName] ?? COMMAND_DEFAULTS[commandName] ?? 'everyone';
+  return hasPermission(member, level);
+}
+
+module.exports = {
+  parseTime, formatTime, readData, writeData,
+  promoteOrder, getMemberRoleLevel,
+  hasPermission, checkPerm,
+  COMMAND_DEFAULTS, COMMAND_LABELS,
+};

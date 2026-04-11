@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { hasPermission } = require('../../utils');
+const { checkPerm } = require('../../utils');
 
 module.exports = {
   name: 'unmute',
@@ -10,7 +10,7 @@ module.exports = {
     .addUserOption(o => o.setName('user').setDescription('User to unmute').setRequired(true)),
 
   async execute(message, args) {
-    if (!hasPermission(message.member, 'jrHelper'))
+    if (!checkPerm(message.member, 'unmute'))
       return message.reply('❌ You need to be **JrHelper** or above to use this command.');
 
     const target = message.mentions.members.first();
@@ -26,7 +26,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!hasPermission(interaction.member, 'jrHelper'))
+    if (!checkPerm(interaction.member, 'unmute'))
       return interaction.reply({ content: '❌ You need to be **JrHelper** or above.', ephemeral: true });
 
     const user = interaction.options.getUser('user');

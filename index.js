@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js'
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
+const connectDB = require('./db');
 
 const client = new Client({
   intents: [
@@ -39,4 +40,4 @@ for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
   }
 }
 
-client.login(process.env.TOKEN);
+connectDB().then(() => client.login(process.env.TOKEN));
