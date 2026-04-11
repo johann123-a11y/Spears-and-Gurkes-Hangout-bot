@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { parseTime, formatTime, checkPerm } = require('../../utils');
+const { sendLog } = require('../../utils/logger');
 
 module.exports = {
   name: 'mute',
@@ -30,6 +31,7 @@ module.exports = {
       await target.timeout(ms, reason);
       const embed = buildEmbed(target.user, formatTime(ms), reason, message.author.tag);
       message.channel.send({ embeds: [embed] });
+      sendLog(message.client, { action: 'User Muted', executor: message.author.tag, target: target.user.tag, fields: { Dauer: formatTime(ms), Grund: reason }, color: '#FF6B35' });
     } catch {
       message.reply('❌ Could not mute that user. Check my permissions and role hierarchy.');
     }
@@ -54,6 +56,7 @@ module.exports = {
     try {
       await member.timeout(ms, reason);
       interaction.reply({ embeds: [buildEmbed(user, formatTime(ms), reason, interaction.user.tag)] });
+      sendLog(interaction.client, { action: 'User Muted', executor: interaction.user.tag, target: user.tag, fields: { Dauer: formatTime(ms), Grund: reason }, color: '#FF6B35' });
     } catch {
       interaction.reply({ content: '❌ Could not mute that user.', ephemeral: true });
     }

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { checkPerm } = require('../../utils');
+const { sendLog } = require('../../utils/logger');
 
 module.exports = {
   name: 'unmute',
@@ -11,15 +12,15 @@ module.exports = {
 
   async execute(message, args) {
     if (!checkPerm(message.member, 'unmute'))
-      return message.reply('❌ You need to be **JrHelper** or above to use this command.');
+      return message.reply('❌ Du hast keine Berechtigung für diesen Command.');
 
     const target = message.mentions.members.first();
     if (!target) return message.reply('Usage: `?unmute @user`');
 
     try {
       await target.timeout(null);
-      const embed = buildEmbed(target.user, message.author.tag);
-      message.channel.send({ embeds: [embed] });
+      message.channel.send({ embeds: [buildEmbed(target.user, message.author.tag)] });
+      sendLog(message.client, { action: 'User Unmuted', executor: message.author.tag, target: target.user.tag, color: '#57F287' });
     } catch {
       message.reply('❌ Could not unmute that user.');
     }
@@ -27,7 +28,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'unmute'))
-      return interaction.reply({ content: '❌ You need to be **JrHelper** or above.', ephemeral: true });
+      return interaction.reply({ content: '❌ Du hast keine Berechtigung für diesen Command.', ephemeral: true });
 
     const user = interaction.options.getUser('user');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
@@ -36,6 +37,7 @@ module.exports = {
     try {
       await member.timeout(null);
       interaction.reply({ embeds: [buildEmbed(user, interaction.user.tag)] });
+      sendLog(interaction.client, { action: 'User Unmuted', executor: interaction.user.tag, target: user.tag, color: '#57F287' });
     } catch {
       interaction.reply({ content: '❌ Could not unmute that user.', ephemeral: true });
     }

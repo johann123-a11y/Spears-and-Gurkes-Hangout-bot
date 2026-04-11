@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { checkPerm } = require('../../utils');
+const { sendLog } = require('../../utils/logger');
 
 module.exports = {
   name: 'ban',
@@ -16,12 +17,12 @@ module.exports = {
 
     const target = message.mentions.members.first();
     const reason = args.slice(1).join(' ');
-
     if (!target || !reason) return message.reply('Usage: `?ban @user {reason}`');
 
     try {
       await target.ban({ reason });
       message.channel.send({ embeds: [buildEmbed(target.user, reason, message.author.tag)] });
+      sendLog(message.client, { action: 'User Banned', executor: message.author.tag, target: target.user.tag, fields: { Grund: reason }, color: '#ED4245' });
     } catch {
       message.reply('❌ Could not ban that user. Check my permissions and role hierarchy.');
     }
@@ -39,6 +40,7 @@ module.exports = {
     try {
       await member.ban({ reason });
       interaction.reply({ embeds: [buildEmbed(user, reason, interaction.user.tag)] });
+      sendLog(interaction.client, { action: 'User Banned', executor: interaction.user.tag, target: user.tag, fields: { Grund: reason }, color: '#ED4245' });
     } catch {
       interaction.reply({ content: '❌ Could not ban that user.', ephemeral: true });
     }

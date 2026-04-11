@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { checkPerm } = require('../../utils');
+const { sendLog } = require('../../utils/logger');
 
 module.exports = {
   name: 'kick',
@@ -18,12 +19,12 @@ module.exports = {
     const target = message.mentions.members.first();
     const time = args[1];
     const reason = args.slice(2).join(' ');
-
     if (!target || !time || !reason) return message.reply('Usage: `?kick @user {time} {reason}`');
 
     try {
       await target.kick(reason);
       message.channel.send({ embeds: [buildEmbed(target.user, time, reason, message.author.tag)] });
+      sendLog(message.client, { action: 'User Kicked', executor: message.author.tag, target: target.user.tag, fields: { Dauer: time, Grund: reason }, color: '#FEE75C' });
     } catch {
       message.reply('❌ Could not kick that user. Check my permissions and role hierarchy.');
     }
@@ -42,6 +43,7 @@ module.exports = {
     try {
       await member.kick(reason);
       interaction.reply({ embeds: [buildEmbed(user, time, reason, interaction.user.tag)] });
+      sendLog(interaction.client, { action: 'User Kicked', executor: interaction.user.tag, target: user.tag, fields: { Dauer: time, Grund: reason }, color: '#FEE75C' });
     } catch {
       interaction.reply({ content: '❌ Could not kick that user.', ephemeral: true });
     }
