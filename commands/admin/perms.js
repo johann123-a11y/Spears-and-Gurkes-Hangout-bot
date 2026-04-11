@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const {
+  SlashCommandBuilder, EmbedBuilder,
+  StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
+  ActionRowBuilder,
+} = require('discord.js');
 const { readData, writeData, COMMAND_DEFAULTS, COMMAND_LABELS } = require('../../utils');
 
 const COMMAND_DESCRIPTIONS = {
@@ -10,11 +14,12 @@ const COMMAND_DESCRIPTIONS = {
   strikes:        'Zeigt alle Strikes eines Users',
   loa:            'Setzt einen User auf Leave of Absence',
   checkloa:       'Zeigt die verbleibende LOA-Zeit',
-  demote:         'Demoted einen Staff Member eine Stufe',
-  promote:        'Promoted einen Staff Member eine Stufe',
+  demote:         'Demoted einen Staff Member zu einer Rolle',
+  promote:        'Promoted einen Staff Member zu einer Rolle',
   staffkick:      'Entfernt alle Staff-Rollen von einem User',
   pingperm:       'Gibt einer Rolle Ping-Rechte',
   setrole:        'Setzt eine Rollen-ID im Bot-Config',
+  stick:          'Klebt eine Nachricht ans Ende des Channels',
   welcome:        'Welcome-Nachricht an-/ausschalten',
   welcomechannel: 'Setzt den Welcome-Channel',
   welcomemessage: 'Ändert den Welcome-Nachrichtentext',
@@ -27,11 +32,11 @@ const COMMAND_DESCRIPTIONS = {
 };
 
 const LEVEL_CHOICES = [
-  { name: '🌍 Everyone — Jeder', value: 'everyone' },
-  { name: '🟢 JrHelper+ — JrHelper und höher', value: 'jrHelper' },
-  { name: '🟠 SrMod+ — SrMod und höher', value: 'srMod' },
-  { name: '🔵 Staff Team — Alle Staff-Mitglieder', value: 'staffTeam' },
-  { name: '🔴 Admin Only — Nur Admins', value: 'admin' },
+  { label: '🌍 Everyone — Jeder', value: 'everyone' },
+  { label: '🟢 JrHelper+ — JrHelper und höher', value: 'jrHelper' },
+  { label: '🟠 SrMod+ — SrMod und höher', value: 'srMod' },
+  { label: '🔵 Staff Team — Alle Staff-Mitglieder', value: 'staffTeam' },
+  { label: '🔴 Admin Only — Nur Admins', value: 'admin' },
 ];
 
 module.exports = {
@@ -42,7 +47,7 @@ module.exports = {
     .setDescription('Verwaltet Command-Berechtigungen [Administrator Only]')
     .addSubcommand(sub =>
       sub.setName('list')
-        .setDescription('Zeigt alle Commands mit ihren aktuellen Berechtigungen')
+        .setDescription('Zeigt alle Commands mit ihren aktuellen Berechtigungen (interaktiv änderbar)')
     )
     .addSubcommand(sub =>
       sub.setName('set')
@@ -57,7 +62,7 @@ module.exports = {
           o.setName('level')
             .setDescription('Welche Berechtigung benötigt wird')
             .setRequired(true)
-            .addChoices(...LEVEL_CHOICES)
+            .addChoices(...LEVEL_CHOICES.map(l => ({ name: l.label, value: l.value })))
         )
     ),
 
@@ -74,9 +79,9 @@ module.exports = {
     if (sub === 'set') {
       const cmd = args[1]?.toLowerCase();
       const level = args[2]?.toLowerCase();
-      if (!cmd || !level) return message.reply('Usage: `?perms set {command} {level}`\nLevels: `everyone`, `jrHelper`, `srMod`, `staffTeam`, `admin`');
+      if (!cmd || !level) return message.reply('Usage: `?perms set {command} {level}`');
       if (!COMMAND_DEFAULTS[cmd]) return message.reply(`❌ Unbekannter Command: \`${cmd}\``);
-      if (!LEVEL_CHOICES.find(l => l.value === level)) return message.reply(`❌ Ungültiges Level. Erlaubt: \`everyone\`, \`jrHelper\`, \`srMod\`, \`staffTeam\`, \`admin\``);
+      if (!LEVEL_CHOICES.find(l => l.value === level)) return message.reply(`❌ Ungültiges Level.`);
       setPerm(cmd, level);
       return message.channel.send({ embeds: [buildSetEmbed(cmd, level)] });
     }
@@ -91,14 +96,32 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'list') {
-      return interaction.reply({ embeds: [buildListEmbed()], ephemeral: true });
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('perms_select_command')
+        .setPlaceholder('Command auswählen zum Bearbeiten...')
+        .addOptions(
+          Object.keys(COMMAND_DEFAULTS).map(cmd =>
+            new StringSelectMenuOptionBuilder()
+              .setLabel(cmd)
+              .setDescription(COMMAND_DESCRIPTIONS[cmd] ?? '—')
+              .setValue(cmd)
+          )
+        );
+
+      const row = new ActionRowBuilder().addComponents(selectMenu);
+
+      return interaction.reply({
+        embeds: [buildListEmbed()],
+        components: [row],
+        ephemeral: true,
+      });
     }
 
     if (sub === 'set') {
       const cmd = interaction.options.getString('command');
       const level = interaction.options.getString('level');
       setPerm(cmd, level);
-      return interaction.reply({ embeds: [buildSetEmbed(cmd, level)] });
+      return interaction.reply({ embeds: [buildSetEmbed(cmd, level)], ephemeral: true });
     }
   },
 };
@@ -123,7 +146,6 @@ function buildSetEmbed(cmd, level) {
 
 function buildListEmbed() {
   const perms = readData('perms.json');
-
   const fields = Object.keys(COMMAND_DEFAULTS).map(cmd => {
     const level = perms[cmd] ?? COMMAND_DEFAULTS[cmd];
     return {
@@ -136,7 +158,11 @@ function buildListEmbed() {
   return new EmbedBuilder()
     .setColor('#5865F2')
     .setTitle('🔐 Command-Berechtigungen')
-    .setDescription('Benutze `?perms set {command} {level}` um Berechtigungen zu ändern.\n\u200b')
+    .setDescription('Wähle unten einen Command aus um die Berechtigung zu ändern.\n\u200b')
     .addFields(fields)
     .setTimestamp();
 }
+
+module.exports.setPerm = setPerm;
+module.exports.buildSetEmbed = buildSetEmbed;
+module.exports.LEVEL_CHOICES = LEVEL_CHOICES;

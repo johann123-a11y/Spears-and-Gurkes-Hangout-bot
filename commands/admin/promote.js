@@ -87,12 +87,12 @@ async function performPromote(member, newRoleKey, reason, by, channel, interacti
       { name: 'Staff Member', value: `${member.user.tag}`, inline: true },
       { name: 'Promoted by', value: by, inline: true },
       { name: 'Old Role', value: oldRoleKey, inline: true },
-      { name: 'New Role', value: newRoleKey, inline: true },
+      { name: 'New Role', value: `<@&${newRoleId}>`, inline: true },
       { name: 'Reason', value: reason }
     )
     .setThumbnail(member.user.displayAvatarURL())
     .setTimestamp();
 
-  if (channel) channel.send({ embeds: [embed] });
-  else if (interaction) interaction.editReply({ embeds: [embed] });
+  if (channel) channel.send({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
+  else if (interaction) interaction.editReply({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
 }

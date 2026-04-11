@@ -1,5 +1,9 @@
-const { parseTime, formatTime } = require('../utils');
+const { parseTime } = require('../utils');
 const { createGiveaway } = require('../commands/giveaways/gstart');
+const { setPerm, buildSetEmbed, LEVEL_CHOICES } = require('../commands/admin/perms');
+const {
+  StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, EmbedBuilder
+} = require('discord.js');
 
 module.exports = {
   name: 'interactionCreate',
@@ -20,6 +24,41 @@ module.exports = {
         }
       }
       return;
+    }
+
+    // --- Select Menu: perms command picker ---
+    if (interaction.isStringSelectMenu() && interaction.customId === 'perms_select_command') {
+      if (!interaction.member.permissions.has('Administrator'))
+        return interaction.reply({ content: '❌ Keine Berechtigung.', ephemeral: true });
+
+      const selectedCmd = interaction.values[0];
+      const levelMenu = new StringSelectMenuBuilder()
+        .setCustomId(`perms_select_level:${selectedCmd}`)
+        .setPlaceholder(`Neue Berechtigung für "${selectedCmd}" wählen...`)
+        .addOptions(LEVEL_CHOICES.map(l =>
+          new StringSelectMenuOptionBuilder().setLabel(l.label).setValue(l.value)
+        ));
+
+      return interaction.reply({
+        content: `Welche Berechtigung soll **\`${selectedCmd}\`** bekommen?`,
+        components: [new ActionRowBuilder().addComponents(levelMenu)],
+        ephemeral: true,
+      });
+    }
+
+    // --- Select Menu: perms level picker ---
+    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('perms_select_level:')) {
+      if (!interaction.member.permissions.has('Administrator'))
+        return interaction.reply({ content: '❌ Keine Berechtigung.', ephemeral: true });
+
+      const cmd = interaction.customId.split(':')[1];
+      const level = interaction.values[0];
+      setPerm(cmd, level);
+      return interaction.update({
+        content: null,
+        embeds: [buildSetEmbed(cmd, level)],
+        components: [],
+      });
     }
 
     // --- Modal submit (giveaway) ---
