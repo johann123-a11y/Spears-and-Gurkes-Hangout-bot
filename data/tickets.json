@@ -1,0 +1,12 @@
+{
+  "panels": {},
+  "group": {
+    "enabled": false,
+    "channelId": null,
+    "messageId": null
+  },
+  "description": {
+    "title": "Create Ticket",
+    "text": null
+  }
+}
