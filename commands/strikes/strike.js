@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { readData, writeData, checkPerm, getMemberRoleLevel, promoteOrder } = require('../../utils');
+const { sendLog } = require('../../utils/logger');
 const config = require('../../config.json');
 
 module.exports = {

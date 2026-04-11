@@ -21,5 +21,6 @@
   "afk": "everyone",
   "help": "everyone",
   "perms": "admin",
-  "stick": "admin"
+  "stick": "admin",
+  "logs": "admin"
 }

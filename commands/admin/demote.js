@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { checkPerm, getMemberRoleLevel, promoteOrder } = require('../../utils');
+const { sendLog } = require('../../utils/logger');
 const config = require('../../config.json');
 
 module.exports = {
@@ -93,6 +94,11 @@ async function performDemote(member, newRoleKey, reason, by, channel, interactio
     .setThumbnail(member.user.displayAvatarURL())
     .setTimestamp();
 
-  if (channel) channel.send({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
-  else if (interaction) interaction.editReply({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
+  if (channel) {
+    channel.send({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
+    sendLog(channel.client, { action: 'Staff Demoted', executor: by, target: member.user.tag, fields: { 'Alte Rolle': oldRoleKey, 'Neue Rolle': newRoleKey, Grund: reason }, color: '#FF6B35' });
+  } else if (interaction) {
+    interaction.editReply({ embeds: [embed], allowedMentions: { roles: [newRoleId] } });
+    sendLog(interaction.client, { action: 'Staff Demoted', executor: by, target: member.user.tag, fields: { 'Alte Rolle': oldRoleKey, 'Neue Rolle': newRoleKey, Grund: reason }, color: '#FF6B35' });
+  }
 }
