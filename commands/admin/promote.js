@@ -4,11 +4,23 @@ const config = require('../../config.json');
 
 module.exports = {
   name: 'promote',
-  description: 'Promotes a staff member one rank up. [Admin Only]',
+  description: 'Promotes a staff member to a specified role. [Admin Only]',
   data: new SlashCommandBuilder()
     .setName('promote')
-    .setDescription('Promotes a staff member one rank up [Admin Only]')
+    .setDescription('Promotes a staff member to a specified role [Admin Only]')
     .addUserOption(o => o.setName('user').setDescription('Staff member to promote').setRequired(true))
+    .addStringOption(o =>
+      o.setName('role')
+        .setDescription('The role to promote to')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Helper', value: 'helper' },
+          { name: 'SrHelper', value: 'srHelper' },
+          { name: 'JrMod', value: 'jrMod' },
+          { name: 'Mod', value: 'mod' },
+          { name: 'SrMod', value: 'srMod' },
+        )
+    )
     .addStringOption(o => o.setName('reason').setDescription('Reason for promotion').setRequired(true)),
 
   async execute(message, args) {
@@ -16,10 +28,17 @@ module.exports = {
       return message.reply('❌ Only **Admins** can use this command.');
 
     const target = message.mentions.members.first();
-    const reason = args.slice(1).join(' ');
-    if (!target || !reason) return message.reply('Usage: `?promote @user {reason}`');
+    const roleKey = args[1]?.toLowerCase();
+    const reason = args.slice(2).join(' ');
 
-    await performPromote(target, reason, message.author.tag, message.channel);
+    if (!target || !roleKey || !reason)
+      return message.reply('Usage: `?promote @user {role} {reason}`\nRoles: `helper`, `srHelper`, `jrMod`, `mod`, `srMod`');
+
+    const matched = promoteOrder.find(k => k.toLowerCase() === roleKey);
+    if (!matched)
+      return message.reply(`❌ Unbekannte Rolle. Erlaubt: \`${promoteOrder.slice(1).join('`, `')}\``);
+
+    await performPromote(target, matched, reason, message.author.tag, message.channel);
   },
 
   async executeSlash(interaction) {
@@ -27,33 +46,37 @@ module.exports = {
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const user = interaction.options.getUser('user');
+    const roleKey = interaction.options.getString('role');
     const reason = interaction.options.getString('reason');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
     if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
 
     await interaction.deferReply();
-    await performPromote(member, reason, interaction.user.tag, null, interaction);
+    await performPromote(member, roleKey, reason, interaction.user.tag, null, interaction);
   },
 };
 
-async function performPromote(member, reason, by, channel, interaction) {
-  const level = getMemberRoleLevel(member);
+async function performPromote(member, newRoleKey, reason, by, channel, interaction) {
+  const currentLevel = getMemberRoleLevel(member);
+  const oldRoleKey = currentLevel >= 0 ? promoteOrder[currentLevel] : 'None';
+  const newRoleId = config.roles[newRoleKey];
 
-  if (level >= promoteOrder.length - 1) {
-    const msg = '❌ This user is already at the highest rank (SrMod).';
+  if (!newRoleId || newRoleId.endsWith('_ROLE_ID')) {
+    const msg = `❌ Die Rolle \`${newRoleKey}\` ist noch nicht konfiguriert. Benutze \`?setrole set ${newRoleKey} @role\`.`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
   }
 
-  const oldRoleKey = promoteOrder[level];
-  const newRoleKey = promoteOrder[level + 1];
-  const oldRoleId = config.roles[oldRoleKey];
-  const newRoleId = config.roles[newRoleKey];
-
   try {
-    if (oldRoleId && !oldRoleId.endsWith('_ROLE_ID')) await member.roles.remove(oldRoleId);
-    if (newRoleId && !newRoleId.endsWith('_ROLE_ID')) await member.roles.add(newRoleId);
+    // Remove all current ranked roles
+    for (const key of promoteOrder) {
+      const id = config.roles[key];
+      if (id && !id.endsWith('_ROLE_ID') && member.roles.cache.has(id)) {
+        await member.roles.remove(id);
+      }
+    }
+    await member.roles.add(newRoleId);
   } catch (err) {
-    const msg = `❌ Failed to update roles: ${err.message}`;
+    const msg = `❌ Konnte Rollen nicht ändern: ${err.message}`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
   }
 
@@ -63,7 +86,7 @@ async function performPromote(member, reason, by, channel, interaction) {
     .addFields(
       { name: 'Staff Member', value: `${member.user.tag}`, inline: true },
       { name: 'Promoted by', value: by, inline: true },
-      { name: 'Old Role', value: level >= 0 ? oldRoleKey : 'None', inline: true },
+      { name: 'Old Role', value: oldRoleKey, inline: true },
       { name: 'New Role', value: newRoleKey, inline: true },
       { name: 'Reason', value: reason }
     )
