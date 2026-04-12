@@ -4,6 +4,9 @@ const { readData } = require('../utils');
 module.exports = {
   name: 'guildMemberAdd',
   async execute(member, client) {
+    // Always pre-open DM channel so leave DMs work later
+    member.user.createDM().catch(() => {});
+
     const data = readData('welcome.json');
     if (!data.enabled || !data.channel) return;
 
