@@ -92,10 +92,10 @@ module.exports = {
         ));
 
     const rows = [
-      new ActionRowBuilder().addComponents(makeMenu(firstHalf, 'perms_select_command', 'Select a command to edit...')),
+      new ActionRowBuilder().addComponents(makeMenu(firstHalf, 'perms_select_command_a', 'Select a command to edit (1–25)...')),
     ];
     if (secondHalf.length > 0)
-      rows.push(new ActionRowBuilder().addComponents(makeMenu(secondHalf, 'perms_select_command', 'Select a command to edit...')));
+      rows.push(new ActionRowBuilder().addComponents(makeMenu(secondHalf, 'perms_select_command_b', 'Select a command to edit (26+)...')));
 
     return interaction.reply({
       embeds: [buildListEmbed()],

@@ -967,7 +967,7 @@ module.exports = {
       }
 
       // perms command picker
-      if (interaction.customId === 'perms_select_command') {
+      if (interaction.customId === 'perms_select_command_a' || interaction.customId === 'perms_select_command_b') {
         if (!interaction.member.permissions.has('Administrator'))
           return interaction.reply({ content: '❌ No permission.', ephemeral: true });
 
