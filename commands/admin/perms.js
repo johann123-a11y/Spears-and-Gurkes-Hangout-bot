@@ -20,10 +20,10 @@ const COMMAND_DESCRIPTIONS = {
 };
 
 const COMMAND_GROUPS = [
-  { name: '🔇 Moderation',  cmds: ['mute', 'unmute', 'clear'] },
-  { name: '⚠️ Strikes',     cmds: ['strike', 'strikes'] },
-  { name: '🎉 Giveaways',   cmds: ['gstart', 'gend', 'greroll'] },
-  { name: '💬 General',     cmds: ['afk', 'help'] },
+  { name: '🔇 Moderation', cmds: ['mute', 'unmute', 'clear'] },
+  { name: '⚠️ Strikes',    cmds: ['strike', 'strikes'] },
+  { name: '🎉 Giveaways',  cmds: ['gstart', 'gend', 'greroll'] },
+  { name: '💬 General',    cmds: ['afk', 'help'] },
 ];
 
 const LEVEL_CHOICES = [
