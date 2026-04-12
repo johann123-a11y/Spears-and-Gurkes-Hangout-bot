@@ -129,6 +129,41 @@ module.exports = {
       }
     }
 
+    // ── Select Menu: ticket info panel picker (from /ticket info overview) ───
+    if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_info_panel_picker') {
+      const panelId = interaction.values[0];
+      const tickets = readData('tickets.json');
+      const panel   = tickets.panels?.[panelId];
+      if (!panel) return interaction.update({ content: '❌ Panel no longer exists.', embeds: [], components: [] });
+
+      const embed = new EmbedBuilder()
+        .setColor('#5865F2').setTitle(`🎫 Panel: ${panel.name}`)
+        .addFields(
+          { name: 'Button Label', value: panel.buttonLabel,        inline: true },
+          { name: 'Color',        value: panel.buttonStyle,        inline: true },
+          { name: 'Category',     value: `<#${panel.categoryId}>`, inline: true },
+          { name: 'Questions',    value: panel.questions.length > 0
+            ? panel.questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : 'None' },
+        ).setTimestamp();
+
+      const editMenu = new StringSelectMenuBuilder()
+        .setCustomId(`ticket_info_edit:${panel.id}`)
+        .setPlaceholder('✏️ Edit this panel...')
+        .addOptions(
+          new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji('🏷️'),
+          new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji('🎨'),
+          new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji('📁'),
+          new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji('➕'),
+          new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji('➖'),
+          new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji('🗑️'),
+        );
+
+      return interaction.update({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(editMenu)],
+      });
+    }
+
     // ── Select Menu: ticket group panel picker ────────────────────────────────
     if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_group_select') {
       const selectedIds = interaction.values;

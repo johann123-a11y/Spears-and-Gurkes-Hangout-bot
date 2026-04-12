@@ -41,13 +41,13 @@ module.exports = {
     .setName('ticket')
     .setDescription('Ticket system')
 
-    // ── /ticket perms (subcommand group) ─────────────────────────────────────
+    // ── /ticket perms ─────────────────────────────────────────────────────────
     .addSubcommandGroup(group =>
       group.setName('perms')
-        .setDescription('Manage ticket role permissions')
+        .setDescription('Manage which roles get pinged/can view tickets')
         .addSubcommand(sub =>
           sub.setName('ping')
-            .setDescription('Add a role that gets pinged when a ticket is opened')
+            .setDescription('Add a role that gets pinged when a ticket opens')
             .addRoleOption(o => o.setName('role').setDescription('Role to ping').setRequired(true))
         )
         .addSubcommand(sub =>
@@ -56,79 +56,71 @@ module.exports = {
             .addRoleOption(o => o.setName('role').setDescription('Role to grant view access').setRequired(true))
         )
         .addSubcommand(sub =>
-          sub.setName('info')
-            .setDescription('Show current ping and view role settings')
+          sub.setName('info').setDescription('Show current ping & view role settings')
         )
         .addSubcommand(sub =>
-          sub.setName('clear')
-            .setDescription('Clear all ping and view role settings')
+          sub.setName('clear').setDescription('Clear all ticket ping and view role settings')
+        )
+    )
+
+    // ── /ticket logs ──────────────────────────────────────────────────────────
+    .addSubcommandGroup(group =>
+      group.setName('logs')
+        .setDescription('Manage the ticket log channel')
+        .addSubcommand(sub =>
+          sub.setName('set')
+            .setDescription('Set the channel where all ticket events are logged')
+            .addChannelOption(o => o.setName('channel').setDescription('Log channel').setRequired(true))
+        )
+        .addSubcommand(sub =>
+          sub.setName('info').setDescription('Show the current ticket log channel')
+        )
+        .addSubcommand(sub =>
+          sub.setName('remove').setDescription('Remove the ticket log channel')
         )
     )
 
     // ── /ticket setup ─────────────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('setup')
-        .setDescription('Create a new ticket panel [Admin Only]')
-        .addStringOption(o => o.setName('name').setDescription('Panel name (e.g. Support)').setRequired(true))
+        .setDescription('Create a panel button (color, category, questions) [Admin]')
+        .addStringOption(o => o.setName('name').setDescription('Panel name').setRequired(true))
         .addStringOption(o => o.setName('label').setDescription('Button label text').setRequired(true))
         .addStringOption(o =>
-          o.setName('color')
-            .setDescription('Button color')
-            .setRequired(true)
+          o.setName('color').setDescription('Button color').setRequired(true)
             .addChoices(
-              { name: '🔵 Blue', value: 'blue' },
-              { name: '⚫ Grey', value: 'grey' },
+              { name: '🔵 Blue',  value: 'blue'  },
+              { name: '⚫ Grey',  value: 'grey'  },
               { name: '🟢 Green', value: 'green' },
-              { name: '🔴 Red', value: 'red' },
+              { name: '🔴 Red',   value: 'red'   },
             )
         )
-        .addChannelOption(o =>
-          o.setName('category')
-            .setDescription('Category where tickets are created')
-            .setRequired(true)
-        )
-    )
-
-    // ── /ticket question ──────────────────────────────────────────────────────
-    .addSubcommand(sub =>
-      sub.setName('question')
-        .setDescription('Add a pre-open question to a panel (max 5) [Admin Only]')
-        .addStringOption(o => o.setName('panel').setDescription('Panel name').setRequired(true))
-        .addStringOption(o => o.setName('question').setDescription('Question text').setRequired(true))
-    )
-
-    // ── /ticket removequestion ────────────────────────────────────────────────
-    .addSubcommand(sub =>
-      sub.setName('removequestion')
-        .setDescription('Remove a question from a panel [Admin Only]')
-        .addStringOption(o => o.setName('panel').setDescription('Panel name').setRequired(true))
-        .addIntegerOption(o => o.setName('number').setDescription('Question number').setRequired(true).setMinValue(1))
+        .addChannelOption(o => o.setName('category').setDescription('Category where tickets are created').setRequired(true))
     )
 
     // ── /ticket description ───────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('description')
-        .setDescription('Set the title and description shown above panels [Admin Only]')
+        .setDescription('Set title, text & rules shown above the buttons [Admin]')
     )
 
     // ── /ticket group ─────────────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('group')
-        .setDescription('Send all panels as one grouped message in this channel [Admin Only]')
+        .setDescription('Send combined panels as an embed in this channel [Admin]')
     )
 
     // ── /ticket send ──────────────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('send')
-        .setDescription('Send a single panel to this channel [Admin Only]')
+        .setDescription('Send a single panel to this channel [Admin]')
         .addStringOption(o => o.setName('panel').setDescription('Panel name').setRequired(true))
     )
 
     // ── /ticket info ──────────────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('info')
-        .setDescription('View info about the current ticket or a panel [Staff]')
-        .addStringOption(o => o.setName('panel').setDescription('Panel name — leave empty to view current ticket').setRequired(false))
+        .setDescription('Overview of all panels — edit/delete [Admin] or view current ticket [Staff]')
     )
 
     // ── /ticket add ───────────────────────────────────────────────────────────
@@ -155,22 +147,22 @@ module.exports = {
     // ── /ticket move ──────────────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('move')
-        .setDescription('Move this ticket to a different category [Staff]')
+        .setDescription('Move this ticket to another category [Staff]')
         .addChannelOption(o => o.setName('category').setDescription('Target category').setRequired(true))
     )
 
     // ── /ticket close ─────────────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('close')
-        .setDescription('Close this ticket [Staff]')
+        .setDescription('Close this ticket in 5s [Staff]')
         .addStringOption(o => o.setName('reason').setDescription('Reason for closing').setRequired(true))
     )
 
     // ── /ticket requestclose ──────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('requestclose')
-        .setDescription('Request this ticket to be closed')
-        .addStringOption(o => o.setName('reason').setDescription('Reason for your request').setRequired(false))
+        .setDescription('Ask staff to close the ticket')
+        .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
     ),
 
   async execute(message) {
@@ -181,7 +173,7 @@ module.exports = {
     const group = interaction.options.getSubcommandGroup(false);
     const sub   = interaction.options.getSubcommand();
 
-    // Perms group — admin only
+    // ── perms group ───────────────────────────────────────────────────────────
     if (group === 'perms') {
       if (!interaction.member.permissions.has('Administrator'))
         return interaction.reply({ content: '❌ Only **Administrators** can manage permissions.', ephemeral: true });
@@ -191,19 +183,26 @@ module.exports = {
       if (sub === 'clear') return handlePermsClear(interaction);
     }
 
-    // Admin-only subcommands
-    const adminOnly = ['setup', 'question', 'removequestion', 'description', 'group', 'send'];
+    // ── logs group ────────────────────────────────────────────────────────────
+    if (group === 'logs') {
+      if (!interaction.member.permissions.has('Administrator'))
+        return interaction.reply({ content: '❌ Only **Administrators** can manage logs.', ephemeral: true });
+      if (sub === 'set')    return handleLogsSet(interaction);
+      if (sub === 'info')   return handleLogsInfo(interaction);
+      if (sub === 'remove') return handleLogsRemove(interaction);
+    }
+
+    // ── admin subcommands ─────────────────────────────────────────────────────
+    const adminOnly = ['setup', 'description', 'group', 'send'];
     if (adminOnly.includes(sub) && !interaction.member.permissions.has('Administrator'))
       return interaction.reply({ content: '❌ Only **Administrators** can use this command.', ephemeral: true });
 
-    // Staff subcommands
-    const staffOnly = ['add', 'remove', 'rename', 'move', 'close', 'info'];
+    // ── staff subcommands ─────────────────────────────────────────────────────
+    const staffOnly = ['add', 'remove', 'rename', 'move', 'close'];
     if (staffOnly.includes(sub) && !isStaff(interaction.member))
       return interaction.reply({ content: '❌ Only **Staff** can use this command.', ephemeral: true });
 
     if (sub === 'setup')          return handleSetup(interaction);
-    if (sub === 'question')       return handleQuestion(interaction);
-    if (sub === 'removequestion') return handleRemoveQuestion(interaction);
     if (sub === 'description')    return handleDescription(interaction);
     if (sub === 'group')          return handleGroup(interaction);
     if (sub === 'send')           return handleSend(interaction);
@@ -217,8 +216,7 @@ module.exports = {
   },
 };
 
-// ── Handlers ──────────────────────────────────────────────────────────────────
-
+// ── /ticket setup ─────────────────────────────────────────────────────────────
 async function handleSetup(interaction) {
   const name     = interaction.options.getString('name');
   const label    = interaction.options.getString('label');
@@ -228,9 +226,9 @@ async function handleSetup(interaction) {
   if (category.type !== ChannelType.GuildCategory)
     return interaction.reply({ content: '❌ Please select a **Category**, not a text channel.', ephemeral: true });
 
-  const tickets  = readData('tickets.json');
+  const tickets = readData('tickets.json');
   if (!tickets.panels) tickets.panels = {};
-  const panelId  = getPanelId(name);
+  const panelId = getPanelId(name);
 
   tickets.panels[panelId] = { id: panelId, name, buttonLabel: label, buttonStyle: color, categoryId: category.id, questions: [] };
   writeData('tickets.json', tickets);
@@ -239,44 +237,17 @@ async function handleSetup(interaction) {
     embeds: [new EmbedBuilder()
       .setColor('#57F287').setTitle('✅ Ticket Panel Created')
       .addFields(
-        { name: 'Panel Name',   value: name,              inline: true },
-        { name: 'Button Label', value: label,             inline: true },
-        { name: 'Color',        value: color,             inline: true },
+        { name: 'Panel Name',   value: name,                inline: true },
+        { name: 'Button Label', value: label,               inline: true },
+        { name: 'Color',        value: color,               inline: true },
         { name: 'Category',     value: `<#${category.id}>`, inline: true },
-        { name: 'Next Steps', value: `• Add questions: \`/ticket question panel:${name}\`\n• Send: \`/ticket send panel:${name}\`\n• Group all: \`/ticket group\`` },
+        { name: 'Next Steps', value: `• Add questions via \`/ticket info\` → edit\n• Set description: \`/ticket description\`\n• Send: \`/ticket send panel:${name}\`\n• Group all: \`/ticket group\`` },
       ).setTimestamp()],
     ephemeral: true,
   });
 }
 
-async function handleQuestion(interaction) {
-  const panelName = interaction.options.getString('panel');
-  const question  = interaction.options.getString('question');
-  const tickets   = readData('tickets.json');
-  const panel     = tickets.panels?.[getPanelId(panelName)];
-
-  if (!panel) return interaction.reply({ content: `❌ Panel \`${panelName}\` not found.`, ephemeral: true });
-  if (panel.questions.length >= 5) return interaction.reply({ content: '❌ Maximum **5 questions** per panel.', ephemeral: true });
-
-  panel.questions.push(question);
-  writeData('tickets.json', tickets);
-  interaction.reply({ content: `✅ Question **#${panel.questions.length}** added to **${panel.name}**:\n> ${question}`, ephemeral: true });
-}
-
-async function handleRemoveQuestion(interaction) {
-  const panelName = interaction.options.getString('panel');
-  const num       = interaction.options.getInteger('number');
-  const tickets   = readData('tickets.json');
-  const panel     = tickets.panels?.[getPanelId(panelName)];
-
-  if (!panel) return interaction.reply({ content: `❌ Panel \`${panelName}\` not found.`, ephemeral: true });
-  if (num > panel.questions.length) return interaction.reply({ content: `❌ No question #${num}.`, ephemeral: true });
-
-  const removed = panel.questions.splice(num - 1, 1)[0];
-  writeData('tickets.json', tickets);
-  interaction.reply({ content: `✅ Removed question #${num} from **${panel.name}**:\n> ${removed}`, ephemeral: true });
-}
-
+// ── /ticket description ───────────────────────────────────────────────────────
 async function handleDescription(interaction) {
   const tickets = readData('tickets.json');
   const current = tickets.description || {};
@@ -314,7 +285,7 @@ async function handleDescription(interaction) {
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
           .setCustomId('desc_footer')
-          .setLabel('Footer text (optional, e.g. Powered by MyBot)')
+          .setLabel('Footer text (optional)')
           .setStyle(TextInputStyle.Short)
           .setValue(current.footer || '')
           .setRequired(false)
@@ -324,13 +295,13 @@ async function handleDescription(interaction) {
   await interaction.showModal(modal);
 }
 
+// ── /ticket group ─────────────────────────────────────────────────────────────
 async function handleGroup(interaction) {
   const tickets = readData('tickets.json');
   const panels  = Object.values(tickets.panels || {});
   if (panels.length === 0)
     return interaction.reply({ content: '❌ No panels configured. Use `/ticket setup` first.', ephemeral: true });
 
-  // Show multi-select dropdown so admin picks which panels to combine
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId('ticket_group_select')
     .setPlaceholder('Select panels to combine...')
@@ -350,84 +321,80 @@ async function handleGroup(interaction) {
   });
 }
 
+// ── /ticket send ──────────────────────────────────────────────────────────────
 async function handleSend(interaction) {
   const panelName = interaction.options.getString('panel');
   const tickets   = readData('tickets.json');
   const panel     = tickets.panels?.[getPanelId(panelName)];
   if (!panel) return interaction.reply({ content: `❌ Panel \`${panelName}\` not found.`, ephemeral: true });
 
-  const embed  = buildDescEmbed(tickets.description);
   const button = new ButtonBuilder()
     .setCustomId(`ticket_open:${panel.id}`)
     .setLabel(panel.buttonLabel)
     .setStyle(STYLES[panel.buttonStyle] || ButtonStyle.Primary);
 
   await interaction.reply({ content: '✅ Panel sent!', ephemeral: true });
-  await interaction.channel.send({ embeds: [embed], components: [new ActionRowBuilder().addComponents(button)] });
+  await interaction.channel.send({ embeds: [buildDescEmbed(tickets.description)], components: [new ActionRowBuilder().addComponents(button)] });
 }
 
+// ── /ticket info ──────────────────────────────────────────────────────────────
 async function handleInfo(interaction) {
-  const panelName   = interaction.options.getString('panel');
   const tickets     = readData('tickets.json');
   const openTickets = readData('openTickets.json');
+  const panels      = Object.values(tickets.panels || {});
 
-  // If panel name provided → show panel info + edit menu
-  if (panelName) {
-    const panel = tickets.panels?.[getPanelId(panelName)];
-    if (!panel) return interaction.reply({ content: `❌ Panel \`${panelName}\` not found.`, ephemeral: true });
-
+  // If inside a ticket channel and not admin → show ticket details
+  const ticket = openTickets[interaction.channelId];
+  if (ticket && !interaction.member.permissions.has('Administrator')) {
     const embed = new EmbedBuilder()
-      .setColor('#5865F2').setTitle(`🎫 Panel: ${panel.name}`)
+      .setColor('#5865F2').setTitle('🎫 Ticket Info')
       .addFields(
-        { name: 'Button Label', value: panel.buttonLabel,        inline: true },
-        { name: 'Color',        value: panel.buttonStyle,        inline: true },
-        { name: 'Category',     value: `<#${panel.categoryId}>`, inline: true },
-        { name: 'Questions',    value: panel.questions.length > 0
-          ? panel.questions.map((q, i) => `${i + 1}. ${q}`).join('\n')
-          : 'None' },
-      ).setTimestamp();
-
-    const editMenu = new StringSelectMenuBuilder()
-      .setCustomId(`ticket_info_edit:${panel.id}`)
-      .setPlaceholder('✏️ Edit panel settings...')
-      .addOptions(
-        new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji('🏷️'),
-        new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji('🎨'),
-        new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji('📁'),
-        new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji('➕'),
-        new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji('➖'),
-        new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji('🗑️'),
+        { name: 'Panel',     value: ticket.panelName,                                       inline: true },
+        { name: 'Opened by', value: `<@${ticket.userId}>`,                                  inline: true },
+        { name: 'Opened at', value: `<t:${Math.floor(new Date(ticket.openedAt) / 1000)}:F>`, inline: true },
       );
-
-    return interaction.reply({
-      embeds: [embed],
-      components: [new ActionRowBuilder().addComponents(editMenu)],
-      ephemeral: true,
-    });
+    if (ticket.answers?.length > 0)
+      embed.addFields(ticket.answers.map(a => ({ name: a.question, value: a.answer })));
+    return interaction.reply({ embeds: [embed], ephemeral: true });
   }
 
-  // Otherwise → show current ticket info
-  const ticket = openTickets[interaction.channelId];
-  if (!ticket)
-    return interaction.reply({ content: '❌ This is not a ticket channel. Provide a panel name to view panel info.', ephemeral: true });
+  // Admin → show all panels overview + panel picker to edit
+  if (panels.length === 0)
+    return interaction.reply({ content: '❌ No panels configured yet. Use `/ticket setup` to create one.', ephemeral: true });
 
-  const embed = new EmbedBuilder()
-    .setColor('#5865F2').setTitle('🎫 Ticket Info')
-    .addFields(
-      { name: 'Panel',    value: ticket.panelName,                                      inline: true },
-      { name: 'Opened by', value: `<@${ticket.userId}>`,                                inline: true },
-      { name: 'Opened at', value: `<t:${Math.floor(new Date(ticket.openedAt) / 1000)}:F>`, inline: true },
-    );
+  const overviewEmbed = new EmbedBuilder()
+    .setColor('#5865F2').setTitle('🎫 Ticket Panels Overview')
+    .addFields(panels.map(p => ({
+      name: `${p.name}`,
+      value: [
+        `**Button:** ${p.buttonLabel} — ${p.buttonStyle}`,
+        `**Category:** <#${p.categoryId}>`,
+        `**Questions:** ${p.questions.length > 0 ? p.questions.map((q, i) => `${i + 1}. ${q}`).join(' | ') : 'None'}`,
+      ].join('\n'),
+    })))
+    .setFooter({ text: 'Select a panel below to edit or delete it' })
+    .setTimestamp();
 
-  if (ticket.answers?.length > 0)
-    embed.addFields(ticket.answers.map(a => ({ name: a.question, value: a.answer })));
+  const panelPicker = new StringSelectMenuBuilder()
+    .setCustomId('ticket_info_panel_picker')
+    .setPlaceholder('Select a panel to edit or delete...')
+    .addOptions(panels.map(p =>
+      new StringSelectMenuOptionBuilder()
+        .setLabel(p.name)
+        .setValue(p.id)
+        .setDescription(`${p.buttonLabel} — ${p.buttonStyle}`)
+    ));
 
-  interaction.reply({ embeds: [embed], ephemeral: true });
+  return interaction.reply({
+    embeds: [overviewEmbed],
+    components: [new ActionRowBuilder().addComponents(panelPicker)],
+    ephemeral: true,
+  });
 }
 
+// ── /ticket add ───────────────────────────────────────────────────────────────
 async function handleAdd(interaction) {
-  const openTickets = readData('openTickets.json');
-  if (!openTickets[interaction.channelId])
+  if (!readData('openTickets.json')[interaction.channelId])
     return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const user = interaction.options.getUser('user');
@@ -439,13 +406,13 @@ async function handleAdd(interaction) {
     });
     interaction.reply({ content: `✅ **${user.tag}** has been added to this ticket.` });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed to add user: ${err.message}`, ephemeral: true });
+    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }
 }
 
+// ── /ticket remove ────────────────────────────────────────────────────────────
 async function handleRemove(interaction) {
-  const openTickets = readData('openTickets.json');
-  if (!openTickets[interaction.channelId])
+  if (!readData('openTickets.json')[interaction.channelId])
     return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const user = interaction.options.getUser('user');
@@ -453,13 +420,13 @@ async function handleRemove(interaction) {
     await interaction.channel.permissionOverwrites.delete(user.id);
     interaction.reply({ content: `✅ **${user.tag}** has been removed from this ticket.` });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed to remove user: ${err.message}`, ephemeral: true });
+    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }
 }
 
+// ── /ticket rename ────────────────────────────────────────────────────────────
 async function handleRename(interaction) {
-  const openTickets = readData('openTickets.json');
-  if (!openTickets[interaction.channelId])
+  if (!readData('openTickets.json')[interaction.channelId])
     return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const newName = interaction.options.getString('name').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -467,13 +434,13 @@ async function handleRename(interaction) {
     await interaction.channel.setName(newName);
     interaction.reply({ content: `✅ Ticket renamed to **${newName}**.` });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed to rename: ${err.message}`, ephemeral: true });
+    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }
 }
 
+// ── /ticket move ──────────────────────────────────────────────────────────────
 async function handleMove(interaction) {
-  const openTickets = readData('openTickets.json');
-  if (!openTickets[interaction.channelId])
+  if (!readData('openTickets.json')[interaction.channelId])
     return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const category = interaction.options.getChannel('category');
@@ -484,10 +451,11 @@ async function handleMove(interaction) {
     await interaction.channel.setParent(category.id, { lockPermissions: false });
     interaction.reply({ content: `✅ Ticket moved to **${category.name}**.` });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed to move ticket: ${err.message}`, ephemeral: true });
+    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }
 }
 
+// ── /ticket close ─────────────────────────────────────────────────────────────
 async function handleClose(interaction, forcedReason, forcedBy) {
   const reason = forcedReason || interaction.options?.getString('reason') || 'No reason provided.';
   const by     = forcedBy || interaction.user;
@@ -497,7 +465,7 @@ async function handleClose(interaction, forcedReason, forcedBy) {
   if (!ticket)
     return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
 
-  await interaction.reply({ content: '🔒 Closing ticket in **3 seconds**...' });
+  await interaction.reply({ content: '🔒 Closing ticket in **5 seconds**...' });
 
   try {
     const user = await interaction.client.users.fetch(ticket.userId);
@@ -505,15 +473,14 @@ async function handleClose(interaction, forcedReason, forcedBy) {
       embeds: [new EmbedBuilder()
         .setColor('#ED4245').setTitle('🔒 Your Ticket Was Closed')
         .addFields(
-          { name: 'Panel',      value: ticket.panelName,                           inline: true },
-          { name: 'Closed by',  value: by.tag,                                     inline: true },
-          { name: 'Time',       value: `<t:${Math.floor(Date.now() / 1000)}:F>`,   inline: true },
-          { name: 'Reason',     value: reason },
+          { name: 'Panel',     value: ticket.panelName,                          inline: true },
+          { name: 'Closed by', value: by.tag,                                    inline: true },
+          { name: 'Time',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`,  inline: true },
+          { name: 'Reason',    value: reason },
         ).setTimestamp()],
     });
   } catch { /* DMs disabled */ }
 
-  // Ticket-specific log
   const tickets = readData('tickets.json');
   if (tickets.logChannelId) {
     const logCh = interaction.client.channels.cache.get(tickets.logChannelId);
@@ -533,8 +500,7 @@ async function handleClose(interaction, forcedReason, forcedBy) {
   }
 
   sendLog(interaction.client, {
-    action: 'Ticket Closed',
-    executor: by.tag,
+    action: 'Ticket Closed', executor: by.tag,
     target: `<@${ticket.userId}>`,
     fields: { Panel: ticket.panelName, Reason: reason },
     color: '#ED4245',
@@ -542,37 +508,65 @@ async function handleClose(interaction, forcedReason, forcedBy) {
 
   delete openTickets[interaction.channelId];
   writeData('openTickets.json', openTickets);
-  setTimeout(() => interaction.channel.delete().catch(() => {}), 3000);
+  setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
 }
 
+// ── /ticket requestclose ──────────────────────────────────────────────────────
 async function handleRequestClose(interaction) {
-  const openTickets = readData('openTickets.json');
-  if (!openTickets[interaction.channelId])
+  if (!readData('openTickets.json')[interaction.channelId])
     return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
 
   const reason = interaction.options.getString('reason') || 'No reason provided.';
 
-  const closeBtn = new ButtonBuilder()
-    .setCustomId('ticket_close_btn')
-    .setLabel('🔒 Close Ticket')
-    .setStyle(ButtonStyle.Danger);
-
-  const embed = new EmbedBuilder()
-    .setColor('#FEE75C')
-    .setTitle('📩 Close Request')
-    .setDescription(`<@${interaction.user.id}> has requested this ticket to be closed.`)
-    .addFields({ name: 'Reason', value: reason })
-    .setTimestamp();
-
   await interaction.reply({ content: '✅ Close request sent.', ephemeral: true });
   await interaction.channel.send({
-    embeds: [embed],
-    components: [new ActionRowBuilder().addComponents(closeBtn)],
+    embeds: [new EmbedBuilder()
+      .setColor('#FEE75C').setTitle('📩 Close Request')
+      .setDescription(`<@${interaction.user.id}> has requested this ticket to be closed.`)
+      .addFields({ name: 'Reason', value: reason })
+      .setTimestamp()],
+    components: [new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
+    )],
   });
 }
 
-// ── Perms handlers ────────────────────────────────────────────────────────────
+// ── /ticket logs ──────────────────────────────────────────────────────────────
+async function handleLogsSet(interaction) {
+  const channel = interaction.options.getChannel('channel');
+  const tickets = readData('tickets.json');
+  tickets.logChannelId = channel.id;
+  writeData('tickets.json', tickets);
+  interaction.reply({
+    embeds: [new EmbedBuilder()
+      .setColor('#57F287').setTitle('✅ Ticket Log Channel Set')
+      .setDescription(`All ticket events will be logged to <#${channel.id}>.`)
+      .setTimestamp()],
+    ephemeral: true,
+  });
+}
 
+async function handleLogsInfo(interaction) {
+  const tickets = readData('tickets.json');
+  interaction.reply({
+    embeds: [new EmbedBuilder()
+      .setColor('#5865F2').setTitle('📋 Ticket Log Channel')
+      .setDescription(tickets.logChannelId ? `Logs are sent to <#${tickets.logChannelId}>.` : '❌ No log channel configured.')
+      .setTimestamp()],
+    ephemeral: true,
+  });
+}
+
+async function handleLogsRemove(interaction) {
+  const tickets = readData('tickets.json');
+  if (!tickets.logChannelId)
+    return interaction.reply({ content: '❌ No log channel is currently set.', ephemeral: true });
+  tickets.logChannelId = null;
+  writeData('tickets.json', tickets);
+  interaction.reply({ content: '✅ Ticket log channel removed.', ephemeral: true });
+}
+
+// ── /ticket perms ─────────────────────────────────────────────────────────────
 async function handlePermsPing(interaction) {
   const role    = interaction.options.getRole('role');
   const tickets = readData('tickets.json');
@@ -580,7 +574,7 @@ async function handlePermsPing(interaction) {
   if (!tickets.perms.pingRoles.includes(role.id)) {
     tickets.perms.pingRoles.push(role.id);
     writeData('tickets.json', tickets);
-    interaction.reply({ content: `✅ **${role.name}** will now be pinged when a ticket is opened.`, ephemeral: true });
+    interaction.reply({ content: `✅ **${role.name}** will be pinged when a ticket opens.`, ephemeral: true });
   } else {
     interaction.reply({ content: `ℹ️ **${role.name}** is already a ping role.`, ephemeral: true });
   }
@@ -600,16 +594,10 @@ async function handlePermsView(interaction) {
 }
 
 async function handlePermsInfo(interaction) {
-  const tickets = readData('tickets.json');
-  const perms   = tickets.perms || { pingRoles: [], viewRoles: [] };
-  const guild   = interaction.guild;
-
-  const pingList = perms.pingRoles.length > 0
-    ? perms.pingRoles.map(id => `<@&${id}>`).join(', ')
-    : 'None';
-  const viewList = perms.viewRoles.length > 0
-    ? perms.viewRoles.map(id => `<@&${id}>`).join(', ')
-    : 'None';
+  const tickets  = readData('tickets.json');
+  const perms    = tickets.perms || { pingRoles: [], viewRoles: [] };
+  const pingList = perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None';
+  const viewList = perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None';
 
   interaction.reply({
     embeds: [new EmbedBuilder()
@@ -626,7 +614,7 @@ async function handlePermsClear(interaction) {
   const tickets = readData('tickets.json');
   tickets.perms = { pingRoles: [], viewRoles: [] };
   writeData('tickets.json', tickets);
-  interaction.reply({ content: '✅ All ticket ping and view role settings have been cleared.', ephemeral: true });
+  interaction.reply({ content: '✅ All ticket ping and view role settings cleared.', ephemeral: true });
 }
 
 module.exports.handleClose    = handleClose;

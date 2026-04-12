@@ -261,7 +261,7 @@ async function handleCloseModal(interaction) {
 
   delete openTickets[interaction.channelId];
   writeData('openTickets.json', openTickets);
-  setTimeout(() => interaction.channel.delete().catch(() => {}), 3000);
+  setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
 }
 
 module.exports = {
