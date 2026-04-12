@@ -5,12 +5,17 @@ module.exports = {
   name: 'guildMemberRemove',
   async execute(member) {
     console.log(`[guildMemberRemove] fired for ${member.user?.tag}`);
-    const data = readData('leave.json');
-    const defaultMsg = 'Hey {user}, schade dass du unseren Server verlassen hast. Wir hoffen dich bald wiederzusehen!';
-    const messageText = data.message || defaultMsg;
 
-    // Check audit log immediately — for bans, GuildBanAdd fires before GuildMemberRemove
-    // so the entry is already available. For kicks it's also nearly instant.
+    // Open DM channel immediately while still in mutual guild
+    let dmChannel;
+    try {
+      dmChannel = await member.user.createDM();
+    } catch (err) {
+      console.log(`[guildMemberRemove] Cannot open DM for ${member.user?.tag}: ${err.message}`);
+      return;
+    }
+
+    // Check audit log — skip if kicked or banned
     try {
       const [kickLogs, banLogs] = await Promise.all([
         member.guild.fetchAuditLogs({ type: AuditLogEvent.MemberKick, limit: 3 }),
@@ -21,12 +26,17 @@ module.exports = {
         e.target?.id === member.user.id &&
         Date.now() - e.createdTimestamp < 15000
       );
-      if (wasForced) return;
+      if (wasForced) {
+        console.log(`[guildMemberRemove] Skipped DM — was kicked/banned`);
+        return;
+      }
     } catch (err) {
       console.error('[guildMemberRemove] Audit log check failed:', err.message);
     }
 
-    const dmMessage = messageText.replace('{user}', member.user.username);
+    const data = readData('leave.json');
+    const defaultMsg = 'Hey {user}, schade dass du unseren Server verlassen hast. Wir hoffen dich bald wiederzusehen!';
+    const dmMessage = (data.message || defaultMsg).replace('{user}', member.user.username);
 
     const embed = new EmbedBuilder()
       .setColor('#ED4245')
@@ -49,7 +59,7 @@ module.exports = {
     );
 
     try {
-      await member.user.send({ embeds: [embed], components: [row] });
+      await dmChannel.send({ embeds: [embed], components: [row] });
       console.log(`[guildMemberRemove] DM sent to ${member.user.tag}`);
     } catch (err) {
       console.log(`[guildMemberRemove] Could not DM ${member.user.tag}: ${err.message}`);
