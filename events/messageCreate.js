@@ -3,6 +3,9 @@ const { readData, writeData, formatTime } = require('../utils');
 const config = require('../config.json');
 const { setStick } = require('../commands/admin/stick');
 
+// Per-channel lock to prevent double-posting sticky on rapid messages
+const stickyLocks = new Set();
+
 module.exports = {
   name: 'messageCreate',
   async execute(message, client) {
@@ -63,11 +66,14 @@ module.exports = {
       }
     }
 
-    // --- Sticky message: repost at bottom ---
-    const sticky = readData('sticky.json');
+    // --- Sticky message: always keep at bottom, no duplicates ---
+    const sticky     = readData('sticky.json');
     const stickyData = sticky[message.channel.id];
-    if (stickyData && message.id !== stickyData.messageId) {
-      setStick(message.channel, stickyData.text, null).catch(() => {});
+    if (stickyData && message.id !== stickyData.messageId && !stickyLocks.has(message.channel.id)) {
+      stickyLocks.add(message.channel.id);
+      setStick(message.channel, stickyData.text, null)
+        .catch(() => {})
+        .finally(() => stickyLocks.delete(message.channel.id));
     }
 
     // --- Prefix command handling ---
