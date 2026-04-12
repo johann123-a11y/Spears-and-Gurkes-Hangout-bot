@@ -1,8 +1,13 @@
 const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 require('dotenv').config();
 const connectDB = require('./db');
+
+// Keep-alive HTTP server for Railway health checks
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => res.end('OK')).listen(PORT);
 
 const client = new Client({
   intents: [
