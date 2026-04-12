@@ -87,8 +87,8 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
       .setThumbnail(targetMember.user.displayAvatarURL())
       .setTimestamp();
 
-    if (channel) channel.send({ embeds: [embed] });
-    else if (interaction) await interaction.editReply({ embeds: [embed] });
+    if (channel) channel.send({ content: `<@${targetMember.user.id}>`, embeds: [embed], allowedMentions: { users: [targetMember.user.id] } });
+    else if (interaction) await interaction.editReply({ content: `<@${targetMember.user.id}>`, embeds: [embed], allowedMentions: { users: [targetMember.user.id] } });
 
     // Auto-demote at 3 strikes
     if (count >= 3) {
