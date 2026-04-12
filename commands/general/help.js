@@ -67,11 +67,12 @@ function buildEmbed() {
         value: [
           '`?setrole list` — Shows configured roles (interactive)',
           '`?setrole set {slot} @role` — Sets a role slot',
-          '`?perms` — All command permissions (interactive)',
+          '`?perms` — Configurable command permissions (interactive)',
           '`?logs set #channel` — Sets the main log channel',
           '`?logs disable` — Disables logging',
           '`?stick {message}` — Sticks a message to a channel',
           '`?stick remove` — Removes the sticky message',
+          '*All setup & admin commands are locked to Administrator.*',
         ].join('\n'),
       },
       {

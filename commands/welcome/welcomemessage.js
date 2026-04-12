@@ -14,7 +14,7 @@ module.exports = {
     ),
 
   async execute(message, args) {
-    if (!checkPerm(message.member, 'welcomemessage'))
+    if (!message.member.permissions.has("Administrator"))
       return message.reply('❌ Only **Admins** can use this command.');
 
     const msg = args.join(' ');
@@ -24,7 +24,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!checkPerm(interaction.member, 'welcomemessage'))
+    if (!interaction.member.permissions.has("Administrator"))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     respond(interaction.options.getString('message'), null, interaction);

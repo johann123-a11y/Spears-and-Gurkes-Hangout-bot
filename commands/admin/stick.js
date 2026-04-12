@@ -18,7 +18,7 @@ module.exports = {
     ),
 
   async execute(message, args) {
-    if (!checkPerm(message.member, 'stick'))
+    if (!message.member.permissions.has("Administrator"))
       return message.reply('❌ Only **Admins** can use this command.');
 
     const sub = args[0]?.toLowerCase();
@@ -34,7 +34,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!checkPerm(interaction.member, 'stick'))
+    if (!interaction.member.permissions.has("Administrator"))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();

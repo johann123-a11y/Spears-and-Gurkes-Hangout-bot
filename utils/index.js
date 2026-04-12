@@ -75,29 +75,17 @@ function hasPermission(member, level) {
 }
 
 // --- Dynamic permission system ---
+// Only commands whose permission level can be configured are listed here.
+// All admin/setup commands are hardcoded to require Administrator in the command itself.
 const COMMAND_DEFAULTS = {
-  // Moderation
+  // Moderation (configurable)
   mute: 'jrHelper', unmute: 'jrHelper',
-  ban: 'admin', kick: 'admin',
-  clear: 'mod', purge: 'admin',
-  // Strikes
+  clear: 'mod',
+  // Strikes (configurable)
   strike: 'srMod', strikes: 'srMod',
-  // Staff management
-  loa: 'admin', checkloa: 'admin',
-  demote: 'admin', promote: 'admin',
-  staffkick: 'admin', pingperm: 'admin',
-  // Setup
-  setrole: 'admin', logs: 'admin', perms: 'admin',
-  stick: 'admin',
-  // Welcome
-  welcome: 'admin', welcomechannel: 'admin', welcomemessage: 'admin',
-  // Tickets
-  ticket: 'admin', tickets: 'admin',
-  // Applications
-  application: 'admin',
-  // Giveaways
+  // Giveaways (configurable)
   gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam',
-  // General
+  // General (configurable)
   afk: 'everyone', help: 'everyone',
 };
 

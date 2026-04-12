@@ -10,7 +10,7 @@ module.exports = {
     .addUserOption(o => o.setName('user').setDescription('Staff member').setRequired(true)),
 
   async execute(message, args) {
-    if (!checkPerm(message.member, 'checkloa'))
+    if (!message.member.permissions.has("Administrator"))
       return message.reply('❌ Only **Admins** can use this command.');
 
     const target = message.mentions.members.first();
@@ -20,7 +20,7 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!checkPerm(interaction.member, 'checkloa'))
+    if (!interaction.member.permissions.has("Administrator"))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const user   = interaction.options.getUser('user');
