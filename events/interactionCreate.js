@@ -474,10 +474,19 @@ module.exports = {
         const result   = results[resultId];
         if (!result) return interaction.reply({ content: '❌ Application not found.', ephemeral: true });
 
-        result.status      = 'accepted';
-        result.reviewedBy  = interaction.user.tag;
+        result.status       = 'accepted';
+        result.reviewedBy   = interaction.user.tag;
         result.reviewReason = reason;
         writeData('applicationResults.json', results);
+
+        const resultEmbed = new EmbedBuilder()
+          .setColor('#57F287').setTitle('✅ Application Accepted')
+          .addFields(
+            { name: '👤 Applicant',   value: result.username,         inline: true },
+            { name: '📋 For',         value: result.forWhat,          inline: true },
+            { name: '✅ Accepted by', value: interaction.user.tag,    inline: true },
+            { name: 'Reason',         value: reason },
+          ).setTimestamp();
 
         // DM the applicant
         try {
@@ -486,24 +495,19 @@ module.exports = {
             embeds: [new EmbedBuilder()
               .setColor('#57F287').setTitle('✅ Application Accepted!')
               .setDescription(
-                `You got **accepted** as **${result.forWhat}** by <@${interaction.user.id}>!\n\n` +
-                `**Reason:** ${reason}`
-              )
-              .setTimestamp()],
+                `You got **accepted** as **${result.forWhat}** by <@${interaction.user.id}>!\n\n**Reason:** ${reason}`
+              ).setTimestamp()],
           });
         } catch { /* DMs closed */ }
 
-        return interaction.update({
-          embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('✅ Application Accepted')
-            .addFields(
-              { name: 'Applicant', value: result.username,          inline: true },
-              { name: 'For',       value: result.forWhat,           inline: true },
-              { name: 'Accepted by', value: interaction.user.tag,   inline: true },
-              { name: 'Reason',    value: reason },
-            ).setTimestamp()],
-          components: [],
-        });
+        // Post to accepted channel
+        const apps = readData('applications.json');
+        if (apps.channels?.accepted) {
+          const ch = interaction.client.channels.cache.get(apps.channels.accepted);
+          if (ch) await ch.send({ embeds: [resultEmbed] }).catch(() => {});
+        }
+
+        return interaction.update({ embeds: [resultEmbed], components: [] });
       }
 
       // ── Application: deny modal ───────────────────────────────────────────
@@ -519,6 +523,15 @@ module.exports = {
         result.reviewReason = reason;
         writeData('applicationResults.json', results);
 
+        const resultEmbed = new EmbedBuilder()
+          .setColor('#ED4245').setTitle('❌ Application Denied')
+          .addFields(
+            { name: '👤 Applicant', value: result.username,       inline: true },
+            { name: '📋 For',       value: result.forWhat,        inline: true },
+            { name: '❌ Denied by', value: interaction.user.tag,  inline: true },
+            { name: 'Reason',       value: reason },
+          ).setTimestamp();
+
         // DM the applicant
         try {
           const user = await interaction.client.users.fetch(result.userId);
@@ -526,24 +539,19 @@ module.exports = {
             embeds: [new EmbedBuilder()
               .setColor('#ED4245').setTitle('❌ Application Denied')
               .setDescription(
-                `You got **denied** as **${result.forWhat}** by <@${interaction.user.id}>.\n\n` +
-                `**Reason:** ${reason}`
-              )
-              .setTimestamp()],
+                `You got **denied** as **${result.forWhat}** by <@${interaction.user.id}>.\n\n**Reason:** ${reason}`
+              ).setTimestamp()],
           });
         } catch { /* DMs closed */ }
 
-        return interaction.update({
-          embeds: [new EmbedBuilder()
-            .setColor('#ED4245').setTitle('❌ Application Denied')
-            .addFields(
-              { name: 'Applicant', value: result.username,        inline: true },
-              { name: 'For',       value: result.forWhat,         inline: true },
-              { name: 'Denied by', value: interaction.user.tag,   inline: true },
-              { name: 'Reason',    value: reason },
-            ).setTimestamp()],
-          components: [],
-        });
+        // Post to denied channel
+        const apps = readData('applications.json');
+        if (apps.channels?.denied) {
+          const ch = interaction.client.channels.cache.get(apps.channels.denied);
+          if (ch) await ch.send({ embeds: [resultEmbed] }).catch(() => {});
+        }
+
+        return interaction.update({ embeds: [resultEmbed], components: [] });
       }
 
       // Ticket setup modal

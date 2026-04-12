@@ -1,7 +1,7 @@
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const { readData, writeData } = require('./index');
 
-// In-memory sessions: userId → { panelId, panelName, forWhat, questions, answers, currentIndex }
+// In-memory sessions: userId → { panelId, panelName, forWhat, questions, answers, currentIndex, dmChannelId }
 const sessions = new Map();
 
 // ── Start a DM application session ───────────────────────────────────────────
@@ -31,7 +31,7 @@ async function startApplication(interaction, panelId) {
         .setTitle(`📋 ${panel.name}`)
         .setDescription(
           `👋 Hey **${interaction.user.username}**! You're applying for **${panel.forWhat}**.\n\n` +
-          `I'll ask you **${panel.questions.length}** question(s). Simply reply here in DMs!\n\n` +
+          `I'll ask you **${panel.questions.length}** question(s) one by one. Simply reply here!\n\n` +
           `Type \`cancel\` at any time to cancel your application.`
         )
         .setFooter({ text: `Question 1 of ${panel.questions.length} coming up...` })
@@ -44,7 +44,6 @@ async function startApplication(interaction, panelId) {
     });
   }
 
-  // Set session
   sessions.set(interaction.user.id, {
     panelId,
     panelName: panel.name,
@@ -53,11 +52,11 @@ async function startApplication(interaction, panelId) {
     answers:   [],
     currentIndex: 0,
     dmChannelId: dmChannel.id,
+    guildId: interaction.guildId,
+    client: interaction.client,
   });
 
   await interaction.reply({ content: '✅ Check your DMs! I\'ve sent you the application questions.', ephemeral: true });
-
-  // Send first question
   await sendQuestion(dmChannel, sessions.get(interaction.user.id));
 }
 
@@ -71,7 +70,7 @@ async function sendQuestion(dmChannel, session) {
     .setColor('#FEE75C')
     .setTitle(`Question ${num}/${total}`)
     .setDescription(q.text)
-    .setFooter({ text: q.type === 'yesno' ? 'Reply with: yes or no' : 'Type your answer and send it' })
+    .setFooter({ text: q.type === 'yesno' ? 'Click Yes or No below' : 'Type your answer and send it' })
     .setTimestamp();
 
   if (q.type === 'yesno') {
@@ -95,7 +94,6 @@ async function handleDMAnswer(message) {
   if (q.type === 'yesno') return; // handled by button
 
   const answer = message.content.trim();
-
   if (answer.toLowerCase() === 'cancel') {
     sessions.delete(message.author.id);
     return message.channel.send({ content: '❌ Application cancelled.' });
@@ -120,7 +118,6 @@ async function processAnswer(user, dmChannel, session, answer) {
   session.currentIndex++;
 
   if (session.currentIndex >= session.questions.length) {
-    // All questions answered → save result
     sessions.delete(user.id);
     await finalizeApplication(user, dmChannel, session);
   } else {
@@ -128,10 +125,10 @@ async function processAnswer(user, dmChannel, session, answer) {
   }
 }
 
-// ── Save result and confirm to applicant ─────────────────────────────────────
+// ── Save result, confirm to applicant, post to pending channel ────────────────
 async function finalizeApplication(user, dmChannel, session) {
-  const results   = readData('applicationResults.json');
-  const resultId  = `${user.id}_${session.panelId}_${Date.now()}`;
+  const results  = readData('applicationResults.json');
+  const resultId = `${user.id}_${session.panelId}_${Date.now()}`;
 
   results[resultId] = {
     userId:      user.id,
@@ -145,17 +142,56 @@ async function finalizeApplication(user, dmChannel, session) {
   };
   writeData('applicationResults.json', results);
 
+  // Confirm to applicant
+  await dmChannel.send({
+    embeds: [new EmbedBuilder()
+      .setColor('#57F287')
+      .setTitle('✅ Application Submitted!')
+      .setDescription(
+        `Your application for **${session.forWhat}** has been submitted.\n` +
+        `You will be notified once it has been reviewed. Thank you!`
+      )
+      .addFields(session.answers.map(a => ({ name: a.question, value: a.answer })))
+      .setTimestamp()],
+  }).catch(() => {});
+
+  // Post to pending channel
+  const apps          = readData('applications.json');
+  const pendingChId   = apps.channels?.pending;
+  const pingTarget    = apps.pingTarget;
+
+  if (!pendingChId || !session.client) return;
+  const pendingChannel = session.client.channels.cache.get(pendingChId);
+  if (!pendingChannel) return;
+
   const embed = new EmbedBuilder()
-    .setColor('#57F287')
-    .setTitle('✅ Application Submitted!')
-    .setDescription(
-      `Your application for **${session.forWhat}** has been submitted.\n` +
-      `You will be notified once it has been reviewed. Thank you!`
+    .setColor('#FEE75C')
+    .setTitle('📋 New Application — Pending')
+    .addFields(
+      { name: '👤 Applicant',   value: `<@${user.id}> (${user.tag})`,                          inline: true },
+      { name: '📋 Applied for', value: session.forWhat,                                         inline: true },
+      { name: '🕐 Submitted',   value: `<t:${Math.floor(Date.now() / 1000)}:F>`,               inline: true },
+      ...session.answers.map(a => ({ name: a.question, value: a.answer })),
     )
-    .addFields(session.answers.map(a => ({ name: a.question, value: a.answer })))
+    .setThumbnail(user.displayAvatarURL())
+    .setFooter({ text: `Result ID: ${resultId}` })
     .setTimestamp();
 
-  await dmChannel.send({ embeds: [embed] }).catch(() => {});
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('✅ Accept').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('❌ Deny').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId(`app_warnhistory:${user.id}`).setLabel('⚠️ Warn History').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`app_openticket:${user.id}`).setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary),
+  );
+
+  const pingContent = pingTarget ? `<@${pingTarget}>` : null;
+
+  await pendingChannel.send({
+    content: pingContent,
+    embeds:  [embed],
+    components: [row],
+    allowedMentions: pingTarget ? { users: [pingTarget], roles: [pingTarget] } : {},
+  }).catch(() => {});
 }
 
 module.exports = { startApplication, handleDMAnswer, handleDMButton };
