@@ -1,31 +1,10 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AuditLogEvent } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { readData } = require('../utils');
 
 module.exports = {
   name: 'guildMemberRemove',
   async execute(member) {
-    console.log(`[guildMemberRemove] fired for ${member.user?.tag}`);
-
     if (!member.user) return;
-
-    // Check audit log — skip if kicked or banned
-    try {
-      const [kickLogs, banLogs] = await Promise.all([
-        member.guild.fetchAuditLogs({ type: AuditLogEvent.MemberKick, limit: 3 }),
-        member.guild.fetchAuditLogs({ type: AuditLogEvent.MemberBanAdd, limit: 3 }),
-      ]);
-      const allEntries = [...kickLogs.entries.values(), ...banLogs.entries.values()];
-      const wasForced = allEntries.find(e =>
-        e.target?.id === member.user.id &&
-        Date.now() - e.createdTimestamp < 15000
-      );
-      if (wasForced) {
-        console.log(`[guildMemberRemove] Skipped — was kicked/banned`);
-        return;
-      }
-    } catch (err) {
-      console.error('[guildMemberRemove] Audit log check failed:', err.message);
-    }
 
     const data = readData('leave.json');
     const defaultMsg = 'Hey {user}, schade dass du unseren Server verlassen hast. Wir hoffen dich bald wiederzusehen!';
@@ -51,11 +30,6 @@ module.exports = {
         .setEmoji('💬'),
     );
 
-    try {
-      await member.user.send({ embeds: [embed], components: [row] });
-      console.log(`[guildMemberRemove] DM sent to ${member.user.tag}`);
-    } catch (err) {
-      console.log(`[guildMemberRemove] Could not DM ${member.user.tag}: ${err.message}`);
-    }
+    member.user.send({ embeds: [embed], components: [row] }).catch(() => {});
   },
 };
