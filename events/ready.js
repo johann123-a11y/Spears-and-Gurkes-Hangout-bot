@@ -14,15 +14,13 @@ module.exports = {
     setInterval(() => checkTimers(client), 30_000);
 
     // Pre-cache DM channels for all guild members so leave DMs work
-    client.dmChannels = new Map();
     try {
       const guild = await client.guilds.fetch(config.guildId);
       const members = await guild.members.fetch();
       let count = 0;
       for (const [, member] of members) {
         if (member.user.bot) continue;
-        const dm = await member.user.createDM().catch(() => null);
-        if (dm) client.dmChannels.set(member.user.id, dm.id);
+        member.user.createDM().catch(() => {});
         count++;
         if (count % 20 === 0) await new Promise(r => setTimeout(r, 1000));
       }

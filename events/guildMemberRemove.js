@@ -30,14 +30,7 @@ module.exports = {
         .setEmoji('💬'),
     );
 
-    // Try cached DM channel first, fall back to user.send()
-    const dmChannelId = member.client.dmChannels?.get(member.user.id);
-    const dmChannel = dmChannelId ? member.client.channels.cache.get(dmChannelId) : null;
-    const sendFn = dmChannel
-      ? dmChannel.send({ embeds: [embed], components: [row] })
-      : member.user.send({ embeds: [embed], components: [row] });
-
-    sendFn
+    member.user.send({ embeds: [embed], components: [row] })
       .then(() => console.log(`[leave] DM sent to ${member.user.tag}`))
       .catch(err => console.error(`[leave] DM FAILED for ${member.user.tag}: ${err.message}`));
   },

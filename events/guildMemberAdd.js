@@ -4,9 +4,8 @@ const { readData } = require('../utils');
 module.exports = {
   name: 'guildMemberAdd',
   async execute(member, client) {
-    // Always pre-open DM channel and cache ID so leave DMs work later
-    const dm = await member.user.createDM().catch(() => null);
-    if (dm && client.dmChannels) client.dmChannels.set(member.user.id, dm.id);
+    // Always pre-cache DM channel so leave DM works later
+    member.user.createDM().catch(() => {});
 
     const data = readData('welcome.json');
     if (!data.enabled || !data.channel) return;
@@ -27,8 +26,5 @@ module.exports = {
       .setTimestamp();
 
     channel.send({ embeds: [embed] }).catch(() => {});
-
-    // Pre-open DM channel so it exists when they leave
-    member.user.createDM().catch(() => {});
   },
 };
