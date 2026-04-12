@@ -10,6 +10,8 @@ const {
   handleCloseModal,
 } = require('../utils/ticketHandler');
 const { buildDescEmbed, sendTicketOverview } = require('../commands/tickets/ticket');
+const { startApplication, handleDMButton } = require('../utils/applicationDM');
+const { getAppId } = require('../commands/applications/application');
 const {
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder,
@@ -164,6 +166,126 @@ module.exports = {
         return interaction.update({ content: '✅ All ticket ping and view role settings cleared.', embeds: [], components: [] });
       }
 
+      // ── Application: yes/no DM buttons ────────────────────────────────────
+      if (interaction.customId.startsWith('app_answer_yes:'))
+        return handleDMButton(interaction, 'Yes');
+      if (interaction.customId.startsWith('app_answer_no:'))
+        return handleDMButton(interaction, 'No');
+
+      // ── Application: question builder buttons ──────────────────────────────
+      if (interaction.customId.startsWith('app_addq_yesno:')) {
+        const panelId = interaction.customId.split(':')[1];
+        const modal   = new ModalBuilder()
+          .setCustomId(`app_addq_modal:${panelId}:yesno`)
+          .setTitle('Add Yes/No Question')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('question').setLabel('Question text').setStyle(TextInputStyle.Short).setRequired(true)
+          ));
+        return interaction.showModal(modal);
+      }
+
+      if (interaction.customId.startsWith('app_addq_text:')) {
+        const panelId = interaction.customId.split(':')[1];
+        const modal   = new ModalBuilder()
+          .setCustomId(`app_addq_modal:${panelId}:text`)
+          .setTitle('Add Text Answer Question')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('question').setLabel('Question text').setStyle(TextInputStyle.Short).setRequired(true)
+          ));
+        return interaction.showModal(modal);
+      }
+
+      if (interaction.customId.startsWith('app_addq_done:')) {
+        return interaction.update({ content: '✅ Questions saved! Use `/application group` and `/application open` to publish.', embeds: [], components: [] });
+      }
+
+      // ── Application: action buttons on result ──────────────────────────────
+      if (interaction.customId.startsWith('app_accept:')) {
+        const resultId = interaction.customId.split(':')[1];
+        const modal    = new ModalBuilder()
+          .setCustomId(`app_accept_modal:${resultId}`)
+          .setTitle('Accept Application')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for acceptance').setStyle(TextInputStyle.Paragraph).setRequired(true)
+          ));
+        return interaction.showModal(modal);
+      }
+
+      if (interaction.customId.startsWith('app_deny:')) {
+        const resultId = interaction.customId.split(':')[1];
+        const modal    = new ModalBuilder()
+          .setCustomId(`app_deny_modal:${resultId}`)
+          .setTitle('Deny Application')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for denial').setStyle(TextInputStyle.Paragraph).setRequired(true)
+          ));
+        return interaction.showModal(modal);
+      }
+
+      if (interaction.customId.startsWith('app_warnhistory:')) {
+        const userId = interaction.customId.split(':')[1];
+        await interaction.deferReply({ ephemeral: true });
+        try {
+          const [bans, timeouts, kicks] = await Promise.all([
+            interaction.guild.bans.fetch().catch(() => new Map()),
+            interaction.guild.fetchAuditLogs({ type: 24, limit: 10 }).catch(() => null), // MEMBER_UPDATE (timeout)
+            interaction.guild.fetchAuditLogs({ type: 20, limit: 10 }).catch(() => null), // MEMBER_KICK
+          ]);
+
+          const banEntry     = bans.get(userId);
+          const timeoutLogs  = timeouts?.entries.filter(e => e.target?.id === userId) || [];
+          const kickLogs     = kicks?.entries.filter(e => e.target?.id === userId) || [];
+
+          const fields = [];
+          if (banEntry) fields.push({ name: '🔨 Banned', value: banEntry.reason || 'No reason', inline: false });
+          timeoutLogs.forEach(e => fields.push({ name: `🔇 Timeout by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
+          kickLogs.forEach(e => fields.push({ name: `👢 Kicked by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
+
+          const embed = new EmbedBuilder()
+            .setColor(fields.length > 0 ? '#FF6B35' : '#57F287')
+            .setTitle(`⚠️ Warn/Punishment History — <@${userId}>`)
+            .setDescription(fields.length === 0 ? '✅ No recorded punishments found.' : null)
+            .addFields(fields)
+            .setFooter({ text: 'Based on Discord audit logs (last 10 entries each)' })
+            .setTimestamp();
+
+          return interaction.editReply({ embeds: [embed] });
+        } catch (err) {
+          return interaction.editReply({ content: `❌ Failed to fetch history: ${err.message}` });
+        }
+      }
+
+      if (interaction.customId.startsWith('app_openticket:')) {
+        const userId = interaction.customId.split(':')[1];
+        const tickets = readData('tickets.json');
+        const panels  = Object.values(tickets.panels || {});
+        if (panels.length === 0)
+          return interaction.reply({ content: '❌ No ticket panels configured. Use `/ticket setup` first.', ephemeral: true });
+
+        // Open a ticket for the applicant using the first ticket panel
+        const panel = panels[0];
+        const { createTicketChannel } = require('../utils/ticketHandler');
+
+        // Fetch the applicant as a guild member
+        const member = await interaction.guild.members.fetch(userId).catch(() => null);
+        if (!member)
+          return interaction.reply({ content: '❌ Could not find this user in the server.', ephemeral: true });
+
+        // Create a fake interaction-like object so we can reuse createTicketChannel
+        const fakeInteraction = {
+          guild:       interaction.guild,
+          user:        member.user,
+          client:      interaction.client,
+          channelId:   interaction.channelId,
+          channel:     interaction.channel,
+          editReply:   (d) => interaction.editReply(d),
+        };
+
+        await interaction.deferReply({ ephemeral: true });
+        await createTicketChannel(fakeInteraction, panel, []);
+        return;
+      }
+
       // ── Ticket logs buttons ────────────────────────────────────────────────
       if (interaction.customId === 'ticket_logs_remove_btn') {
         const tickets = readData('tickets.json');
@@ -275,6 +397,153 @@ module.exports = {
         await interaction.reply({ content: '✅ Giveaway started!', ephemeral: true });
         await createGiveaway(interaction.channel, ms, winners, prize, description, interaction.user.id);
         return;
+      }
+
+      // ── Application: setup modal ───────────────────────────────────────────
+      if (interaction.customId === 'app_setup_modal') {
+        const name    = interaction.fields.getTextInputValue('app_name').trim();
+        const forWhat = interaction.fields.getTextInputValue('app_for').trim();
+        const apps    = readData('applications.json');
+        if (!apps.panels) apps.panels = {};
+        const panelId = getAppId(name);
+
+        apps.panels[panelId] = { id: panelId, name, forWhat, questions: [] };
+        writeData('applications.json', apps);
+
+        return interaction.reply({
+          embeds: [new EmbedBuilder()
+            .setColor('#57F287').setTitle('✅ Application Created')
+            .addFields(
+              { name: 'Name',     value: name,    inline: true },
+              { name: 'For',      value: forWhat, inline: true },
+              { name: 'Questions', value: 'None yet — add them below!' },
+            ).setTimestamp()],
+          components: [new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
+          )],
+          ephemeral: true,
+        });
+      }
+
+      // ── Application: add question modal ───────────────────────────────────
+      if (interaction.customId.startsWith('app_addq_modal:')) {
+        const [, panelId, type] = interaction.customId.split(':');
+        const questionText      = interaction.fields.getTextInputValue('question').trim();
+        const apps              = readData('applications.json');
+        const panel             = apps.panels?.[panelId];
+        if (!panel) return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
+
+        panel.questions.push({ text: questionText, type });
+        writeData('applications.json', apps);
+
+        const qList = panel.questions.map((q, i) => `${i + 1}. [${q.type === 'yesno' ? 'Yes/No' : 'Text'}] ${q.text}`).join('\n');
+
+        return interaction.reply({
+          embeds: [new EmbedBuilder()
+            .setColor('#57F287').setTitle(`📋 ${panel.name} — Questions`)
+            .addFields({ name: `${panel.questions.length} Question(s)`, value: qList })
+            .setFooter({ text: 'Keep adding or click Done when finished' })
+            .setTimestamp()],
+          components: [new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
+          )],
+          ephemeral: true,
+        });
+      }
+
+      // ── Application: description modal ────────────────────────────────────
+      if (interaction.customId === 'app_description_modal') {
+        const title  = interaction.fields.getTextInputValue('app_desc_title');
+        const text   = interaction.fields.getTextInputValue('app_desc_text')   || null;
+        const footer = interaction.fields.getTextInputValue('app_desc_footer') || null;
+        const apps   = readData('applications.json');
+        apps.description = { title, text, footer };
+        writeData('applications.json', apps);
+        return interaction.reply({ content: '✅ Description saved! Use `/application open` to send the panel.', ephemeral: true });
+      }
+
+      // ── Application: accept modal ─────────────────────────────────────────
+      if (interaction.customId.startsWith('app_accept_modal:')) {
+        const resultId = interaction.customId.split(':')[1];
+        const reason   = interaction.fields.getTextInputValue('reason');
+        const results  = readData('applicationResults.json');
+        const result   = results[resultId];
+        if (!result) return interaction.reply({ content: '❌ Application not found.', ephemeral: true });
+
+        result.status      = 'accepted';
+        result.reviewedBy  = interaction.user.tag;
+        result.reviewReason = reason;
+        writeData('applicationResults.json', results);
+
+        // DM the applicant
+        try {
+          const user = await interaction.client.users.fetch(result.userId);
+          await user.send({
+            embeds: [new EmbedBuilder()
+              .setColor('#57F287').setTitle('✅ Application Accepted!')
+              .setDescription(
+                `You got **accepted** as **${result.forWhat}** by <@${interaction.user.id}>!\n\n` +
+                `**Reason:** ${reason}`
+              )
+              .setTimestamp()],
+          });
+        } catch { /* DMs closed */ }
+
+        return interaction.update({
+          embeds: [new EmbedBuilder()
+            .setColor('#57F287').setTitle('✅ Application Accepted')
+            .addFields(
+              { name: 'Applicant', value: result.username,          inline: true },
+              { name: 'For',       value: result.forWhat,           inline: true },
+              { name: 'Accepted by', value: interaction.user.tag,   inline: true },
+              { name: 'Reason',    value: reason },
+            ).setTimestamp()],
+          components: [],
+        });
+      }
+
+      // ── Application: deny modal ───────────────────────────────────────────
+      if (interaction.customId.startsWith('app_deny_modal:')) {
+        const resultId = interaction.customId.split(':')[1];
+        const reason   = interaction.fields.getTextInputValue('reason');
+        const results  = readData('applicationResults.json');
+        const result   = results[resultId];
+        if (!result) return interaction.reply({ content: '❌ Application not found.', ephemeral: true });
+
+        result.status       = 'denied';
+        result.reviewedBy   = interaction.user.tag;
+        result.reviewReason = reason;
+        writeData('applicationResults.json', results);
+
+        // DM the applicant
+        try {
+          const user = await interaction.client.users.fetch(result.userId);
+          await user.send({
+            embeds: [new EmbedBuilder()
+              .setColor('#ED4245').setTitle('❌ Application Denied')
+              .setDescription(
+                `You got **denied** as **${result.forWhat}** by <@${interaction.user.id}>.\n\n` +
+                `**Reason:** ${reason}`
+              )
+              .setTimestamp()],
+          });
+        } catch { /* DMs closed */ }
+
+        return interaction.update({
+          embeds: [new EmbedBuilder()
+            .setColor('#ED4245').setTitle('❌ Application Denied')
+            .addFields(
+              { name: 'Applicant', value: result.username,        inline: true },
+              { name: 'For',       value: result.forWhat,         inline: true },
+              { name: 'Denied by', value: interaction.user.tag,   inline: true },
+              { name: 'Reason',    value: reason },
+            ).setTimestamp()],
+          components: [],
+        });
       }
 
       // Ticket setup modal
@@ -497,6 +766,58 @@ module.exports = {
 
     // ── String Select Menus ───────────────────────────────────────────────────
     if (interaction.isStringSelectMenu()) {
+
+      // ── Application: user selects which app to apply for ──────────────────
+      if (interaction.customId === 'app_apply_select') {
+        const panelId = interaction.values[0];
+        return startApplication(interaction, panelId);
+      }
+
+      // ── Application: group select ──────────────────────────────────────────
+      if (interaction.customId === 'app_group_select') {
+        const panelIds = interaction.values;
+        const apps     = readData('applications.json');
+        if (!apps.group) apps.group = {};
+        apps.group.enabled  = true;
+        apps.group.panelIds = panelIds;
+        writeData('applications.json', apps);
+        const names = panelIds.map(id => apps.panels?.[id]?.name || id).join(', ');
+        return interaction.update({ content: `✅ Grouped **${panelIds.length}** application(s): ${names}\nNow use \`/application description\` and \`/application open\`.`, components: [] });
+      }
+
+      // ── Application: result picker ─────────────────────────────────────────
+      if (interaction.customId === 'app_result_picker') {
+        const resultId = interaction.values[0];
+        const results  = readData('applicationResults.json');
+        const result   = results[resultId];
+        if (!result) return interaction.update({ content: '❌ Application not found.', embeds: [], components: [] });
+
+        const embed = new EmbedBuilder()
+          .setColor('#5865F2')
+          .setTitle(`📋 Application — ${result.username}`)
+          .addFields(
+            { name: '👤 Applicant', value: `<@${result.userId}>`,                              inline: true },
+            { name: '📋 Applied for', value: result.forWhat,                                   inline: true },
+            { name: '🕐 Submitted',   value: `<t:${Math.floor(new Date(result.submittedAt) / 1000)}:F>`, inline: true },
+            ...result.answers.map(a => ({ name: a.question, value: a.answer })),
+          )
+          .setThumbnail(`https://cdn.discordapp.com/embed/avatars/0.png`)
+          .setTimestamp();
+
+        try {
+          const user = await interaction.client.users.fetch(result.userId);
+          embed.setThumbnail(user.displayAvatarURL());
+        } catch {}
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('✅ Accept with Reason').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('❌ Deny with Reason').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId(`app_warnhistory:${result.userId}`).setLabel('⚠️ Warn History').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_openticket:${result.userId}`).setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary),
+        );
+
+        return interaction.update({ embeds: [embed], components: [row] });
+      }
 
       // ticket info panel picker (from /ticket info overview)
       if (interaction.customId === 'ticket_info_panel_picker') {

@@ -269,4 +269,5 @@ module.exports = {
   handleTicketQuestionsModal,
   handleCloseButton,
   handleCloseModal,
+  createTicketChannel,
 };

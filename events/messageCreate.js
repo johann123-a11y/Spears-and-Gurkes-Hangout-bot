@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { readData, writeData, formatTime } = require('../utils');
 const config = require('../config.json');
 const { setStick } = require('../commands/admin/stick');
+const { handleDMAnswer } = require('../utils/applicationDM');
 
 // Per-channel lock to prevent double-posting sticky on rapid messages
 const stickyLocks = new Set();
@@ -9,7 +10,13 @@ const stickyLocks = new Set();
 module.exports = {
   name: 'messageCreate',
   async execute(message, client) {
-    if (message.author.bot || !message.guild) return;
+    if (message.author.bot) return;
+
+    // ── DM: handle application answers ───────────────────────────────────────
+    if (!message.guild) {
+      await handleDMAnswer(message);
+      return;
+    }
 
     // --- AFK: author sent a message, remove their AFK ---
     const afk = readData('afk.json');
