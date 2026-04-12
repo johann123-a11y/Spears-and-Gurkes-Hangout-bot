@@ -6,35 +6,44 @@ const {
 const { readData, writeData, COMMAND_DEFAULTS, COMMAND_LABELS } = require('../../utils');
 
 const COMMAND_DESCRIPTIONS = {
-  mute:           'Timeouts a user',
-  unmute:         'Removes a timeout',
+  // Moderation
+  mute:           'Timeouts a user for a duration',
+  unmute:         'Removes a timeout from a user',
   ban:            'Permanently bans a user',
-  kick:           'Kicks a user',
-  clear:          'Deletes a number of messages',
-  purge:          'Deletes messages from a specific user',
-  strike:         'Gives/removes a strike',
-  strikes:        'Shows all strikes of a user',
+  kick:           'Kicks a user from the server',
+  clear:          'Deletes messages (1–100)',
+  purge:          'Deletes messages from a specific user (1–100)',
+  // Strikes
+  strike:         'Adds or removes a strike from a staff member',
+  strikes:        'Shows all strikes + add/remove buttons',
+  // Staff management
   loa:            'Puts a user on Leave of Absence',
-  checkloa:       'Shows remaining LOA time',
-  demote:         'Demotes a staff member',
-  promote:        'Promotes a staff member',
-  staffkick:      'Removes all staff roles',
+  checkloa:       'Shows LOA status + manage buttons',
+  demote:         'Demotes a staff member to a lower role',
+  promote:        'Promotes a staff member to a higher role',
+  staffkick:      'Removes all staff roles from a user',
   pingperm:       'Grants a role ping permissions',
-  setrole:        'Sets a role in the bot config',
-  logs:           'Sets the main log channel',
-  perms:          'Manages command permissions',
-  stick:          'Sticks a message to a channel',
-  welcome:        'Toggle welcome messages',
+  // Setup
+  setrole:        'Sets a role ID in the bot config',
+  logs:           'Sets or disables the main log channel',
+  perms:          'Manages command permission levels',
+  stick:          'Sticks a message to the bottom of a channel',
+  // Welcome
+  welcome:        'Toggle welcome messages on/off',
   welcomechannel: 'Sets the welcome channel',
-  welcomemessage: 'Changes the welcome message',
-  ticket:         'Full ticket system',
-  tickets:        'Manage ticket panels',
-  application:    'Full application system',
+  welcomemessage: 'Changes the welcome message text',
+  // Tickets
+  ticket:         'Full ticket system (setup, send, group, close, etc.)',
+  tickets:        'List or delete ticket panels',
+  // Applications
+  application:    'Full application system (setup, results, channels)',
+  // Giveaways
   gstart:         'Starts a giveaway',
   gend:           'Ends a giveaway early',
   greroll:        'Rerolls giveaway winners',
-  afk:            'Sets yourself as AFK',
-  help:           'Shows all commands',
+  // General
+  afk:            'Sets yourself as AFK with optional time limit',
+  help:           'Shows all available commands',
 };
 
 // Groups for the embed display
