@@ -1,5 +1,0 @@
-{
-  "enabled": false,
-  "channel": null,
-  "message": "Welcome {member} to **{server}**! You are member #{membercount}. Enjoy your stay!"
-}
