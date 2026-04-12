@@ -67,8 +67,7 @@ function buildEmbed() {
         value: [
           '`?setrole list` — Shows configured roles (interactive)',
           '`?setrole set {slot} @role` — Sets a role slot',
-          '`?perms list` — All command permissions (interactive)',
-          '`?perms set {command} {level}` — Changes a permission',
+          '`?perms` — All command permissions (interactive)',
           '`?logs set #channel` — Sets the main log channel',
           '`?logs disable` — Disables logging',
           '`?stick {message}` — Sticks a message to a channel',
