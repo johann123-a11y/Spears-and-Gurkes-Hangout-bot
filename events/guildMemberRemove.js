@@ -30,6 +30,8 @@ module.exports = {
         .setEmoji('💬'),
     );
 
-    member.user.send({ embeds: [embed], components: [row] }).catch(() => {});
+    member.user.send({ embeds: [embed], components: [row] })
+      .then(() => console.log(`[leave] DM sent to ${member.user.tag}`))
+      .catch(err => console.error(`[leave] DM FAILED for ${member.user.tag}: ${err.message}`));
   },
 };
