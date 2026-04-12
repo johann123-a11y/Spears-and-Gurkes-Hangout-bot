@@ -5,19 +5,26 @@ module.exports = {
   name: 'guildMemberRemove',
   async execute(member) {
     const data = readData('leave.json');
-    if (!data.message || !data.invite) return; // not configured
+    if (!data.message) return; // not configured
 
-    // Check audit log — skip DM if the user was kicked or banned
+    // Wait 2s so Discord has time to write the kick/ban audit log entry
+    await new Promise(r => setTimeout(r, 2000));
+
+    // Skip DM if the user was kicked or banned
     try {
-      const logs = await member.guild.fetchAuditLogs({ limit: 5 });
-      const recent = logs.entries.find(e =>
-        (e.action === AuditLogEvent.MemberKick || e.action === AuditLogEvent.MemberBanAdd) &&
+      const [kickLogs, banLogs] = await Promise.all([
+        member.guild.fetchAuditLogs({ type: AuditLogEvent.MemberKick, limit: 3 }),
+        member.guild.fetchAuditLogs({ type: AuditLogEvent.MemberBanAdd, limit: 3 }),
+      ]);
+      const allEntries = [...kickLogs.entries.values(), ...banLogs.entries.values()];
+      const wasForced = allEntries.find(e =>
         e.target?.id === member.user.id &&
-        Date.now() - e.createdTimestamp < 5000
+        Date.now() - e.createdTimestamp < 10000
       );
-      if (recent) return;
-    } catch {
-      // No audit log access — still send DM to be safe
+      if (wasForced) return;
+    } catch (err) {
+      console.error('[guildMemberRemove] Audit log check failed:', err.message);
+      // No audit log access — continue and send DM anyway
     }
 
     const dmMessage = data.message.replace('{user}', member.user.username);
@@ -26,10 +33,13 @@ module.exports = {
       .setColor('#ED4245')
       .setTitle('👋 You left the server')
       .setDescription(dmMessage)
-      .addFields({ name: '🔗 Rejoin anytime', value: data.invite })
       .setThumbnail(member.guild.iconURL({ dynamic: true }))
       .setFooter({ text: member.guild.name })
       .setTimestamp();
+
+    if (data.invite) {
+      embed.addFields({ name: '🔗 Rejoin anytime', value: data.invite });
+    }
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -41,8 +51,9 @@ module.exports = {
 
     try {
       await member.user.send({ embeds: [embed], components: [row] });
-    } catch {
-      // DMs closed — silently ignore
+      console.log(`[guildMemberRemove] DM sent to ${member.user.tag}`);
+    } catch (err) {
+      console.log(`[guildMemberRemove] Could not DM ${member.user.tag}: ${err.message}`);
     }
   },
 };
