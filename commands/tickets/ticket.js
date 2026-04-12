@@ -84,19 +84,7 @@ module.exports = {
     // ── /ticket setup ─────────────────────────────────────────────────────────
     .addSubcommand(sub =>
       sub.setName('setup')
-        .setDescription('Create a panel button (color, category, questions) [Admin]')
-        .addStringOption(o => o.setName('name').setDescription('Panel name').setRequired(true))
-        .addStringOption(o => o.setName('label').setDescription('Button label text').setRequired(true))
-        .addStringOption(o =>
-          o.setName('color').setDescription('Button color').setRequired(true)
-            .addChoices(
-              { name: '🔵 Blue',  value: 'blue'  },
-              { name: '⚫ Grey',  value: 'grey'  },
-              { name: '🟢 Green', value: 'green' },
-              { name: '🔴 Red',   value: 'red'   },
-            )
-        )
-        .addChannelOption(o => o.setName('category').setDescription('Category where tickets are created').setRequired(true))
+        .setDescription('Create a new ticket panel (opens a form) [Admin]')
     )
 
     // ── /ticket description ───────────────────────────────────────────────────
@@ -219,33 +207,53 @@ module.exports = {
 
 // ── /ticket setup ─────────────────────────────────────────────────────────────
 async function handleSetup(interaction) {
-  const name     = interaction.options.getString('name');
-  const label    = interaction.options.getString('label');
-  const color    = interaction.options.getString('color');
-  const category = interaction.options.getChannel('category');
+  const modal = new ModalBuilder()
+    .setCustomId('ticket_setup_modal')
+    .setTitle('🎫 Ticket Panel Setup')
+    .addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('setup_panelid')
+          .setLabel('Panel ID (internal, e.g. support)')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('support')
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('setup_label')
+          .setLabel('Button Text (e.g. 🔧 Support)')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('🔧 Support')
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('setup_color')
+          .setLabel('Button Color: Blue / Green / Red / Gray')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('Blue')
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('setup_categoryid')
+          .setLabel('Discord Category ID (optional)')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('Right-click category → Copy ID')
+          .setRequired(false)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('setup_questions')
+          .setLabel('Questions before ticket (optional)')
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('What is your IGN?\nWhat is your issue?')
+          .setRequired(false)
+      ),
+    );
 
-  if (category.type !== ChannelType.GuildCategory)
-    return interaction.reply({ content: '❌ Please select a **Category**, not a text channel.', ephemeral: true });
-
-  const tickets = readData('tickets.json');
-  if (!tickets.panels) tickets.panels = {};
-  const panelId = getPanelId(name);
-
-  tickets.panels[panelId] = { id: panelId, name, buttonLabel: label, buttonStyle: color, categoryId: category.id, questions: [] };
-  writeData('tickets.json', tickets);
-
-  interaction.reply({
-    embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('✅ Ticket Panel Created')
-      .addFields(
-        { name: 'Panel Name',   value: name,                inline: true },
-        { name: 'Button Label', value: label,               inline: true },
-        { name: 'Color',        value: color,               inline: true },
-        { name: 'Category',     value: `<#${category.id}>`, inline: true },
-        { name: 'Next Steps', value: `• Add questions via \`/ticket info\` → edit\n• Set description: \`/ticket description\`\n• Send: \`/ticket send panel:${name}\`\n• Group all: \`/ticket group\`` },
-      ).setTimestamp()],
-    ephemeral: true,
-  });
+  await interaction.showModal(modal);
 }
 
 // ── /ticket description ───────────────────────────────────────────────────────

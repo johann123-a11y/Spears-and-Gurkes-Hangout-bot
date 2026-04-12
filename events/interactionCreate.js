@@ -192,6 +192,53 @@ module.exports = {
         return;
       }
 
+      // Ticket setup modal
+      if (interaction.customId === 'ticket_setup_modal') {
+        const name       = interaction.fields.getTextInputValue('setup_panelid').trim();
+        const label      = interaction.fields.getTextInputValue('setup_label').trim();
+        const colorRaw   = interaction.fields.getTextInputValue('setup_color').trim().toLowerCase();
+        const categoryId = interaction.fields.getTextInputValue('setup_categoryid').trim().replace(/[^0-9]/g, '') || null;
+        const questionsRaw = interaction.fields.getTextInputValue('setup_questions').trim();
+
+        // Normalise color
+        const colorMap = { blue: 'blue', green: 'green', red: 'red', gray: 'grey', grey: 'grey' };
+        const color    = colorMap[colorRaw];
+        if (!color)
+          return interaction.reply({ content: '❌ Invalid color. Use: **Blue**, **Green**, **Red**, or **Gray**.', ephemeral: true });
+
+        // Parse questions (one per line, max 5)
+        const questions = questionsRaw
+          ? questionsRaw.split('\n').map(q => q.trim()).filter(Boolean).slice(0, 5)
+          : [];
+
+        const tickets = readData('tickets.json');
+        if (!tickets.panels) tickets.panels = {};
+        const panelId = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+
+        tickets.panels[panelId] = {
+          id: panelId,
+          name,
+          buttonLabel: label,
+          buttonStyle: color,
+          categoryId,
+          questions,
+        };
+        writeData('tickets.json', tickets);
+
+        return interaction.reply({
+          embeds: [new EmbedBuilder()
+            .setColor('#57F287').setTitle('✅ Ticket Panel Created')
+            .addFields(
+              { name: 'Panel ID',     value: panelId,                                        inline: true },
+              { name: 'Button',       value: `${label} (${color})`,                          inline: true },
+              { name: 'Category',     value: categoryId ? `<#${categoryId}>` : 'None set',   inline: true },
+              { name: 'Questions',    value: questions.length > 0 ? questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : 'None' },
+              { name: 'Next Steps',   value: `• Set description: \`/ticket description\`\n• Send panel: \`/ticket send panel:${panelId}\`\n• Group panels: \`/ticket group\`` },
+            ).setTimestamp()],
+          ephemeral: true,
+        });
+      }
+
       // Ticket description modal
       if (interaction.customId === 'ticket_description_modal') {
         const title    = interaction.fields.getTextInputValue('desc_title');
