@@ -9,7 +9,7 @@ const {
   handleCloseButton,
   handleCloseModal,
 } = require('../utils/ticketHandler');
-const { buildDescEmbed } = require('../commands/tickets/ticket');
+const { buildDescEmbed, sendTicketOverview } = require('../commands/tickets/ticket');
 const {
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder,
@@ -172,6 +172,91 @@ module.exports = {
         tickets.logChannelId = null;
         writeData('tickets.json', tickets);
         return interaction.update({ content: '✅ Ticket log channel removed.', embeds: [], components: [] });
+      }
+
+      // ── /ticket info navigation buttons ───────────────────────────────────
+      if (interaction.customId === 'ticket_info_nav_desc') {
+        const tickets = readData('tickets.json');
+        const current = tickets.description || {};
+        const previewEmbed = buildDescEmbed(current);
+        previewEmbed.setTitle('📝 Ticket Description — Preview');
+        const editBtn = new ButtonBuilder()
+          .setCustomId('ticket_desc_edit_btn')
+          .setLabel('✏️ Edit Description')
+          .setStyle(ButtonStyle.Primary);
+        const backBtn = new ButtonBuilder()
+          .setCustomId('ticket_info_nav_back')
+          .setLabel('← Back')
+          .setStyle(ButtonStyle.Secondary);
+        return interaction.update({ embeds: [previewEmbed], components: [new ActionRowBuilder().addComponents(editBtn, backBtn)] });
+      }
+
+      if (interaction.customId === 'ticket_info_nav_perms') {
+        const tickets  = readData('tickets.json');
+        const perms    = tickets.perms || { pingRoles: [], viewRoles: [] };
+        const pingList = perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None';
+        const viewList = perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None';
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('ticket_perms_addping').setLabel('➕ Ping').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId('ticket_perms_removeping').setLabel('➖ Ping').setStyle(ButtonStyle.Secondary).setDisabled(perms.pingRoles.length === 0),
+          new ButtonBuilder().setCustomId('ticket_perms_addview').setLabel('➕ View').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('ticket_perms_removeview').setLabel('➖ View').setStyle(ButtonStyle.Secondary).setDisabled(perms.viewRoles.length === 0),
+          new ButtonBuilder().setCustomId('ticket_perms_clear').setLabel('🗑️ Clear All').setStyle(ButtonStyle.Danger),
+        );
+        const backBtn = new ButtonBuilder().setCustomId('ticket_info_nav_back').setLabel('← Back').setStyle(ButtonStyle.Secondary);
+        return interaction.update({
+          embeds: [new EmbedBuilder()
+            .setColor('#5865F2').setTitle('🔐 Ticket Permissions')
+            .addFields(
+              { name: '🔔 Ping Roles (notified on open)', value: pingList },
+              { name: '👁️ View Roles (can see all tickets)', value: viewList },
+            ).setFooter({ text: '➕ to add  •  ➖ to remove  •  🗑️ to clear all' }).setTimestamp()],
+          components: [row, new ActionRowBuilder().addComponents(backBtn)],
+        });
+      }
+
+      if (interaction.customId === 'ticket_info_nav_logs') {
+        const tickets     = readData('tickets.json');
+        const removeBtn   = new ButtonBuilder().setCustomId('ticket_logs_remove_btn').setLabel('🗑️ Remove Log Channel').setStyle(ButtonStyle.Danger).setDisabled(!tickets.logChannelId);
+        const backBtn     = new ButtonBuilder().setCustomId('ticket_info_nav_back').setLabel('← Back').setStyle(ButtonStyle.Secondary);
+        const channelSel  = new ChannelSelectMenuBuilder().setCustomId('ticket_logs_channel_select').setPlaceholder('Select a new log channel...').setChannelTypes(ChannelType.GuildText);
+        return interaction.update({
+          embeds: [new EmbedBuilder()
+            .setColor('#5865F2').setTitle('📋 Ticket Log Channel')
+            .setDescription(tickets.logChannelId ? `Currently logging to <#${tickets.logChannelId}>.` : '❌ No log channel configured.')
+            .setTimestamp()],
+          components: [
+            new ActionRowBuilder().addComponents(removeBtn, backBtn),
+            new ActionRowBuilder().addComponents(channelSel),
+          ],
+        });
+      }
+
+      if (interaction.customId === 'ticket_info_nav_back') {
+        return sendTicketOverview(interaction, 'update');
+      }
+
+      if (interaction.customId === 'ticket_desc_edit_btn') {
+        const tickets = readData('tickets.json');
+        const current = tickets.description || {};
+        const modal   = new ModalBuilder()
+          .setCustomId('ticket_description_modal')
+          .setTitle('Set Ticket Panel Description')
+          .addComponents(
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('desc_title').setLabel('Title (e.g. Create Ticket)').setStyle(TextInputStyle.Short).setValue(current.title || 'Create Ticket').setRequired(true)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('desc_subtitle').setLabel('Subtitle — shown bold').setStyle(TextInputStyle.Short).setValue(current.subtitle || '').setRequired(false)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('desc_text').setLabel('Description — multiple lines & bullet points').setStyle(TextInputStyle.Paragraph).setValue(current.text || '').setPlaceholder('• Rule 1\n• Rule 2').setRequired(false)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('desc_footer').setLabel('Footer text (optional)').setStyle(TextInputStyle.Short).setValue(current.footer || '').setRequired(false)
+            ),
+          );
+        return interaction.showModal(modal);
       }
     }
 
@@ -508,11 +593,25 @@ module.exports = {
           return interaction.update({ content: 'Select the new button color:', embeds: [], components: [new ActionRowBuilder().addComponents(colorMenu)] });
         }
 
+        // Remove question → show select menu with actual questions
+        if (choice === 'removeq') {
+          if (panel.questions.length === 0)
+            return interaction.reply({ content: '❌ This panel has no questions.', ephemeral: true });
+          const menu = new StringSelectMenuBuilder()
+            .setCustomId(`ticket_removeq_select:${panelId}`)
+            .setPlaceholder('Select a question to delete...')
+            .addOptions(panel.questions.map((q, i) =>
+              new StringSelectMenuOptionBuilder()
+                .setLabel(`${i + 1}. ${q.substring(0, 90)}`)
+                .setValue(String(i))
+            ));
+          return interaction.update({ content: '**Select the question to remove:**', embeds: [], components: [new ActionRowBuilder().addComponents(menu)] });
+        }
+
         const modalMap = {
-          label:    { title: 'Edit Button Label',    inputLabel: 'New button label',          field: 'label'    },
-          category: { title: 'Edit Category',        inputLabel: 'New Category ID',           field: 'category' },
-          addq:     { title: 'Add Question',         inputLabel: 'Question text',             field: 'addq'     },
-          removeq:  { title: 'Remove Question',      inputLabel: 'Question number to remove', field: 'removeq'  },
+          label:    { title: 'Edit Button Label',    inputLabel: 'New button label', field: 'label'    },
+          category: { title: 'Edit Category',        inputLabel: 'New Category ID',  field: 'category' },
+          addq:     { title: 'Add Question',         inputLabel: 'Question text',    field: 'addq'     },
         };
         const m = modalMap[choice];
         if (!m) return;
@@ -584,6 +683,18 @@ module.exports = {
           embeds: [],
           components: [new ActionRowBuilder().addComponents(roleSelect)],
         });
+      }
+
+      // ticket remove question select
+      if (interaction.customId.startsWith('ticket_removeq_select:')) {
+        const panelId = interaction.customId.split(':')[1];
+        const index   = parseInt(interaction.values[0]);
+        const tickets = readData('tickets.json');
+        const panel   = tickets.panels?.[panelId];
+        if (!panel) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
+        const removed = panel.questions.splice(index, 1)[0];
+        writeData('tickets.json', tickets);
+        return interaction.update({ content: `✅ Question removed:\n> ${removed}`, embeds: [], components: [] });
       }
 
       // ticket perms remove ping role

@@ -358,8 +358,8 @@ async function handleInfo(interaction) {
     const embed = new EmbedBuilder()
       .setColor('#5865F2').setTitle('🎫 Ticket Info')
       .addFields(
-        { name: 'Panel',     value: ticket.panelName,                                       inline: true },
-        { name: 'Opened by', value: `<@${ticket.userId}>`,                                  inline: true },
+        { name: 'Panel',     value: ticket.panelName,                                        inline: true },
+        { name: 'Opened by', value: `<@${ticket.userId}>`,                                   inline: true },
         { name: 'Opened at', value: `<t:${Math.floor(new Date(ticket.openedAt) / 1000)}:F>`, inline: true },
       );
     if (ticket.answers?.length > 0)
@@ -367,38 +367,70 @@ async function handleInfo(interaction) {
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
 
-  // Admin → show all panels overview + panel picker to edit
-  if (panels.length === 0)
-    return interaction.reply({ content: '❌ No panels configured yet. Use `/ticket setup` to create one.', ephemeral: true });
+  // Admin → full overview of everything
+  return sendTicketOverview(interaction, 'reply');
+}
 
-  const overviewEmbed = new EmbedBuilder()
-    .setColor('#5865F2').setTitle('🎫 Ticket Panels Overview')
-    .addFields(panels.map(p => ({
-      name: `${p.name}`,
-      value: [
-        `**Button:** ${p.buttonLabel} — ${p.buttonStyle}`,
-        `**Category:** <#${p.categoryId}>`,
-        `**Questions:** ${p.questions.length > 0 ? p.questions.map((q, i) => `${i + 1}. ${q}`).join(' | ') : 'None'}`,
-      ].join('\n'),
-    })))
-    .setFooter({ text: 'Select a panel below to edit or delete it' })
+// ── Shared: build & send the full ticket overview ─────────────────────────────
+async function sendTicketOverview(interaction, method = 'reply') {
+  const tickets = readData('tickets.json');
+  const panels  = Object.values(tickets.panels || {});
+  const perms   = tickets.perms || { pingRoles: [], viewRoles: [] };
+  const desc    = tickets.description || {};
+
+  const panelsValue = panels.length > 0
+    ? panels.map(p =>
+        `• **${p.name}** — \`${p.buttonLabel}\` (${p.buttonStyle})`
+        + (p.categoryId ? ` → <#${p.categoryId}>` : '')
+        + (p.questions.length > 0 ? ` • ${p.questions.length} question(s)` : '')
+      ).join('\n')
+    : '*No panels yet — use `/ticket setup`*';
+
+  const descValue = [
+    `**Title:** ${desc.title || 'Create Ticket'}`,
+    desc.subtitle ? `**Subtitle:** ${desc.subtitle}` : null,
+    desc.text     ? `**Text:** ${desc.text.substring(0, 80)}${desc.text.length > 80 ? '…' : ''}` : null,
+    desc.footer   ? `**Footer:** ${desc.footer}` : null,
+  ].filter(Boolean).join('\n') || '*Not configured*';
+
+  const embed = new EmbedBuilder()
+    .setColor('#5865F2')
+    .setTitle('🎫 Ticket System Overview')
+    .addFields(
+      { name: `🎫 Panels (${panels.length})`,   value: panelsValue },
+      { name: '📝 Description',                  value: descValue },
+      { name: '🔔 Ping Roles',                   value: perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
+      { name: '👁️ View Roles',                   value: perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
+      { name: '📋 Log Channel',                  value: tickets.logChannelId ? `<#${tickets.logChannelId}>` : 'Not set', inline: true },
+    )
+    .setFooter({ text: 'Select a panel below • Use buttons to manage settings' })
     .setTimestamp();
 
-  const panelPicker = new StringSelectMenuBuilder()
-    .setCustomId('ticket_info_panel_picker')
-    .setPlaceholder('Select a panel to edit or delete...')
-    .addOptions(panels.map(p =>
-      new StringSelectMenuOptionBuilder()
-        .setLabel(p.name)
-        .setValue(p.id)
-        .setDescription(`${p.buttonLabel} — ${p.buttonStyle}`)
-    ));
+  const components = [];
 
-  return interaction.reply({
-    embeds: [overviewEmbed],
-    components: [new ActionRowBuilder().addComponents(panelPicker)],
-    ephemeral: true,
-  });
+  if (panels.length > 0) {
+    components.push(new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId('ticket_info_panel_picker')
+        .setPlaceholder('🎫 Select a panel to edit or delete...')
+        .addOptions(panels.map(p =>
+          new StringSelectMenuOptionBuilder()
+            .setLabel(p.name)
+            .setValue(p.id)
+            .setDescription(`${p.buttonLabel} — ${p.buttonStyle}`)
+        ))
+    ));
+  }
+
+  components.push(new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('ticket_info_nav_desc').setLabel('📝 Description').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('ticket_info_nav_perms').setLabel('🔐 Permissions').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('ticket_info_nav_logs').setLabel('📋 Log Channel').setStyle(ButtonStyle.Secondary),
+  ));
+
+  const payload = { embeds: [embed], components, ephemeral: true };
+  if (method === 'update') return interaction.update(payload);
+  return interaction.reply(payload);
 }
 
 // ── /ticket add ───────────────────────────────────────────────────────────────
@@ -654,6 +686,7 @@ async function handlePermsClear(interaction) {
   interaction.reply({ content: '✅ All ticket ping and view role settings cleared.', ephemeral: true });
 }
 
-module.exports.handleClose    = handleClose;
-module.exports.getPanelId     = getPanelId;
-module.exports.buildDescEmbed = buildDescEmbed;
+module.exports.handleClose        = handleClose;
+module.exports.getPanelId         = getPanelId;
+module.exports.buildDescEmbed     = buildDescEmbed;
+module.exports.sendTicketOverview = sendTicketOverview;
