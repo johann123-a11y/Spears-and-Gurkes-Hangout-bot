@@ -77,7 +77,7 @@ function hasPermission(member, level) {
 // --- Dynamic permission system ---
 const COMMAND_DEFAULTS = {
   mute: 'jrHelper', unmute: 'jrHelper',
-  ban: 'admin', kick: 'admin',
+  ban: 'admin', kick: 'admin', clear: 'mod',
   strike: 'srMod', strikes: 'srMod',
   loa: 'admin', checkloa: 'admin',
   demote: 'admin', promote: 'admin',

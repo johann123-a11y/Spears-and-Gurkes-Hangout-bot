@@ -34,6 +34,7 @@ function buildEmbed() {
         value: [
           '`?ban @user {reason}` — Permanently bans a user',
           '`?kick @user {reason}` — Kicks a user from the server',
+          '`?clear {amount} [@user]` — Deletes a number of messages (1–100)',
         ].join('\n'),
       },
       {
