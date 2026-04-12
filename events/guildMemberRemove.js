@@ -5,7 +5,8 @@ module.exports = {
   name: 'guildMemberRemove',
   async execute(member) {
     const data = readData('leave.json');
-    if (!data.message) return; // not configured
+    const defaultMsg = 'Hey {user}, schade dass du unseren Server verlassen hast. Wir hoffen dich bald wiederzusehen!';
+    const messageText = data.message || defaultMsg;
 
     // Wait 2s so Discord has time to write the kick/ban audit log entry
     await new Promise(r => setTimeout(r, 2000));
@@ -27,7 +28,7 @@ module.exports = {
       // No audit log access — continue and send DM anyway
     }
 
-    const dmMessage = data.message.replace('{user}', member.user.username);
+    const dmMessage = messageText.replace('{user}', member.user.username);
 
     const embed = new EmbedBuilder()
       .setColor('#ED4245')

@@ -1,6 +1,7 @@
 const {
   SlashCommandBuilder, EmbedBuilder, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle, ChannelSelectMenuBuilder, ChannelType,
+  ButtonBuilder, ButtonStyle,
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 
@@ -21,6 +22,10 @@ module.exports = {
     .addSubcommand(s =>
       s.setName('info')
         .setDescription('Show current leave system configuration')
+    )
+    .addSubcommand(s =>
+      s.setName('test')
+        .setDescription('Send yourself a test leave DM to check if it works')
     ),
 
   async executeSlash(interaction) {
@@ -52,7 +57,7 @@ module.exports = {
               .setStyle(TextInputStyle.Short)
               .setPlaceholder('https://discord.gg/yourserver')
               .setValue(data.invite || '')
-              .setRequired(true)
+              .setRequired(false)
               .setMaxLength(200)
           ),
         );
@@ -66,6 +71,37 @@ module.exports = {
         .setChannelTypes(ChannelType.GuildText);
       const row = new ActionRowBuilder().addComponents(channelSel);
       return interaction.reply({ content: '📋 Select the channel where leave reasons will be posted:', components: [row], ephemeral: true });
+    }
+
+    if (sub === 'test') {
+      const data = readData('leave.json');
+      const defaultMsg = 'Hey {user}, schade dass du unseren Server verlassen hast. Wir hoffen dich bald wiederzusehen!';
+      const messageText = (data.message || defaultMsg).replace('{user}', interaction.user.username);
+
+      const embed = new EmbedBuilder()
+        .setColor('#ED4245')
+        .setTitle('👋 You left the server')
+        .setDescription(messageText)
+        .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
+        .setFooter({ text: `${interaction.guild.name} — TEST` })
+        .setTimestamp();
+
+      if (data.invite) embed.addFields({ name: '🔗 Rejoin anytime', value: data.invite });
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`leave_reason_btn:${interaction.guild.id}:${interaction.user.id}`)
+          .setLabel('Tell us why you left')
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji('💬'),
+      );
+
+      try {
+        await interaction.user.send({ embeds: [embed], components: [row] });
+        return interaction.reply({ content: '✅ Test-DM wurde dir geschickt!', ephemeral: true });
+      } catch {
+        return interaction.reply({ content: '❌ Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
+      }
     }
 
     if (sub === 'info') {
