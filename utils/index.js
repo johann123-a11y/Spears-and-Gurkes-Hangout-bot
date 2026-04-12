@@ -35,7 +35,9 @@ function formatTime(ms) {
 }
 
 function readData(filename) {
-  const filePath = path.join(__dirname, '..', 'data', filename);
+  const dataDir = path.join(__dirname, '..', 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  const filePath = path.join(dataDir, filename);
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, JSON.stringify({}));
     return {};
