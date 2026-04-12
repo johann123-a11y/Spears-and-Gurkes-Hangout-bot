@@ -3,6 +3,7 @@ const {
   ActionRowBuilder, ChannelType, PermissionFlagsBits,
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
+  ChannelSelectMenuBuilder,
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
@@ -548,11 +549,28 @@ async function handleLogsSet(interaction) {
 
 async function handleLogsInfo(interaction) {
   const tickets = readData('tickets.json');
+
+  const removeBtn = new ButtonBuilder()
+    .setCustomId('ticket_logs_remove_btn')
+    .setLabel('🗑️ Remove Log Channel')
+    .setStyle(ButtonStyle.Danger)
+    .setDisabled(!tickets.logChannelId);
+
+  const channelSelect = new ChannelSelectMenuBuilder()
+    .setCustomId('ticket_logs_channel_select')
+    .setPlaceholder('Select a new log channel...')
+    .setChannelTypes(ChannelType.GuildText);
+
   interaction.reply({
     embeds: [new EmbedBuilder()
       .setColor('#5865F2').setTitle('📋 Ticket Log Channel')
       .setDescription(tickets.logChannelId ? `Logs are sent to <#${tickets.logChannelId}>.` : '❌ No log channel configured.')
+      .setFooter({ text: 'Use the menu below to set a new channel, or remove the current one.' })
       .setTimestamp()],
+    components: [
+      new ActionRowBuilder().addComponents(removeBtn),
+      new ActionRowBuilder().addComponents(channelSelect),
+    ],
     ephemeral: true,
   });
 }
@@ -599,13 +617,24 @@ async function handlePermsInfo(interaction) {
   const pingList = perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None';
   const viewList = perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None';
 
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('ticket_perms_addping').setLabel('➕ Ping').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId('ticket_perms_removeping').setLabel('➖ Ping').setStyle(ButtonStyle.Secondary).setDisabled(perms.pingRoles.length === 0),
+    new ButtonBuilder().setCustomId('ticket_perms_addview').setLabel('➕ View').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('ticket_perms_removeview').setLabel('➖ View').setStyle(ButtonStyle.Secondary).setDisabled(perms.viewRoles.length === 0),
+    new ButtonBuilder().setCustomId('ticket_perms_clear').setLabel('🗑️ Clear All').setStyle(ButtonStyle.Danger),
+  );
+
   interaction.reply({
     embeds: [new EmbedBuilder()
       .setColor('#5865F2').setTitle('🔐 Ticket Permission Settings')
       .addFields(
         { name: '🔔 Ping Roles (notified on open)', value: pingList },
         { name: '👁️ View Roles (can see all tickets)', value: viewList },
-      ).setTimestamp()],
+      )
+      .setFooter({ text: '➕ Ping / ➕ View to add  •  ➖ to remove  •  🗑️ to clear all' })
+      .setTimestamp()],
+    components: [row],
     ephemeral: true,
   });
 }

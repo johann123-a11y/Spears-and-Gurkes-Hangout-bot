@@ -124,6 +124,8 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
   }
 }
 
+module.exports.handleStrike = handleStrike;
+
 async function autoDemote(member, guild, channel, interaction) {
   const level = getMemberRoleLevel(member);
   if (level <= 0) return;

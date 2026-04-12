@@ -1,6 +1,8 @@
-const { parseTime, readData, writeData } = require('../utils');
+const { parseTime, readData, writeData, checkPerm, formatTime } = require('../utils');
 const { createGiveaway } = require('../commands/giveaways/gstart');
 const { setPerm, buildSetEmbed, LEVEL_CHOICES } = require('../commands/admin/perms');
+const { setRole, buildSetEmbed: buildSetRoleEmbed, ROLE_KEYS } = require('../commands/admin/setrole');
+const { handleStrike } = require('../commands/strikes/strike');
 const {
   handleTicketOpen,
   handleTicketQuestionsModal,
@@ -11,7 +13,8 @@ const { buildDescEmbed } = require('../commands/tickets/ticket');
 const {
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder,
-  ButtonBuilder, ButtonStyle,
+  ButtonBuilder, ButtonStyle, RoleSelectMenuBuilder, ChannelSelectMenuBuilder,
+  ChannelType,
 } = require('discord.js');
 
 const BTN_STYLES = { blue: ButtonStyle.Primary, grey: ButtonStyle.Secondary, green: ButtonStyle.Success, red: ButtonStyle.Danger };
@@ -44,20 +47,146 @@ module.exports = {
       // Ticket close button (inside ticket channel)
       if (interaction.customId === 'ticket_close_btn')
         return handleCloseButton(interaction);
+
+      // ── Strikes buttons ────────────────────────────────────────────────────
+      if (interaction.customId.startsWith('strikes_add:')) {
+        if (!checkPerm(interaction.member, 'strike'))
+          return interaction.reply({ content: '❌ Only **SrMod+** can add strikes.', ephemeral: true });
+        const userId = interaction.customId.split(':')[1];
+        const modal  = new ModalBuilder()
+          .setCustomId(`strikes_add_modal:${userId}`)
+          .setTitle('Add Strike')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for strike').setStyle(TextInputStyle.Short).setRequired(true)
+          ));
+        return interaction.showModal(modal);
+      }
+
+      if (interaction.customId.startsWith('strikes_remove:')) {
+        if (!checkPerm(interaction.member, 'strike'))
+          return interaction.reply({ content: '❌ Only **SrMod+** can remove strikes.', ephemeral: true });
+        const userId = interaction.customId.split(':')[1];
+        const modal  = new ModalBuilder()
+          .setCustomId(`strikes_remove_modal:${userId}`)
+          .setTitle('Remove Strike')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for removal').setStyle(TextInputStyle.Short).setRequired(true)
+          ));
+        return interaction.showModal(modal);
+      }
+
+      // ── CheckLOA buttons ───────────────────────────────────────────────────
+      if (interaction.customId.startsWith('checkloa_clear:')) {
+        if (!checkPerm(interaction.member, 'checkloa'))
+          return interaction.reply({ content: '❌ Only **Admins** can manage LOA.', ephemeral: true });
+        const userId = interaction.customId.split(':')[1];
+        const loa    = readData('loa.json');
+        if (!loa[userId])
+          return interaction.update({ content: '❌ This user is not on LOA.', embeds: [], components: [] });
+        delete loa[userId];
+        writeData('loa.json', loa);
+        return interaction.update({ content: '✅ LOA cleared.', embeds: [], components: [] });
+      }
+
+      if (interaction.customId.startsWith('checkloa_set:')) {
+        if (!checkPerm(interaction.member, 'checkloa'))
+          return interaction.reply({ content: '❌ Only **Admins** can manage LOA.', ephemeral: true });
+        const userId = interaction.customId.split(':')[1];
+        const modal  = new ModalBuilder()
+          .setCustomId(`checkloa_set_modal:${userId}`)
+          .setTitle('Set LOA')
+          .addComponents(
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('duration').setLabel('Duration (e.g. 3d, 1w, 12h)').setStyle(TextInputStyle.Short).setRequired(true)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('reason').setLabel('Reason').setStyle(TextInputStyle.Short).setRequired(true)
+            ),
+          );
+        return interaction.showModal(modal);
+      }
+
+      // ── Ticket perms buttons ───────────────────────────────────────────────
+      if (interaction.customId === 'ticket_perms_addping') {
+        const roleSelect = new RoleSelectMenuBuilder()
+          .setCustomId('ticket_perms_addping_select')
+          .setPlaceholder('Select a role to add as ping role...');
+        return interaction.update({
+          content: 'Select a role to add as **Ping Role** (notified when a ticket opens):',
+          embeds: [], components: [new ActionRowBuilder().addComponents(roleSelect)],
+        });
+      }
+
+      if (interaction.customId === 'ticket_perms_addview') {
+        const roleSelect = new RoleSelectMenuBuilder()
+          .setCustomId('ticket_perms_addview_select')
+          .setPlaceholder('Select a role to add as view role...');
+        return interaction.update({
+          content: 'Select a role to add as **View Role** (can see all ticket channels):',
+          embeds: [], components: [new ActionRowBuilder().addComponents(roleSelect)],
+        });
+      }
+
+      if (interaction.customId === 'ticket_perms_removeping') {
+        const tickets   = readData('tickets.json');
+        const pingRoles = tickets.perms?.pingRoles || [];
+        if (pingRoles.length === 0)
+          return interaction.update({ content: '❌ No ping roles configured.', embeds: [], components: [] });
+        const menu = new StringSelectMenuBuilder()
+          .setCustomId('ticket_perms_removeping_select')
+          .setPlaceholder('Select a ping role to remove...')
+          .addOptions(pingRoles.map(id => {
+            const role = interaction.guild.roles.cache.get(id);
+            return new StringSelectMenuOptionBuilder().setLabel(role ? role.name : id).setValue(id);
+          }));
+        return interaction.update({ content: 'Select a ping role to remove:', embeds: [], components: [new ActionRowBuilder().addComponents(menu)] });
+      }
+
+      if (interaction.customId === 'ticket_perms_removeview') {
+        const tickets   = readData('tickets.json');
+        const viewRoles = tickets.perms?.viewRoles || [];
+        if (viewRoles.length === 0)
+          return interaction.update({ content: '❌ No view roles configured.', embeds: [], components: [] });
+        const menu = new StringSelectMenuBuilder()
+          .setCustomId('ticket_perms_removeview_select')
+          .setPlaceholder('Select a view role to remove...')
+          .addOptions(viewRoles.map(id => {
+            const role = interaction.guild.roles.cache.get(id);
+            return new StringSelectMenuOptionBuilder().setLabel(role ? role.name : id).setValue(id);
+          }));
+        return interaction.update({ content: 'Select a view role to remove:', embeds: [], components: [new ActionRowBuilder().addComponents(menu)] });
+      }
+
+      if (interaction.customId === 'ticket_perms_clear') {
+        const tickets = readData('tickets.json');
+        tickets.perms = { pingRoles: [], viewRoles: [] };
+        writeData('tickets.json', tickets);
+        return interaction.update({ content: '✅ All ticket ping and view role settings cleared.', embeds: [], components: [] });
+      }
+
+      // ── Ticket logs buttons ────────────────────────────────────────────────
+      if (interaction.customId === 'ticket_logs_remove_btn') {
+        const tickets = readData('tickets.json');
+        if (!tickets.logChannelId)
+          return interaction.update({ content: '❌ No log channel is currently set.', embeds: [], components: [] });
+        tickets.logChannelId = null;
+        writeData('tickets.json', tickets);
+        return interaction.update({ content: '✅ Ticket log channel removed.', embeds: [], components: [] });
+      }
     }
 
     // ── Modal submits ─────────────────────────────────────────────────────────
     if (interaction.isModalSubmit()) {
       // Giveaway modal
       if (interaction.customId === 'giveaway_modal') {
-        const time = interaction.fields.getTextInputValue('gw_time');
-        const prize = interaction.fields.getTextInputValue('gw_prize');
-        const winnersRaw = interaction.fields.getTextInputValue('gw_winners');
+        const time        = interaction.fields.getTextInputValue('gw_time');
+        const prize       = interaction.fields.getTextInputValue('gw_prize');
+        const winnersRaw  = interaction.fields.getTextInputValue('gw_winners');
         const description = interaction.fields.getTextInputValue('gw_description') || 'No description provided.';
-        const ms = parseTime(time);
-        const winners = parseInt(winnersRaw);
-        if (!ms) return interaction.reply({ content: '❌ Invalid time format.', ephemeral: true });
-        if (isNaN(winners) || winners < 1) return interaction.reply({ content: '❌ Winners must be a positive number.', ephemeral: true });
+        const ms          = parseTime(time);
+        const winners     = parseInt(winnersRaw);
+        if (!ms)                             return interaction.reply({ content: '❌ Invalid time format.', ephemeral: true });
+        if (isNaN(winners) || winners < 1)   return interaction.reply({ content: '❌ Winners must be a positive number.', ephemeral: true });
         await interaction.reply({ content: '✅ Giveaway started!', ephemeral: true });
         await createGiveaway(interaction.channel, ms, winners, prize, description, interaction.user.id);
         return;
@@ -73,9 +202,8 @@ module.exports = {
         tickets.description = { title, subtitle, text, footer };
         writeData('tickets.json', tickets);
 
-        // Show preview
         const previewEmbed = buildDescEmbed(tickets.description);
-        const infoEmbed = new EmbedBuilder()
+        const infoEmbed    = new EmbedBuilder()
           .setColor('#57F287').setTitle('✅ Description Updated')
           .setDescription('**Preview:**')
           .setFooter({ text: 'Use /ticket group or /ticket send to post the panel' })
@@ -127,173 +255,307 @@ module.exports = {
         }
         return;
       }
-    }
 
-    // ── Select Menu: ticket info panel picker (from /ticket info overview) ───
-    if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_info_panel_picker') {
-      const panelId = interaction.values[0];
-      const tickets = readData('tickets.json');
-      const panel   = tickets.panels?.[panelId];
-      if (!panel) return interaction.update({ content: '❌ Panel no longer exists.', embeds: [], components: [] });
-
-      const embed = new EmbedBuilder()
-        .setColor('#5865F2').setTitle(`🎫 Panel: ${panel.name}`)
-        .addFields(
-          { name: 'Button Label', value: panel.buttonLabel,        inline: true },
-          { name: 'Color',        value: panel.buttonStyle,        inline: true },
-          { name: 'Category',     value: `<#${panel.categoryId}>`, inline: true },
-          { name: 'Questions',    value: panel.questions.length > 0
-            ? panel.questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : 'None' },
-        ).setTimestamp();
-
-      const editMenu = new StringSelectMenuBuilder()
-        .setCustomId(`ticket_info_edit:${panel.id}`)
-        .setPlaceholder('✏️ Edit this panel...')
-        .addOptions(
-          new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji('🏷️'),
-          new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji('🎨'),
-          new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji('📁'),
-          new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji('➕'),
-          new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji('➖'),
-          new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji('🗑️'),
-        );
-
-      return interaction.update({
-        embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(editMenu)],
-      });
-    }
-
-    // ── Select Menu: ticket group panel picker ────────────────────────────────
-    if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_group_select') {
-      const selectedIds = interaction.values;
-      const tickets     = readData('tickets.json');
-      const selected    = selectedIds.map(id => tickets.panels?.[id]).filter(Boolean);
-
-      if (selected.length === 0)
-        return interaction.update({ content: '❌ No valid panels selected.', components: [] });
-
-      const embed = buildDescEmbed(tickets.description);
-      const rows  = [];
-      let curRow  = new ActionRowBuilder();
-      let count   = 0;
-
-      for (const panel of selected) {
-        if (count > 0 && count % 5 === 0) { rows.push(curRow); curRow = new ActionRowBuilder(); }
-        curRow.addComponents(
-          new ButtonBuilder()
-            .setCustomId(`ticket_open:${panel.id}`)
-            .setLabel(panel.buttonLabel)
-            .setStyle(BTN_STYLES[panel.buttonStyle] || ButtonStyle.Primary)
-        );
-        count++;
+      // ── Strikes add/remove modals ──────────────────────────────────────────
+      if (interaction.customId.startsWith('strikes_add_modal:')) {
+        const userId = interaction.customId.split(':')[1];
+        const reason = interaction.fields.getTextInputValue('reason');
+        const member = await interaction.guild.members.fetch(userId).catch(() => null);
+        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+        await interaction.deferReply();
+        await handleStrike('add', member, reason, interaction.user, interaction.guild, null, interaction);
+        return;
       }
-      rows.push(curRow);
 
-      const sent = await interaction.channel.send({ embeds: [embed], components: rows });
-      tickets.group = { enabled: true, channelId: interaction.channelId, messageId: sent.id };
-      writeData('tickets.json', tickets);
+      if (interaction.customId.startsWith('strikes_remove_modal:')) {
+        const userId = interaction.customId.split(':')[1];
+        const reason = interaction.fields.getTextInputValue('reason');
+        const member = await interaction.guild.members.fetch(userId).catch(() => null);
+        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+        await interaction.deferReply();
+        await handleStrike('remove', member, reason, interaction.user, interaction.guild, null, interaction);
+        return;
+      }
 
-      return interaction.update({ content: `✅ Grouped panel with **${selected.length}** panel(s) sent!`, components: [] });
+      // ── CheckLOA set modal ─────────────────────────────────────────────────
+      if (interaction.customId.startsWith('checkloa_set_modal:')) {
+        const userId      = interaction.customId.split(':')[1];
+        const durationStr = interaction.fields.getTextInputValue('duration');
+        const reason      = interaction.fields.getTextInputValue('reason');
+        const ms          = parseTime(durationStr);
+        if (!ms) return interaction.reply({ content: '❌ Invalid duration. Use e.g. `3d`, `1w`, `12h`.', ephemeral: true });
+        const member = await interaction.guild.members.fetch(userId).catch(() => null);
+        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+        const loa = readData('loa.json');
+        loa[userId] = { endTime: Date.now() + ms, reason, by: interaction.user.tag, username: member.user.tag };
+        writeData('loa.json', loa);
+        return interaction.reply({
+          embeds: [new EmbedBuilder()
+            .setColor('#5865F2').setTitle('🏖️ LOA Set')
+            .addFields(
+              { name: 'Staff Member', value: member.user.tag,      inline: true },
+              { name: 'Duration',     value: formatTime(ms),       inline: true },
+              { name: 'Set by',       value: interaction.user.tag, inline: true },
+              { name: 'Reason',       value: reason },
+            ).setTimestamp()],
+          ephemeral: true,
+        });
+      }
     }
 
-    // ── Select Menus: ticket info edit picker ────────────────────────────────
-    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('ticket_info_edit:')) {
-      const panelId = interaction.customId.split(':')[1];
-      const choice  = interaction.values[0];
-      const tickets = readData('tickets.json');
-      const panel   = tickets.panels?.[panelId];
-      if (!panel) return interaction.reply({ content: '❌ Panel no longer exists.', ephemeral: true });
+    // ── Role Select Menus ─────────────────────────────────────────────────────
+    if (interaction.isRoleSelectMenu()) {
+      // setrole: pick role for a slot
+      if (interaction.customId.startsWith('setrole_pick_role:')) {
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+        const slot   = interaction.customId.split(':')[1];
+        const roleId = interaction.values[0];
+        setRole(slot, roleId);
+        return interaction.update({
+          content: null,
+          embeds: [new EmbedBuilder()
+            .setColor('#57F287').setTitle('✅ Role Set')
+            .addFields(
+              { name: 'Slot', value: slot,            inline: true },
+              { name: 'Role', value: `<@&${roleId}>`, inline: true },
+            ).setTimestamp()],
+          components: [],
+        });
+      }
 
-      if (choice === 'delete') {
-        delete tickets.panels[panelId];
+      // ticket perms: add ping role
+      if (interaction.customId === 'ticket_perms_addping_select') {
+        const roleId  = interaction.values[0];
+        const tickets = readData('tickets.json');
+        if (!tickets.perms) tickets.perms = { pingRoles: [], viewRoles: [] };
+        if (!tickets.perms.pingRoles.includes(roleId)) {
+          tickets.perms.pingRoles.push(roleId);
+          writeData('tickets.json', tickets);
+          return interaction.update({ content: `✅ <@&${roleId}> added as ping role.`, embeds: [], components: [] });
+        }
+        return interaction.update({ content: `ℹ️ <@&${roleId}> is already a ping role.`, embeds: [], components: [] });
+      }
+
+      // ticket perms: add view role
+      if (interaction.customId === 'ticket_perms_addview_select') {
+        const roleId  = interaction.values[0];
+        const tickets = readData('tickets.json');
+        if (!tickets.perms) tickets.perms = { pingRoles: [], viewRoles: [] };
+        if (!tickets.perms.viewRoles.includes(roleId)) {
+          tickets.perms.viewRoles.push(roleId);
+          writeData('tickets.json', tickets);
+          return interaction.update({ content: `✅ <@&${roleId}> added as view role.`, embeds: [], components: [] });
+        }
+        return interaction.update({ content: `ℹ️ <@&${roleId}> already has view access.`, embeds: [], components: [] });
+      }
+    }
+
+    // ── Channel Select Menus ──────────────────────────────────────────────────
+    if (interaction.isChannelSelectMenu()) {
+      // ticket logs: set log channel
+      if (interaction.customId === 'ticket_logs_channel_select') {
+        const channelId = interaction.values[0];
+        const tickets   = readData('tickets.json');
+        tickets.logChannelId = channelId;
         writeData('tickets.json', tickets);
-        return interaction.update({ content: `✅ Panel **${panel.name}** deleted.`, embeds: [], components: [] });
+        return interaction.update({ content: `✅ Ticket log channel set to <#${channelId}>.`, embeds: [], components: [] });
       }
+    }
 
-      if (choice === 'color') {
-        const colorMenu = new StringSelectMenuBuilder()
-          .setCustomId(`ticket_edit_color:${panelId}`)
-          .setPlaceholder('Select new button color...')
+    // ── String Select Menus ───────────────────────────────────────────────────
+    if (interaction.isStringSelectMenu()) {
+
+      // ticket info panel picker (from /ticket info overview)
+      if (interaction.customId === 'ticket_info_panel_picker') {
+        const panelId = interaction.values[0];
+        const tickets = readData('tickets.json');
+        const panel   = tickets.panels?.[panelId];
+        if (!panel) return interaction.update({ content: '❌ Panel no longer exists.', embeds: [], components: [] });
+
+        const embed = new EmbedBuilder()
+          .setColor('#5865F2').setTitle(`🎫 Panel: ${panel.name}`)
+          .addFields(
+            { name: 'Button Label', value: panel.buttonLabel,        inline: true },
+            { name: 'Color',        value: panel.buttonStyle,        inline: true },
+            { name: 'Category',     value: `<#${panel.categoryId}>`, inline: true },
+            { name: 'Questions',    value: panel.questions.length > 0
+              ? panel.questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : 'None' },
+          ).setTimestamp();
+
+        const editMenu = new StringSelectMenuBuilder()
+          .setCustomId(`ticket_info_edit:${panel.id}`)
+          .setPlaceholder('✏️ Edit this panel...')
           .addOptions(
-            new StringSelectMenuOptionBuilder().setLabel('🔵 Blue').setValue('blue'),
-            new StringSelectMenuOptionBuilder().setLabel('⚫ Grey').setValue('grey'),
-            new StringSelectMenuOptionBuilder().setLabel('🟢 Green').setValue('green'),
-            new StringSelectMenuOptionBuilder().setLabel('🔴 Red').setValue('red'),
+            new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji('🏷️'),
+            new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji('🎨'),
+            new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji('📁'),
+            new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji('➕'),
+            new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji('➖'),
+            new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji('🗑️'),
           );
-        return interaction.update({ content: 'Select the new button color:', embeds: [], components: [new ActionRowBuilder().addComponents(colorMenu)] });
+
+        return interaction.update({
+          embeds: [embed],
+          components: [new ActionRowBuilder().addComponents(editMenu)],
+        });
       }
 
-      // All other choices → modal
-      const modalMap = {
-        label:    { title: 'Edit Button Label',    inputLabel: 'New button label',          field: 'label'    },
-        category: { title: 'Edit Category',        inputLabel: 'New Category ID',           field: 'category' },
-        addq:     { title: 'Add Question',         inputLabel: 'Question text',             field: 'addq'     },
-        removeq:  { title: 'Remove Question',      inputLabel: 'Question number to remove', field: 'removeq'  },
-      };
-      const m = modalMap[choice];
-      if (!m) return;
+      // ticket group panel picker
+      if (interaction.customId === 'ticket_group_select') {
+        const selectedIds = interaction.values;
+        const tickets     = readData('tickets.json');
+        const selected    = selectedIds.map(id => tickets.panels?.[id]).filter(Boolean);
 
-      const modal = new ModalBuilder()
-        .setCustomId(`ticket_edit_modal:${panelId}:${m.field}`)
-        .setTitle(m.title)
-        .addComponents(
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('value')
-              .setLabel(m.inputLabel)
-              .setStyle(TextInputStyle.Short)
-              .setRequired(true)
-          )
-        );
-      await interaction.showModal(modal);
-      return;
-    }
+        if (selected.length === 0)
+          return interaction.update({ content: '❌ No valid panels selected.', components: [] });
 
-    // ── Select Menus: ticket color edit ──────────────────────────────────────
-    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('ticket_edit_color:')) {
-      const panelId = interaction.customId.split(':')[1];
-      const color   = interaction.values[0];
-      const tickets = readData('tickets.json');
-      if (!tickets.panels?.[panelId]) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
-      tickets.panels[panelId].buttonStyle = color;
-      writeData('tickets.json', tickets);
-      return interaction.update({ content: `✅ Button color updated to **${color}**.`, embeds: [], components: [] });
-    }
+        const embed = buildDescEmbed(tickets.description);
+        const rows  = [];
+        let curRow  = new ActionRowBuilder();
+        let count   = 0;
 
-    // ── Select Menus: perms command picker ────────────────────────────────────
-    if (interaction.isStringSelectMenu() && interaction.customId === 'perms_select_command') {
-      if (!interaction.member.permissions.has('Administrator'))
-        return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+        for (const panel of selected) {
+          if (count > 0 && count % 5 === 0) { rows.push(curRow); curRow = new ActionRowBuilder(); }
+          curRow.addComponents(
+            new ButtonBuilder()
+              .setCustomId(`ticket_open:${panel.id}`)
+              .setLabel(panel.buttonLabel)
+              .setStyle(BTN_STYLES[panel.buttonStyle] || ButtonStyle.Primary)
+          );
+          count++;
+        }
+        rows.push(curRow);
 
-      const selectedCmd = interaction.values[0];
-      const levelMenu = new StringSelectMenuBuilder()
-        .setCustomId(`perms_select_level:${selectedCmd}`)
-        .setPlaceholder(`Select new permission for "${selectedCmd}"...`)
-        .addOptions(LEVEL_CHOICES.map(l =>
-          new StringSelectMenuOptionBuilder().setLabel(l.label).setValue(l.value)
-        ));
+        const sent = await interaction.channel.send({ embeds: [embed], components: rows });
+        tickets.group = { enabled: true, channelId: interaction.channelId, messageId: sent.id };
+        writeData('tickets.json', tickets);
 
-      return interaction.reply({
-        content: `What permission level should **\`${selectedCmd}\`** require?`,
-        components: [new ActionRowBuilder().addComponents(levelMenu)],
-        ephemeral: true,
-      });
-    }
+        return interaction.update({ content: `✅ Grouped panel with **${selected.length}** panel(s) sent!`, components: [] });
+      }
 
-    // ── Select Menus: perms level picker ─────────────────────────────────────
-    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('perms_select_level:')) {
-      if (!interaction.member.permissions.has('Administrator'))
-        return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+      // ticket info edit picker
+      if (interaction.customId.startsWith('ticket_info_edit:')) {
+        const panelId = interaction.customId.split(':')[1];
+        const choice  = interaction.values[0];
+        const tickets = readData('tickets.json');
+        const panel   = tickets.panels?.[panelId];
+        if (!panel) return interaction.reply({ content: '❌ Panel no longer exists.', ephemeral: true });
 
-      const cmd = interaction.customId.split(':')[1];
-      const level = interaction.values[0];
-      setPerm(cmd, level);
-      return interaction.update({
-        content: null,
-        embeds: [buildSetEmbed(cmd, level)],
-        components: [],
-      });
+        if (choice === 'delete') {
+          delete tickets.panels[panelId];
+          writeData('tickets.json', tickets);
+          return interaction.update({ content: `✅ Panel **${panel.name}** deleted.`, embeds: [], components: [] });
+        }
+
+        if (choice === 'color') {
+          const colorMenu = new StringSelectMenuBuilder()
+            .setCustomId(`ticket_edit_color:${panelId}`)
+            .setPlaceholder('Select new button color...')
+            .addOptions(
+              new StringSelectMenuOptionBuilder().setLabel('🔵 Blue').setValue('blue'),
+              new StringSelectMenuOptionBuilder().setLabel('⚫ Grey').setValue('grey'),
+              new StringSelectMenuOptionBuilder().setLabel('🟢 Green').setValue('green'),
+              new StringSelectMenuOptionBuilder().setLabel('🔴 Red').setValue('red'),
+            );
+          return interaction.update({ content: 'Select the new button color:', embeds: [], components: [new ActionRowBuilder().addComponents(colorMenu)] });
+        }
+
+        const modalMap = {
+          label:    { title: 'Edit Button Label',    inputLabel: 'New button label',          field: 'label'    },
+          category: { title: 'Edit Category',        inputLabel: 'New Category ID',           field: 'category' },
+          addq:     { title: 'Add Question',         inputLabel: 'Question text',             field: 'addq'     },
+          removeq:  { title: 'Remove Question',      inputLabel: 'Question number to remove', field: 'removeq'  },
+        };
+        const m = modalMap[choice];
+        if (!m) return;
+
+        const modal = new ModalBuilder()
+          .setCustomId(`ticket_edit_modal:${panelId}:${m.field}`)
+          .setTitle(m.title)
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('value').setLabel(m.inputLabel).setStyle(TextInputStyle.Short).setRequired(true)
+          ));
+        await interaction.showModal(modal);
+        return;
+      }
+
+      // ticket color edit
+      if (interaction.customId.startsWith('ticket_edit_color:')) {
+        const panelId = interaction.customId.split(':')[1];
+        const color   = interaction.values[0];
+        const tickets = readData('tickets.json');
+        if (!tickets.panels?.[panelId]) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
+        tickets.panels[panelId].buttonStyle = color;
+        writeData('tickets.json', tickets);
+        return interaction.update({ content: `✅ Button color updated to **${color}**.`, embeds: [], components: [] });
+      }
+
+      // perms command picker
+      if (interaction.customId === 'perms_select_command') {
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+
+        const selectedCmd = interaction.values[0];
+        const levelMenu   = new StringSelectMenuBuilder()
+          .setCustomId(`perms_select_level:${selectedCmd}`)
+          .setPlaceholder(`Select new permission for "${selectedCmd}"...`)
+          .addOptions(LEVEL_CHOICES.map(l =>
+            new StringSelectMenuOptionBuilder().setLabel(l.label).setValue(l.value)
+          ));
+
+        return interaction.reply({
+          content: `What permission level should **\`${selectedCmd}\`** require?`,
+          components: [new ActionRowBuilder().addComponents(levelMenu)],
+          ephemeral: true,
+        });
+      }
+
+      // perms level picker
+      if (interaction.customId.startsWith('perms_select_level:')) {
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+
+        const cmd   = interaction.customId.split(':')[1];
+        const level = interaction.values[0];
+        setPerm(cmd, level);
+        return interaction.update({ content: null, embeds: [buildSetEmbed(cmd, level)], components: [] });
+      }
+
+      // setrole slot picker
+      if (interaction.customId === 'setrole_pick_slot') {
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+
+        const slot       = interaction.values[0];
+        const roleSelect = new RoleSelectMenuBuilder()
+          .setCustomId(`setrole_pick_role:${slot}`)
+          .setPlaceholder(`Select the role for the "${slot}" slot...`);
+
+        return interaction.update({
+          content: `Assign a Discord role to the **${slot}** slot:`,
+          embeds: [],
+          components: [new ActionRowBuilder().addComponents(roleSelect)],
+        });
+      }
+
+      // ticket perms remove ping role
+      if (interaction.customId === 'ticket_perms_removeping_select') {
+        const roleId  = interaction.values[0];
+        const tickets = readData('tickets.json');
+        tickets.perms.pingRoles = (tickets.perms?.pingRoles || []).filter(id => id !== roleId);
+        writeData('tickets.json', tickets);
+        return interaction.update({ content: `✅ <@&${roleId}> removed from ping roles.`, embeds: [], components: [] });
+      }
+
+      // ticket perms remove view role
+      if (interaction.customId === 'ticket_perms_removeview_select') {
+        const roleId  = interaction.values[0];
+        const tickets = readData('tickets.json');
+        tickets.perms.viewRoles = (tickets.perms?.viewRoles || []).filter(id => id !== roleId);
+        writeData('tickets.json', tickets);
+        return interaction.update({ content: `✅ <@&${roleId}> removed from view roles.`, embeds: [], components: [] });
+      }
     }
   },
 };

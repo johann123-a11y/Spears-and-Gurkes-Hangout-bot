@@ -1,6 +1,9 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const fs = require('fs');
-const { sendLog } = require('../../utils/logger');
+const {
+  SlashCommandBuilder, EmbedBuilder,
+  StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
+  ActionRowBuilder,
+} = require('discord.js');
+const fs   = require('fs');
 const path = require('path');
 
 const CONFIG_PATH = path.join(__dirname, '../../config.json');
@@ -25,18 +28,18 @@ module.exports = {
             .setDescription('Which role slot to set')
             .setRequired(true)
             .addChoices(
-              { name: 'Admin', value: 'admin' },
-              { name: 'Bot', value: 'bot' },
-              { name: 'SrMod', value: 'srMod' },
-              { name: 'Mod', value: 'mod' },
-              { name: 'JrMod', value: 'jrMod' },
-              { name: 'SrHelper', value: 'srHelper' },
-              { name: 'Helper', value: 'helper' },
-              { name: 'JrHelper', value: 'jrHelper' },
-              { name: 'Member', value: 'member' },
-              { name: 'Staff Team', value: 'staffTeam' },
+              { name: 'Admin',           value: 'admin'          },
+              { name: 'Bot',             value: 'bot'            },
+              { name: 'SrMod',           value: 'srMod'          },
+              { name: 'Mod',             value: 'mod'            },
+              { name: 'JrMod',           value: 'jrMod'          },
+              { name: 'SrHelper',        value: 'srHelper'       },
+              { name: 'Helper',          value: 'helper'         },
+              { name: 'JrHelper',        value: 'jrHelper'       },
+              { name: 'Member',          value: 'member'         },
+              { name: 'Staff Team',      value: 'staffTeam'      },
               { name: 'Partner Manager', value: 'partnerManager' },
-              { name: 'Builder', value: 'builder' },
+              { name: 'Builder',         value: 'builder'        },
             )
         )
         .addRoleOption(o =>
@@ -65,7 +68,6 @@ module.exports = {
       if (!slot || !role)
         return message.reply('Usage: `?setrole set {slot} @role`\nSlots: `' + ROLE_KEYS.join('`, `') + '`');
 
-      // case-insensitive match
       const matched = ROLE_KEYS.find(k => k.toLowerCase() === slot);
       if (!matched)
         return message.reply(`❌ Unknown slot. Available: \`${ROLE_KEYS.join('`, `')}\``);
@@ -84,14 +86,28 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'list') {
-      return interaction.reply({ embeds: [buildListEmbed()], ephemeral: true });
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('setrole_pick_slot')
+        .setPlaceholder('Select a role slot to assign...')
+        .addOptions(ROLE_KEYS.map(key =>
+          new StringSelectMenuOptionBuilder()
+            .setLabel(key)
+            .setValue(key)
+            .setDescription(`Assign a role to the "${key}" slot`)
+        ));
+
+      return interaction.reply({
+        embeds: [buildListEmbed()],
+        components: [new ActionRowBuilder().addComponents(selectMenu)],
+        ephemeral: true,
+      });
     }
 
     if (sub === 'set') {
       const slot = interaction.options.getString('slot');
       const role = interaction.options.getRole('role');
       setRole(slot, role.id);
-      return interaction.reply({ embeds: [buildSetEmbed(slot, role)] });
+      return interaction.reply({ embeds: [buildSetEmbed(slot, role)], ephemeral: true });
     }
   },
 };
@@ -107,9 +123,9 @@ function buildSetEmbed(slot, role) {
     .setColor('#57F287')
     .setTitle('✅ Role Set')
     .addFields(
-      { name: 'Slot', value: slot, inline: true },
-      { name: 'Role', value: `${role}`, inline: true },
-      { name: 'Role ID', value: role.id, inline: true }
+      { name: 'Slot',    value: slot,      inline: true },
+      { name: 'Role',    value: `${role}`, inline: true },
+      { name: 'Role ID', value: role.id,   inline: true }
     )
     .setTimestamp();
 }
@@ -117,18 +133,19 @@ function buildSetEmbed(slot, role) {
 function buildListEmbed() {
   const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
   const fields = ROLE_KEYS.map(key => {
-    const id = config.roles[key];
+    const id  = config.roles[key];
     const set = id && !id.endsWith('_ROLE_ID');
-    return {
-      name: key,
-      value: set ? `<@&${id}>` : '❌ Not set',
-      inline: true,
-    };
+    return { name: key, value: set ? `<@&${id}>` : '❌ Not set', inline: true };
   });
 
   return new EmbedBuilder()
     .setColor('#5865F2')
     .setTitle('⚙️ Role Configuration')
+    .setDescription('Select a slot below to change its role assignment.\n\u200b')
     .addFields(fields)
     .setTimestamp();
 }
+
+module.exports.setRole      = setRole;
+module.exports.buildSetEmbed = buildSetEmbed;
+module.exports.ROLE_KEYS    = ROLE_KEYS;

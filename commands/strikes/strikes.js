@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const { readData } = require('../../utils');
 
 module.exports = {
@@ -16,14 +16,30 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    const user = interaction.options.getUser('user');
-    interaction.reply({ embeds: [buildEmbed(user, readData('strikes.json'))] });
+    const user    = interaction.options.getUser('user');
+    const strikes = readData('strikes.json');
+    const count   = strikes[user.id]?.count ?? 0;
+
+    const addBtn = new ButtonBuilder()
+      .setCustomId(`strikes_add:${user.id}`)
+      .setLabel('➕ Add Strike')
+      .setStyle(ButtonStyle.Danger);
+
+    const removeBtn = new ButtonBuilder()
+      .setCustomId(`strikes_remove:${user.id}`)
+      .setLabel('➖ Remove Strike')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(count === 0);
+
+    const row = new ActionRowBuilder().addComponents(addBtn, removeBtn);
+
+    interaction.reply({ embeds: [buildEmbed(user, strikes)], components: [row] });
   },
 };
 
 function buildEmbed(user, strikes) {
-  const data = strikes[user.id];
-  const count = data?.count ?? 0;
+  const data    = strikes[user.id];
+  const count   = data?.count ?? 0;
   const entries = data?.entries ?? [];
 
   const embed = new EmbedBuilder()
@@ -43,3 +59,5 @@ function buildEmbed(user, strikes) {
 
   return embed;
 }
+
+module.exports.buildEmbed = buildEmbed;
