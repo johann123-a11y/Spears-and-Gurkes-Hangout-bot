@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { parseTime, formatTime, checkPerm, readData, writeData } = require('../../utils');
+const { parseTime, formatTime, readData, writeData } = require('../../utils');
 
 module.exports = {
   name: 'loa',

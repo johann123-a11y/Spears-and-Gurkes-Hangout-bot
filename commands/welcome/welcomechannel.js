@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { checkPerm, readData, writeData } = require('../../utils');
+const { readData, writeData } = require('../../utils');
 
 module.exports = {
   name: 'welcomechannel',

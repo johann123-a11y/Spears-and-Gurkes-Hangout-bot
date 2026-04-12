@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
-const { checkPerm, readData, formatTime } = require('../../utils');
+const { readData, formatTime } = require('../../utils');
 
 module.exports = {
   name: 'checkloa',

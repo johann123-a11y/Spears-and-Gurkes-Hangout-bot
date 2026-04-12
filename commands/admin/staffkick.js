@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { checkPerm } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 const config = require('../../config.json');
 
@@ -13,31 +12,32 @@ module.exports = {
     .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(true)),
 
   async execute(message, args) {
-    if (!message.member.permissions.has("Administrator"))
+    if (!message.member.permissions.has('Administrator'))
       return message.reply('❌ Only **Admins** can use this command.');
 
     const target = message.mentions.members.first();
     const reason = args.slice(1).join(' ');
     if (!target || !reason) return message.reply('Usage: `?staffkick @user {reason}`');
 
-    await performStaffKick(target, reason, message.author.tag, message.channel);
+    await performStaffKick(target, reason, message.author, message.channel);
   },
 
   async executeSlash(interaction) {
-    if (!interaction.member.permissions.has("Administrator"))
+    if (!interaction.member.permissions.has('Administrator'))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
-    const user = interaction.options.getUser('user');
+    const user   = interaction.options.getUser('user');
     const reason = interaction.options.getString('reason');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
     if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
 
     await interaction.deferReply();
-    await performStaffKick(member, reason, interaction.user.tag, null, interaction);
+    await performStaffKick(member, reason, interaction.user, null, interaction);
   },
 };
 
-async function performStaffKick(member, reason, by, channel, interaction) {
+async function performStaffKick(member, reason, executor, channel, interaction) {
+  const client     = channel?.client || interaction?.client;
   const staffRoleIds = config.staffRoles
     .map(key => config.roles[key])
     .filter(id => id && !id.endsWith('_ROLE_ID') && member.roles.cache.has(id));
@@ -55,14 +55,22 @@ async function performStaffKick(member, reason, by, channel, interaction) {
     .setColor('#ED4245')
     .setTitle('🚪 Staff Member Removed')
     .addFields(
-      { name: 'User', value: `${member.user.tag}`, inline: true },
-      { name: 'Removed by', value: by, inline: true },
+      { name: 'User',          value: `${member.user.tag}`,                                     inline: true },
+      { name: 'Removed by',    value: executor.tag,                                              inline: true },
       { name: 'Roles Removed', value: staffRoleIds.length > 0 ? `${staffRoleIds.length} role(s)` : 'None found', inline: true },
-      { name: 'Reason', value: reason }
+      { name: 'Reason',        value: reason },
     )
     .setThumbnail(member.user.displayAvatarURL())
     .setTimestamp();
 
   if (channel) channel.send({ embeds: [embed] });
   else if (interaction) interaction.editReply({ embeds: [embed] });
+
+  sendLog(client, {
+    action:   'Staff Kicked',
+    executor: executor.tag,
+    target:   member.user.tag,
+    fields:   { Reason: reason, 'Roles Removed': `${staffRoleIds.length}` },
+    color:    '#ED4245',
+  });
 }

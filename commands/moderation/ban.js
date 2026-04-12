@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { checkPerm } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 
 module.exports = {

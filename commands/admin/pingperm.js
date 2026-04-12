@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
-const { checkPerm } = require('../../utils');
 
 module.exports = {
   name: 'pingperm',
