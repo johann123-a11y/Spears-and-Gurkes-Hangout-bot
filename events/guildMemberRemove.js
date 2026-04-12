@@ -6,14 +6,7 @@ module.exports = {
   async execute(member) {
     console.log(`[guildMemberRemove] fired for ${member.user?.tag}`);
 
-    // Open DM channel immediately while still in mutual guild
-    let dmChannel;
-    try {
-      dmChannel = await member.user.createDM();
-    } catch (err) {
-      console.log(`[guildMemberRemove] Cannot open DM for ${member.user?.tag}: ${err.message}`);
-      return;
-    }
+    if (!member.user) return;
 
     // Check audit log — skip if kicked or banned
     try {
@@ -27,7 +20,7 @@ module.exports = {
         Date.now() - e.createdTimestamp < 15000
       );
       if (wasForced) {
-        console.log(`[guildMemberRemove] Skipped DM — was kicked/banned`);
+        console.log(`[guildMemberRemove] Skipped — was kicked/banned`);
         return;
       }
     } catch (err) {
@@ -59,7 +52,7 @@ module.exports = {
     );
 
     try {
-      await dmChannel.send({ embeds: [embed], components: [row] });
+      await member.user.send({ embeds: [embed], components: [row] });
       console.log(`[guildMemberRemove] DM sent to ${member.user.tag}`);
     } catch (err) {
       console.log(`[guildMemberRemove] Could not DM ${member.user.tag}: ${err.message}`);

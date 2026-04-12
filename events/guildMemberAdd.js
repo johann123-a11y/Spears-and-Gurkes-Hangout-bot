@@ -23,5 +23,8 @@ module.exports = {
       .setTimestamp();
 
     channel.send({ embeds: [embed] }).catch(() => {});
+
+    // Pre-open DM channel so it exists when they leave
+    member.user.createDM().catch(() => {});
   },
 };
