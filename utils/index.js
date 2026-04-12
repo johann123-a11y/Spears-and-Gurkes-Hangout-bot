@@ -76,16 +76,29 @@ function hasPermission(member, level) {
 
 // --- Dynamic permission system ---
 const COMMAND_DEFAULTS = {
+  // Moderation
   mute: 'jrHelper', unmute: 'jrHelper',
-  ban: 'admin', kick: 'admin', clear: 'mod',
+  ban: 'admin', kick: 'admin',
+  clear: 'mod', purge: 'admin',
+  // Strikes
   strike: 'srMod', strikes: 'srMod',
+  // Staff management
   loa: 'admin', checkloa: 'admin',
   demote: 'admin', promote: 'admin',
   staffkick: 'admin', pingperm: 'admin',
-  setrole: 'admin',
+  // Setup
+  setrole: 'admin', logs: 'admin', perms: 'admin',
+  stick: 'admin',
+  // Welcome
   welcome: 'admin', welcomechannel: 'admin', welcomemessage: 'admin',
+  // Tickets
+  ticket: 'admin', tickets: 'admin',
+  // Applications
+  application: 'admin',
+  // Giveaways
   gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam',
-  afk: 'everyone', help: 'everyone', perms: 'admin',
+  // General
+  afk: 'everyone', help: 'everyone',
 };
 
 const COMMAND_LABELS = {

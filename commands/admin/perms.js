@@ -9,35 +9,56 @@ const COMMAND_DESCRIPTIONS = {
   mute:           'Timeouts a user',
   unmute:         'Removes a timeout',
   ban:            'Permanently bans a user',
-  kick:           'Kicks a user from the server',
-  strike:         'Gives or removes a strike from a staff member',
+  kick:           'Kicks a user',
+  clear:          'Deletes a number of messages',
+  purge:          'Deletes messages from a specific user',
+  strike:         'Gives/removes a strike',
   strikes:        'Shows all strikes of a user',
   loa:            'Puts a user on Leave of Absence',
-  checkloa:       'Shows the remaining LOA time',
-  demote:         'Demotes a staff member to a role',
-  promote:        'Promotes a staff member to a role',
-  staffkick:      'Removes all staff roles from a user',
+  checkloa:       'Shows remaining LOA time',
+  demote:         'Demotes a staff member',
+  promote:        'Promotes a staff member',
+  staffkick:      'Removes all staff roles',
   pingperm:       'Grants a role ping permissions',
-  setrole:        'Sets a role ID in the bot config',
-  stick:          'Sticks a message to the bottom of a channel',
-  welcome:        'Toggle welcome messages on/off',
+  setrole:        'Sets a role in the bot config',
+  logs:           'Sets the main log channel',
+  perms:          'Manages command permissions',
+  stick:          'Sticks a message to a channel',
+  welcome:        'Toggle welcome messages',
   welcomechannel: 'Sets the welcome channel',
-  welcomemessage: 'Changes the welcome message text',
+  welcomemessage: 'Changes the welcome message',
+  ticket:         'Full ticket system',
+  tickets:        'Manage ticket panels',
+  application:    'Full application system',
   gstart:         'Starts a giveaway',
   gend:           'Ends a giveaway early',
   greroll:        'Rerolls giveaway winners',
   afk:            'Sets yourself as AFK',
   help:           'Shows all commands',
-  perms:          'Manages command permissions',
 };
 
-const LEVEL_CHOICES = [
-  { label: '🌍 Everyone', value: 'everyone' },
-  { label: '🟢 JrHelper+', value: 'jrHelper' },
-  { label: '🟠 SrMod+', value: 'srMod' },
-  { label: '🔵 Staff Team', value: 'staffTeam' },
-  { label: '🔴 Admin Only', value: 'admin' },
+// Groups for the embed display
+const COMMAND_GROUPS = [
+  { name: '🔇 Moderation',       cmds: ['mute', 'unmute', 'ban', 'kick', 'clear', 'purge'] },
+  { name: '⚠️ Strikes',          cmds: ['strike', 'strikes'] },
+  { name: '🛡️ Staff Management', cmds: ['loa', 'checkloa', 'demote', 'promote', 'staffkick', 'pingperm'] },
+  { name: '⚙️ Setup',            cmds: ['setrole', 'logs', 'perms', 'stick'] },
+  { name: '👋 Welcome',          cmds: ['welcome', 'welcomechannel', 'welcomemessage'] },
+  { name: '🎫 Tickets',          cmds: ['ticket', 'tickets'] },
+  { name: '📋 Applications',     cmds: ['application'] },
+  { name: '🎉 Giveaways',        cmds: ['gstart', 'gend', 'greroll'] },
+  { name: '💬 General',          cmds: ['afk', 'help'] },
 ];
+
+const LEVEL_CHOICES = [
+  { label: '🌍 Everyone',    value: 'everyone'  },
+  { label: '🟢 JrHelper+',  value: 'jrHelper'  },
+  { label: '🟠 SrMod+',     value: 'srMod'     },
+  { label: '🔵 Staff Team', value: 'staffTeam' },
+  { label: '🔴 Admin Only', value: 'admin'     },
+];
+
+const ALL_CMDS = Object.keys(COMMAND_DEFAULTS); // 29 commands
 
 module.exports = {
   name: 'perms',
@@ -54,13 +75,12 @@ module.exports = {
         .setDescription('Change the permission level for a command')
         .addStringOption(o =>
           o.setName('command')
-            .setDescription('Which command to update')
+            .setDescription('Command name (e.g. mute, ticket, application)')
             .setRequired(true)
-            .addChoices(...Object.keys(COMMAND_DEFAULTS).map(k => ({ name: k, value: k })))
         )
         .addStringOption(o =>
           o.setName('level')
-            .setDescription('Required permission level')
+            .setDescription('Permission level')
             .setRequired(true)
             .addChoices(...LEVEL_CHOICES.map(l => ({ name: l.label, value: l.value })))
         )
@@ -71,13 +91,11 @@ module.exports = {
       return message.reply('❌ Only **Administrators** can use this command.');
 
     const sub = args[0]?.toLowerCase();
-
-    if (!sub || sub === 'list') {
+    if (!sub || sub === 'list')
       return message.channel.send({ embeds: [buildListEmbed()] });
-    }
 
     if (sub === 'set') {
-      const cmd = args[1]?.toLowerCase();
+      const cmd   = args[1]?.toLowerCase();
       const level = args[2]?.toLowerCase();
       if (!cmd || !level) return message.reply('Usage: `?perms set {command} {level}`');
       if (!COMMAND_DEFAULTS[cmd]) return message.reply(`❌ Unknown command: \`${cmd}\``);
@@ -96,29 +114,36 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'list') {
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId('perms_select_command')
-        .setPlaceholder('Select a command to edit...')
-        .addOptions(
-          Object.keys(COMMAND_DEFAULTS).map(cmd =>
+      // Split 29 commands across two select menus (max 25 per menu)
+      const firstHalf  = ALL_CMDS.slice(0, 25);
+      const secondHalf = ALL_CMDS.slice(25);
+
+      const makeMenu = (cmds, customId, placeholder) =>
+        new StringSelectMenuBuilder()
+          .setCustomId(customId)
+          .setPlaceholder(placeholder)
+          .addOptions(cmds.map(cmd =>
             new StringSelectMenuOptionBuilder()
               .setLabel(cmd)
               .setDescription(COMMAND_DESCRIPTIONS[cmd] ?? '—')
               .setValue(cmd)
-          )
-        );
+          ));
 
-      const row = new ActionRowBuilder().addComponents(selectMenu);
+      const rows = [
+        new ActionRowBuilder().addComponents(makeMenu(firstHalf, 'perms_select_command', 'Select a command to edit... (1–25)')),
+      ];
+      if (secondHalf.length > 0)
+        rows.push(new ActionRowBuilder().addComponents(makeMenu(secondHalf, 'perms_select_command', `Select a command to edit... (26–${ALL_CMDS.length})`)));
 
       return interaction.reply({
         embeds: [buildListEmbed()],
-        components: [row],
+        components: rows,
         ephemeral: true,
       });
     }
 
     if (sub === 'set') {
-      const cmd = interaction.options.getString('command');
+      const cmd   = interaction.options.getString('command');
       const level = interaction.options.getString('level');
       setPerm(cmd, level);
       return interaction.reply({ embeds: [buildSetEmbed(cmd, level)], ephemeral: true });
@@ -137,22 +162,23 @@ function buildSetEmbed(cmd, level) {
     .setColor('#57F287')
     .setTitle('✅ Permission Updated')
     .addFields(
-      { name: 'Command', value: `\`${cmd}\``, inline: true },
-      { name: 'New Permission', value: COMMAND_LABELS[level] ?? level, inline: true },
-      { name: 'Description', value: COMMAND_DESCRIPTIONS[cmd] ?? '—' }
+      { name: 'Command',        value: `\`${cmd}\``,                    inline: true },
+      { name: 'New Permission', value: COMMAND_LABELS[level] ?? level,   inline: true },
+      { name: 'Description',    value: COMMAND_DESCRIPTIONS[cmd] ?? '—' }
     )
     .setTimestamp();
 }
 
 function buildListEmbed() {
   const perms = readData('perms.json');
-  const fields = Object.keys(COMMAND_DEFAULTS).map(cmd => {
-    const level = perms[cmd] ?? COMMAND_DEFAULTS[cmd];
-    return {
-      name: `\`${cmd}\``,
-      value: `${COMMAND_LABELS[level] ?? level}\n*${COMMAND_DESCRIPTIONS[cmd] ?? '—'}*`,
-      inline: true,
-    };
+
+  const fields = COMMAND_GROUPS.map(group => {
+    const lines = group.cmds.map(cmd => {
+      const level = perms[cmd] ?? COMMAND_DEFAULTS[cmd];
+      const label = COMMAND_LABELS[level] ?? level;
+      return `\`${cmd}\` — ${label}`;
+    });
+    return { name: group.name, value: lines.join('\n') };
   });
 
   return new EmbedBuilder()
@@ -163,6 +189,6 @@ function buildListEmbed() {
     .setTimestamp();
 }
 
-module.exports.setPerm = setPerm;
+module.exports.setPerm       = setPerm;
 module.exports.buildSetEmbed = buildSetEmbed;
 module.exports.LEVEL_CHOICES = LEVEL_CHOICES;
