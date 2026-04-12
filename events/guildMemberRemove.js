@@ -9,10 +9,8 @@ module.exports = {
     const defaultMsg = 'Hey {user}, schade dass du unseren Server verlassen hast. Wir hoffen dich bald wiederzusehen!';
     const messageText = data.message || defaultMsg;
 
-    // Wait 2s so Discord has time to write the kick/ban audit log entry
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Skip DM if the user was kicked or banned
+    // Check audit log immediately — for bans, GuildBanAdd fires before GuildMemberRemove
+    // so the entry is already available. For kicks it's also nearly instant.
     try {
       const [kickLogs, banLogs] = await Promise.all([
         member.guild.fetchAuditLogs({ type: AuditLogEvent.MemberKick, limit: 3 }),
@@ -21,12 +19,11 @@ module.exports = {
       const allEntries = [...kickLogs.entries.values(), ...banLogs.entries.values()];
       const wasForced = allEntries.find(e =>
         e.target?.id === member.user.id &&
-        Date.now() - e.createdTimestamp < 10000
+        Date.now() - e.createdTimestamp < 15000
       );
       if (wasForced) return;
     } catch (err) {
       console.error('[guildMemberRemove] Audit log check failed:', err.message);
-      // No audit log access — continue and send DM anyway
     }
 
     const dmMessage = messageText.replace('{user}', member.user.username);
