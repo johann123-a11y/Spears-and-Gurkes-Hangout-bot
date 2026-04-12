@@ -4,6 +4,7 @@ const { readData } = require('../utils');
 module.exports = {
   name: 'guildMemberRemove',
   async execute(member) {
+    console.log(`[guildMemberRemove] fired for ${member.user?.tag}`);
     const data = readData('leave.json');
     const defaultMsg = 'Hey {user}, schade dass du unseren Server verlassen hast. Wir hoffen dich bald wiederzusehen!';
     const messageText = data.message || defaultMsg;
