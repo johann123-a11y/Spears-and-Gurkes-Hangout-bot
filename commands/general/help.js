@@ -76,15 +76,12 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: '👋 Welcome & Leave [Admin]',
+        name: '👋 Welcome [Admin]',
         value: [
           '`?welcome enable / disable` — Toggle welcome messages',
           '`?welcomechannel #channel` — Sets the welcome channel',
           '`?welcomemessage {msg}` — Changes the welcome message',
           '*Variables: `{member}` `{server}` `{membercount}`*',
-          '`/leave message` — Set DM message & invite sent when user leaves (panel)',
-          '`/leave channel` — Set channel where leave reasons are posted',
-          '`/leave info` — Show current leave configuration',
         ].join('\n'),
       },
       {

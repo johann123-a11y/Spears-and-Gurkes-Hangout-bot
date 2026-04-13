@@ -358,26 +358,6 @@ module.exports = {
         return sendTicketOverview(interaction, 'update');
       }
 
-      // ── Leave: user clicks "Tell us why you left" ─────────────────────────
-      if (interaction.customId.startsWith('leave_reason_btn:')) {
-        const [, guildId] = interaction.customId.split(':');
-        const modal = new ModalBuilder()
-          .setCustomId(`leave_reason_modal:${guildId}`)
-          .setTitle('Why did you leave?')
-          .addComponents(
-            new ActionRowBuilder().addComponents(
-              new TextInputBuilder()
-                .setCustomId('reason')
-                .setLabel('Your reason (optional, anonymous)')
-                .setStyle(TextInputStyle.Paragraph)
-                .setPlaceholder('Tell us what we could do better...')
-                .setRequired(false)
-                .setMaxLength(1000)
-            ),
-          );
-        return interaction.showModal(modal);
-      }
-
       if (interaction.customId === 'ticket_desc_edit_btn') {
         const tickets = readData('tickets.json');
         const current = tickets.description || {};
@@ -706,58 +686,6 @@ module.exports = {
         return;
       }
 
-      // ── Leave reason modal ────────────────────────────────────────────────
-      if (interaction.customId.startsWith('leave_reason_modal:')) {
-        const guildId = interaction.customId.split(':')[1];
-        const reason  = interaction.fields.getTextInputValue('reason');
-        const data    = readData('leave.json');
-
-        if (data.channel) {
-          const guild = interaction.client.guilds.cache.get(guildId);
-          const channel = guild?.channels.cache.get(data.channel);
-          if (channel) {
-            const embed = new EmbedBuilder()
-              .setColor('#ED4245')
-              .setTitle('🚪 Leave Reason')
-              .setDescription(reason)
-              .addFields(
-                { name: 'User', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                { name: 'User ID', value: interaction.user.id, inline: true },
-              )
-              .setThumbnail(interaction.user.displayAvatarURL())
-              .setTimestamp();
-            channel.send({ embeds: [embed] }).catch(() => {});
-          }
-        }
-
-        return interaction.reply({
-          content: '✅ Thanks for the feedback! We appreciate your input.',
-          ephemeral: true,
-        });
-      }
-
-      // ── Leave message config modal ─────────────────────────────────────────
-      if (interaction.customId === 'leave_message_modal') {
-        const message = interaction.fields.getTextInputValue('dm_message');
-        const invite  = interaction.fields.getTextInputValue('invite');
-        const data    = readData('leave.json');
-        data.message  = message;
-        data.invite   = invite;
-        writeData('leave.json', data);
-        return interaction.reply({
-          embeds: [new EmbedBuilder()
-            .setColor('#57F287')
-            .setTitle('✅ Leave DM Configured')
-            .addFields(
-              { name: 'DM Message', value: message },
-              { name: 'Server Invite', value: invite },
-            )
-            .setFooter({ text: 'Use /leave channel to set the leave log channel.' })
-            .setTimestamp()],
-          ephemeral: true,
-        });
-      }
-
       // ── CheckLOA set modal ─────────────────────────────────────────────────
       if (interaction.customId.startsWith('checkloa_set_modal:')) {
         const userId      = interaction.customId.split(':')[1];
@@ -843,14 +771,6 @@ module.exports = {
         return interaction.update({ content: `✅ Ticket log channel set to <#${channelId}>.`, embeds: [], components: [] });
       }
 
-      // leave: set log channel
-      if (interaction.customId === 'leave_channel_select') {
-        const channelId = interaction.values[0];
-        const data      = readData('leave.json');
-        data.channel    = channelId;
-        writeData('leave.json', data);
-        return interaction.update({ content: `✅ Leave reasons will be posted in <#${channelId}>.`, embeds: [], components: [] });
-      }
     }
 
     // ── String Select Menus ───────────────────────────────────────────────────

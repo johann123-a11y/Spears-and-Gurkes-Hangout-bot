@@ -1,17 +1,9 @@
 const { EmbedBuilder } = require('discord.js');
-const { readData, writeData } = require('../utils');
+const { readData } = require('../utils');
 
 module.exports = {
   name: 'guildMemberAdd',
   async execute(member, client) {
-    // Always pre-cache DM channel ID so leave DM works later
-    const dm = await member.user.createDM().catch(() => null);
-    if (dm) {
-      const dmCache = readData('dm_channels.json');
-      dmCache[member.user.id] = dm.id;
-      writeData('dm_channels.json', dmCache);
-    }
-
     const data = readData('welcome.json');
     if (!data.enabled || !data.channel) return;
 

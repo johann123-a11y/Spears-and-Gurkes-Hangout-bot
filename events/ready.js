@@ -13,26 +13,6 @@ module.exports = {
     // Check timers every 30 seconds
     setInterval(() => checkTimers(client), 30_000);
 
-    // Pre-cache DM channel IDs persistently so leave DMs work
-    try {
-      const guild = await client.guilds.fetch(config.guildId);
-      const members = await guild.members.fetch();
-      const dmCache = readData('dm_channels.json');
-      let count = 0;
-      for (const [, member] of members) {
-        if (member.user.bot) continue;
-        if (!dmCache[member.user.id]) {
-          const dm = await member.user.createDM().catch(() => null);
-          if (dm) dmCache[member.user.id] = dm.id;
-        }
-        count++;
-        if (count % 20 === 0) await new Promise(r => setTimeout(r, 1000));
-      }
-      writeData('dm_channels.json', dmCache);
-      console.log(`✅ Pre-cached DM channels for ${count} members`);
-    } catch (err) {
-      console.error('DM pre-cache failed:', err.message);
-    }
   },
 };
 
