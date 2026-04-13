@@ -19,6 +19,20 @@ module.exports = {
             .setDescription('The role that receives ping permission')
             .setRequired(true)
         )
+    )
+    .addSubcommand(sub =>
+      sub.setName('remove')
+        .setDescription('Remove a role\'s permission to ping a target')
+        .addStringOption(o =>
+          o.setName('ping')
+            .setDescription('What to disallow pinging: @everyone, @here, or a role mention')
+            .setRequired(true)
+        )
+        .addRoleOption(o =>
+          o.setName('role')
+            .setDescription('The role that loses ping permission')
+            .setRequired(true)
+        )
     ),
 
   async execute(message, args) {
@@ -27,28 +41,80 @@ module.exports = {
 
     // ?pingperm add {ping} {role}
     const sub = args[0]?.toLowerCase();
-    if (sub !== 'add') return message.reply('Usage: `?pingperm add {ping} {role}`');
+    if (sub !== 'add' && sub !== 'remove') return message.reply('Usage: `?pingperm add|remove {ping} {role}`');
 
     const pingTarget = args[1];
     const roleMention = message.mentions.roles.first();
 
     if (!pingTarget || !roleMention)
-      return message.reply('Usage: `?pingperm add {@everyone|@here|@role} @role`');
+      return message.reply('Usage: `?pingperm add|remove {@everyone|@here|@role} @role`');
 
-    await performPingPerm(message.guild, pingTarget, roleMention, message.channel);
+    if (sub === 'add') {
+      await performPingPerm(message.guild, pingTarget, roleMention, message.channel);
+    } else {
+      await performPingPermRemove(message.guild, pingTarget, roleMention, message.channel);
+    }
   },
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has("Administrator"))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
+    const sub = interaction.options.getSubcommand();
     const pingTarget = interaction.options.getString('ping');
     const role = interaction.options.getRole('role');
 
     await interaction.deferReply();
-    await performPingPerm(interaction.guild, pingTarget, role, null, interaction);
+    if (sub === 'add') {
+      await performPingPerm(interaction.guild, pingTarget, role, null, interaction);
+    } else if (sub === 'remove') {
+      await performPingPermRemove(interaction.guild, pingTarget, role, null, interaction);
+    }
   },
 };
+
+async function performPingPermRemove(guild, pingTarget, targetRole, channel, interaction) {
+  const lower = pingTarget.toLowerCase();
+
+  try {
+    if (lower === '@everyone' || lower === '@here' || lower === 'everyone' || lower === 'here') {
+      await targetRole.setPermissions(
+        targetRole.permissions.remove(PermissionFlagsBits.MentionEveryone)
+      );
+
+      const embed = new EmbedBuilder()
+        .setColor('#57F287')
+        .setTitle('✅ Ping Permission Removed')
+        .setDescription(`The role **${targetRole.name}** can no longer use \`@everyone\` / \`@here\`.`)
+        .setTimestamp();
+
+      return channel ? channel.send({ embeds: [embed] }) : interaction.editReply({ embeds: [embed] });
+    }
+
+    const mentionableRoleId = pingTarget.replace(/[<@&>]/g, '');
+    const mentionableRole = guild.roles.cache.get(mentionableRoleId);
+
+    if (!mentionableRole) {
+      const msg = '❌ Could not find the role to make non-mentionable.';
+      return channel ? channel.send(msg) : interaction.editReply(msg);
+    }
+
+    await mentionableRole.setMentionable(false, `Ping permission removed from ${targetRole.name}`);
+
+    const embed = new EmbedBuilder()
+      .setColor('#57F287')
+      .setTitle('✅ Ping Permission Removed')
+      .setDescription(`The role **${mentionableRole.name}** is no longer mentionable by **${targetRole.name}**.`)
+      .setTimestamp();
+
+    if (channel) channel.send({ embeds: [embed] });
+    else if (interaction) interaction.editReply({ embeds: [embed] });
+  } catch (err) {
+    const msg = `❌ Failed: ${err.message}`;
+    if (channel) channel.send(msg);
+    else if (interaction) interaction.editReply(msg);
+  }
+}
 
 async function performPingPerm(guild, pingTarget, targetRole, channel, interaction) {
   const lower = pingTarget.toLowerCase();

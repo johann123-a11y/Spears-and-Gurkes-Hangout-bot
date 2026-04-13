@@ -27,7 +27,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   try {
     console.log(`Registering ${slashCommands.length} slash commands...`);
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, config.guildId),
       { body: slashCommands }
     );
     console.log('Slash commands registered successfully!');

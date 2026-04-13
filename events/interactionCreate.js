@@ -390,6 +390,43 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
+      // ── Giveaway join button ───────────────────────────────────────────────
+      if (interaction.customId.startsWith('giveaway_join:')) {
+        const msgId = interaction.customId.split(':')[1];
+        const giveaways = readData('giveaways.json');
+        const gw = giveaways[msgId];
+        if (!gw || gw.ended)
+          return interaction.reply({ content: '❌ This giveaway has already ended.', ephemeral: true });
+
+        const idx = gw.participants ? gw.participants.indexOf(interaction.user.id) : -1;
+        if (!gw.participants) gw.participants = [];
+
+        if (idx === -1) {
+          gw.participants.push(interaction.user.id);
+          writeData('giveaways.json', giveaways);
+          return interaction.reply({ content: '🎉 You joined the giveaway! Good luck!', ephemeral: true });
+        } else {
+          gw.participants.splice(idx, 1);
+          writeData('giveaways.json', giveaways);
+          return interaction.reply({ content: '👋 You left the giveaway.', ephemeral: true });
+        }
+      }
+
+      // ── Activity check confirm button ──────────────────────────────────────
+      if (interaction.customId === 'activitycheck_confirm') {
+        const msgId = interaction.message.id;
+        const checks = readData('activitychecks.json');
+        const check = checks[msgId];
+        if (!check || check.processed)
+          return interaction.reply({ content: '❌ This activity check is no longer active.', ephemeral: true });
+        if (!check.respondedUserIds) check.respondedUserIds = [];
+        if (check.respondedUserIds.includes(interaction.user.id))
+          return interaction.reply({ content: '✅ You already confirmed your activity!', ephemeral: true });
+        check.respondedUserIds.push(interaction.user.id);
+        writeData('activitychecks.json', checks);
+        return interaction.reply({ content: '✅ Activity confirmed! You are marked as active.', ephemeral: true });
+      }
+
       if (interaction.customId === 'ticket_desc_edit_btn') {
         const tickets = readData('tickets.json');
         const current = tickets.description || {};
@@ -428,6 +465,43 @@ module.exports = {
         if (isNaN(winners) || winners < 1)   return interaction.reply({ content: '❌ Winners must be a positive number.', ephemeral: true });
         await interaction.reply({ content: '✅ Giveaway started!', ephemeral: true });
         await createGiveaway(interaction.channel, ms, winners, prize, description, interaction.user.id);
+        return;
+      }
+
+      // ── Activity check modal ──────────────────────────────────────────────
+      if (interaction.customId === 'activitycheck_modal') {
+        const message = interaction.fields.getTextInputValue('message');
+        const durationStr = interaction.fields.getTextInputValue('duration');
+        const ms = parseTime(durationStr);
+        if (!ms) return interaction.reply({ content: '❌ Invalid duration format.', ephemeral: true });
+
+        const deadline = Date.now() + ms;
+
+        const { EmbedBuilder: ACEmbed, ButtonBuilder: ACBtn, ButtonStyle: ACStyle, ActionRowBuilder: ACRow } = require('discord.js');
+        const embed = new ACEmbed()
+          .setColor('#5865F2')
+          .setTitle('📋 Activity Check')
+          .setDescription(message)
+          .addFields({ name: '⏰ Deadline', value: `<t:${Math.floor(deadline / 1000)}:R> (<t:${Math.floor(deadline / 1000)}:f>)` })
+          .setTimestamp();
+
+        const btn = new ACBtn()
+          .setCustomId('activitycheck_confirm')
+          .setLabel('✅ I\'m active!')
+          .setStyle(ACStyle.Success);
+
+        await interaction.reply({ content: '✅ Activity check posted!', ephemeral: true });
+        const msg = await interaction.channel.send({ embeds: [embed], components: [new ACRow().addComponents(btn)] });
+
+        const checks = readData('activitychecks.json');
+        checks[msg.id] = {
+          channelId: interaction.channel.id,
+          guildId: interaction.guild.id,
+          deadline,
+          respondedUserIds: [],
+          processed: false,
+        };
+        writeData('activitychecks.json', checks);
         return;
       }
 

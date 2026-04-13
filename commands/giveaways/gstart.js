@@ -5,6 +5,8 @@ const {
   TextInputBuilder,
   TextInputStyle,
   ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = require('discord.js');
 const { checkPerm, parseTime, formatTime, readData, writeData } = require('../../utils');
 
@@ -88,13 +90,21 @@ async function createGiveaway(channel, ms, winners, prize, description, hostId) 
     .setColor('#FFD700')
     .setTitle(`🎉 GIVEAWAY — ${prize}`)
     .setDescription(
-      `${description}\n\nReact with 🎉 to enter!\n\n**Winners:** ${winners}\n**Ends:** <t:${Math.floor(endTime / 1000)}:R>`
+      `${description}\n\nClick the button below to enter!\n\n**Winners:** ${winners}\n**Ends:** <t:${Math.floor(endTime / 1000)}:R>`
     )
     .setFooter({ text: `Hosted by User ID: ${hostId} • Ends at` })
     .setTimestamp(endTime);
 
-  const msg = await channel.send({ embeds: [embed] });
-  await msg.react('🎉');
+  const btn = new ButtonBuilder()
+    .setCustomId('giveaway_join:PLACEHOLDER')
+    .setLabel('🎉 Join Giveaway')
+    .setStyle(ButtonStyle.Primary);
+
+  const msg = await channel.send({ embeds: [embed], components: [new ActionRowBuilder().addComponents(btn)] });
+
+  // Update button customId with real message ID
+  btn.setCustomId(`giveaway_join:${msg.id}`);
+  await msg.edit({ embeds: [embed], components: [new ActionRowBuilder().addComponents(btn)] });
 
   const giveaways = readData('giveaways.json');
   giveaways[msg.id] = {
@@ -106,6 +116,7 @@ async function createGiveaway(channel, ms, winners, prize, description, hostId) 
     description,
     hostId,
     ended: false,
+    participants: [],
   };
   writeData('giveaways.json', giveaways);
 }

@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getMemberRoleLevel, promoteOrder } = require('../../utils');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { getMemberRoleLevel, promoteOrder, checkPerm } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 const config = require('../../config.json');
 

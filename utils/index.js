@@ -88,7 +88,7 @@ const COMMAND_DEFAULTS = {
   // Giveaways (configurable)
   gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam',
   // General (configurable)
-  afk: 'everyone', help: 'everyone',
+  afk: 'everyone', help: 'everyone', hereping: 'staffTeam',
 };
 
 const COMMAND_LABELS = {

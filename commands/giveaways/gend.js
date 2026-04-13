@@ -52,9 +52,9 @@ async function endGiveaway(msgId, guild, replyChannel, interaction) {
     return interaction ? interaction.editReply(msg) : replyChannel.send(msg);
   }
 
-  const reaction = gwMsg.reactions.cache.get('🎉');
-  const users = reaction ? (await reaction.users.fetch()).filter(u => !u.bot) : new Map();
-  const userArray = [...users.values()];
+  const participantIds = gw.participants || [];
+  const members = await Promise.all(participantIds.map(id => guild.members.fetch(id).catch(() => null)));
+  const userArray = members.filter(Boolean);
 
   const winnerCount = Math.min(gw.winners, userArray.length);
   const winners = [];
@@ -65,7 +65,7 @@ async function endGiveaway(msgId, guild, replyChannel, interaction) {
   }
 
   const winnerMentions = winners.length > 0
-    ? winners.map(u => `<@${u.id}>`).join(', ')
+    ? winners.map(m => `<@${m.user.id}>`).join(', ')
     : 'No valid entries.';
 
   const embed = new EmbedBuilder()
@@ -74,11 +74,11 @@ async function endGiveaway(msgId, guild, replyChannel, interaction) {
     .setDescription(`**Winner(s):** ${winnerMentions}`)
     .setTimestamp();
 
-  await gwMsg.edit({ embeds: [embed] });
+  await gwMsg.edit({ embeds: [embed], components: [] });
   channel.send(`🎉 Congratulations ${winnerMentions}! You won **${gw.prize}**!`);
 
   giveaways[msgId].ended = true;
-  giveaways[msgId].winnerIds = winners.map(u => u.id);
+  giveaways[msgId].winnerIds = winners.map(m => m.user.id);
   writeData('giveaways.json', giveaways);
 
   if (interaction) interaction.editReply('✅ Giveaway ended!');
