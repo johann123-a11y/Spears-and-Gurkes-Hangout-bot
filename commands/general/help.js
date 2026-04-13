@@ -89,7 +89,8 @@ function buildEmbed() {
         value: [
           '`/send all` — DM an alle Member (Überschrift, Unterzeile, Text, Footer)',
           '`/send test` — Test-DM nur an dich',
-          '`/review panel` — Postet ein Review-Panel im Channel',
+          '`/review panel` — Panel mit Button im Channel posten (User submitten Reviews)',
+          '`/review send` — Nachricht direkt in den Review-Channel schicken',
           '`/review channel` — Setzt den Channel für eingehende Reviews',
         ].join('\n'),
       },

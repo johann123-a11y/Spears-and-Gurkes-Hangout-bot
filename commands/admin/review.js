@@ -28,7 +28,8 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('review')
     .setDescription('Review system [Admin Only]')
-    .addSubcommand(s => s.setName('panel').setDescription('Review-Panel in diesem Channel posten'))
+    .addSubcommand(s => s.setName('panel').setDescription('Review-Panel mit Button in diesem Channel posten'))
+    .addSubcommand(s => s.setName('send').setDescription('Nachricht direkt in den Review-Channel schicken'))
     .addSubcommand(s => s.setName('test').setDescription('Test — schickt dir das Panel als DM'))
     .addSubcommand(s => s.setName('channel').setDescription('Channel für eingehende Reviews setzen')),
 
@@ -39,7 +40,19 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'panel') return interaction.showModal(buildPanelModal(false));
-    if (sub === 'test') return interaction.showModal(buildPanelModal(true));
+    if (sub === 'test')  return interaction.showModal(buildPanelModal(true));
+
+    if (sub === 'send') {
+      const { ModalBuilder: MB2, ActionRowBuilder: AR2, TextInputBuilder: TI2, TextInputStyle: TIS2 } = require('discord.js');
+      const modal = new MB2()
+        .setCustomId('review_send_modal')
+        .setTitle('Direkt in Review-Channel senden')
+        .addComponents(
+          new AR2().addComponents(new TI2().setCustomId('title').setLabel('Überschrift').setStyle(TIS2.Short).setRequired(true).setMaxLength(100)),
+          new AR2().addComponents(new TI2().setCustomId('content').setLabel('Nachricht').setStyle(TIS2.Paragraph).setRequired(true).setMaxLength(2000)),
+        );
+      return interaction.showModal(modal);
+    }
 
     if (sub === 'channel') {
       const sel = new ChannelSelectMenuBuilder()

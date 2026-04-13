@@ -508,6 +508,24 @@ module.exports = {
         }
       }
 
+      // ── Review: direkt in Review-Channel senden ──────────────────────────
+      if (interaction.customId === 'review_send_modal') {
+        const title   = interaction.fields.getTextInputValue('title');
+        const content = interaction.fields.getTextInputValue('content');
+        const data    = readData('review.json');
+        if (!data.channel) return interaction.reply({ content: '❌ Kein Review-Channel gesetzt. Nutze `/review channel`.', ephemeral: true });
+        const ch = interaction.guild.channels.cache.get(data.channel);
+        if (!ch) return interaction.reply({ content: '❌ Review-Channel nicht gefunden.', ephemeral: true });
+        const embed = new EmbedBuilder()
+          .setColor('#5865F2')
+          .setTitle(title)
+          .setDescription(content)
+          .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
+          .setTimestamp();
+        await ch.send({ embeds: [embed] });
+        return interaction.reply({ content: `✅ Nachricht in <#${data.channel}> gepostet!`, ephemeral: true });
+      }
+
       // ── Review modal ──────────────────────────────────────────────────────
       if (interaction.customId === 'review_modal') {
         const title  = interaction.fields.getTextInputValue('review_title');
