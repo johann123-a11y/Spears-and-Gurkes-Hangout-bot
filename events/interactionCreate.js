@@ -398,18 +398,40 @@ module.exports = {
         if (!gw || gw.ended)
           return interaction.reply({ content: '❌ This giveaway has already ended.', ephemeral: true });
 
-        const idx = gw.participants ? gw.participants.indexOf(interaction.user.id) : -1;
         if (!gw.participants) gw.participants = [];
 
-        if (idx === -1) {
+        if (!gw.participants.includes(interaction.user.id)) {
           gw.participants.push(interaction.user.id);
           writeData('giveaways.json', giveaways);
           return interaction.reply({ content: '🎉 You joined the giveaway! Good luck!', ephemeral: true });
         } else {
+          const leaveBtn = new ButtonBuilder()
+            .setCustomId(`giveaway_leave:${msgId}`)
+            .setLabel('Leave Giveaway')
+            .setStyle(ButtonStyle.Danger);
+          return interaction.reply({
+            content: '⚠️ You already joined this giveaway!',
+            components: [new ActionRowBuilder().addComponents(leaveBtn)],
+            ephemeral: true,
+          });
+        }
+      }
+
+      // ── Giveaway leave button ──────────────────────────────────────────────
+      if (interaction.customId.startsWith('giveaway_leave:')) {
+        const msgId = interaction.customId.split(':')[1];
+        const giveaways = readData('giveaways.json');
+        const gw = giveaways[msgId];
+        if (!gw || gw.ended)
+          return interaction.update({ content: '❌ This giveaway has already ended.', components: [] });
+
+        if (!gw.participants) gw.participants = [];
+        const idx = gw.participants.indexOf(interaction.user.id);
+        if (idx !== -1) {
           gw.participants.splice(idx, 1);
           writeData('giveaways.json', giveaways);
-          return interaction.reply({ content: '👋 You left the giveaway.', ephemeral: true });
         }
+        return interaction.update({ content: '👋 You left the giveaway.', components: [] });
       }
 
       // ── Activity check confirm button ──────────────────────────────────────
