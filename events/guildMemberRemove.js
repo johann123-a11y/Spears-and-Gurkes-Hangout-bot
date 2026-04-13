@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Routes } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { readData } = require('../utils');
 
 module.exports = {
@@ -30,24 +30,13 @@ module.exports = {
         .setEmoji('💬'),
     );
 
-    // Use cached DM channel ID and send via REST directly
-    const dmCache = readData('dm_channels.json');
-    const dmChannelId = dmCache[member.user.id];
-
-    if (dmChannelId) {
-      try {
-        await member.client.rest.post(Routes.channelMessages(dmChannelId), {
-          body: {
-            embeds: [embed.toJSON()],
-            components: [row.toJSON()],
-          },
-        });
-        console.log(`[leave] DM sent to ${member.user.tag}`);
-      } catch (err) {
-        console.error(`[leave] DM FAILED for ${member.user.tag}: ${err.message}`);
-      }
+    // Use already-cached DM channel (fastest — no extra API call needed)
+    const dmChannel = member.user.dmChannel;
+    if (dmChannel) {
+      dmChannel.send({ embeds: [embed], components: [row] })
+        .then(() => console.log(`[leave] DM sent via cache to ${member.user.tag}`))
+        .catch(err => console.error(`[leave] DM FAILED for ${member.user.tag}: ${err.message}`));
     } else {
-      // Fallback: no cached channel
       member.user.send({ embeds: [embed], components: [row] })
         .then(() => console.log(`[leave] DM sent to ${member.user.tag}`))
         .catch(err => console.error(`[leave] DM FAILED for ${member.user.tag}: ${err.message}`));
