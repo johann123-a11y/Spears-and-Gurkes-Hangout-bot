@@ -378,7 +378,15 @@ module.exports = {
                 .setLabel('Deine Review / Your Review')
                 .setStyle(TextInputStyle.Paragraph)
                 .setRequired(true)
-                .setMaxLength(1000)
+                .setMaxLength(800)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId('review_improve')
+                .setLabel('Was können wir verbessern? (optional)')
+                .setStyle(TextInputStyle.Paragraph)
+                .setRequired(false)
+                .setMaxLength(500)
             ),
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
@@ -528,10 +536,11 @@ module.exports = {
 
       // ── Review modal ──────────────────────────────────────────────────────
       if (interaction.customId === 'review_modal') {
-        const title  = interaction.fields.getTextInputValue('review_title');
-        const text   = interaction.fields.getTextInputValue('review_text');
-        const rating = interaction.fields.getTextInputValue('review_rating').trim();
-        const stars  = parseInt(rating);
+        const title   = interaction.fields.getTextInputValue('review_title');
+        const text    = interaction.fields.getTextInputValue('review_text');
+        const improve = interaction.fields.getTextInputValue('review_improve') || null;
+        const rating  = interaction.fields.getTextInputValue('review_rating').trim();
+        const stars   = parseInt(rating);
         if (isNaN(stars) || stars < 1 || stars > 5)
           return interaction.reply({ content: '❌ Bewertung muss zwischen 1 und 5 sein.', ephemeral: true });
 
@@ -549,7 +558,9 @@ module.exports = {
           .setColor('#FFD700')
           .setTitle(title)
           .setDescription(text)
-          .addFields({ name: 'Bewertung', value: starStr })
+          .addFields({ name: 'Bewertung', value: starStr, inline: true })
+        if (improve) embed.addFields({ name: '💡 Verbesserungsvorschläge', value: improve });
+        embed
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp();
 
