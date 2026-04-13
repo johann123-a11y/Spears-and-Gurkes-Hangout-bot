@@ -10,20 +10,7 @@ module.exports = {
     .setName('demote')
     .setDescription('Demotes a staff member to a specified role [Admin Only]')
     .addUserOption(o => o.setName('user').setDescription('Staff member to demote').setRequired(true))
-    .addStringOption(o =>
-      o.setName('role')
-        .setDescription('The role to demote to')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Member',   value: 'member'   },
-          { name: 'JrHelper', value: 'jrHelper' },
-          { name: 'Helper',   value: 'helper'   },
-          { name: 'SrHelper', value: 'srHelper' },
-          { name: 'JrMod',    value: 'jrMod'    },
-          { name: 'Mod',      value: 'mod'      },
-          { name: 'SrMod',    value: 'srMod'    },
-        )
-    )
+    .addRoleOption(o => o.setName('role').setDescription('The role to demote to').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for demotion').setRequired(true)),
 
   async execute(message, args) {
@@ -48,28 +35,22 @@ module.exports = {
     if (!interaction.member.permissions.has("Administrator"))
       return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
-    const user    = interaction.options.getUser('user');
-    const roleKey = interaction.options.getString('role');
-    const reason  = interaction.options.getString('reason');
-    const member  = await interaction.guild.members.fetch(user.id).catch(() => null);
+    const user   = interaction.options.getUser('user');
+    const role   = interaction.options.getRole('role');
+    const reason = interaction.options.getString('reason');
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
     if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
 
     await interaction.deferReply();
-    await performDemote(member, roleKey, reason, interaction.user, null, interaction);
+    await performDemote(member, role, reason, interaction.user, null, interaction);
   },
 };
 
-async function performDemote(member, newRoleKey, reason, executor, channel, interaction) {
+async function performDemote(member, newRole, reason, executor, channel, interaction) {
   const client       = channel?.client || interaction?.client;
   const currentLevel = getMemberRoleLevel(member);
   const oldRoleKey   = currentLevel >= 0 ? promoteOrder[currentLevel] : null;
   const oldRoleId    = oldRoleKey ? config.roles[oldRoleKey] : null;
-  const newRoleId    = config.roles[newRoleKey];
-
-  if (!newRoleId || newRoleId.endsWith('_ROLE_ID')) {
-    const msg = `❌ The role \`${newRoleKey}\` is not configured yet. Use \`/setrole set\`.`;
-    return channel ? channel.send(msg) : interaction.editReply(msg);
-  }
 
   try {
     for (const key of promoteOrder) {
@@ -77,7 +58,7 @@ async function performDemote(member, newRoleKey, reason, executor, channel, inte
       if (id && !id.endsWith('_ROLE_ID') && member.roles.cache.has(id))
         await member.roles.remove(id);
     }
-    await member.roles.add(newRoleId);
+    await member.roles.add(newRole.id);
   } catch (err) {
     const msg = `❌ Could not change roles: ${err.message}`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
@@ -95,31 +76,28 @@ async function performDemote(member, newRoleKey, reason, executor, channel, inte
       { name: 'Demoted by',   value: `<@${executor.id}>`,    inline: true },
       { name: '\u200b',       value: '\u200b',                inline: true },
       { name: 'Old Role',     value: oldRoleDisplay,          inline: true },
-      { name: 'New Role',     value: `<@&${newRoleId}>`,      inline: true },
+      { name: 'New Role',     value: `<@&${newRole.id}>`,     inline: true },
       { name: '\u200b',       value: '\u200b',                inline: true },
       { name: 'Reason',       value: reason },
     )
     .setThumbnail(member.user.displayAvatarURL())
     .setTimestamp();
 
-  const mentionedRoles = [newRoleId, ...(oldRoleId && !oldRoleId.endsWith('_ROLE_ID') ? [oldRoleId] : [])];
+  const mentionedRoles = [newRole.id, ...(oldRoleId && !oldRoleId.endsWith('_ROLE_ID') ? [oldRoleId] : [])];
   const payload = {
     content: `<@${member.user.id}>`,
     embeds: [embed],
     allowedMentions: { users: [member.user.id], roles: mentionedRoles },
   };
 
-  if (channel) {
-    channel.send(payload);
-  } else if (interaction) {
-    interaction.editReply(payload);
-  }
+  if (channel) channel.send(payload);
+  else if (interaction) interaction.editReply(payload);
 
   sendLog(client, {
     action: 'Staff Demoted',
     executor: executor.tag,
     target: member.user.tag,
-    fields: { 'Old Role': oldRoleKey || 'None', 'New Role': newRoleKey, Reason: reason },
+    fields: { 'Old Role': oldRoleKey || 'None', 'New Role': newRole.name, Reason: reason },
     color: '#ED4245',
   });
 }
