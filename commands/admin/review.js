@@ -8,13 +8,13 @@ const { readData, writeData } = require('../../utils');
 function buildPanelModal(test) {
   return new ModalBuilder()
     .setCustomId(test ? 'review_panel_modal_test' : 'review_panel_modal')
-    .setTitle(test ? 'Review Panel — TEST (nur du)' : 'Review Panel — In Channel posten')
+    .setTitle(test ? 'Review Panel — TEST (only you)' : 'Review Panel — Post in Channel')
     .addComponents(
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('title').setLabel('Überschrift').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100)
+        new TextInputBuilder().setCustomId('title').setLabel('Title').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100)
       ),
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('description').setLabel('Beschreibung').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)
+        new TextInputBuilder().setCustomId('description').setLabel('Description').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)
       ),
       new ActionRowBuilder().addComponents(
         new TextInputBuilder().setCustomId('footer').setLabel('Footer (optional)').setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(100)
@@ -29,10 +29,10 @@ module.exports = {
     .setName('review')
     .setDescription('Review system [Admin Only]')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    .addSubcommand(s => s.setName('panel').setDescription('Review-Panel mit Button in diesem Channel posten'))
-    .addSubcommand(s => s.setName('send').setDescription('Nachricht direkt in den Review-Channel schicken'))
-    .addSubcommand(s => s.setName('test').setDescription('Test — schickt dir das Panel als DM'))
-    .addSubcommand(s => s.setName('channel').setDescription('Channel für eingehende Reviews setzen')),
+    .addSubcommand(s => s.setName('panel').setDescription('Post a review panel with button in this channel'))
+    .addSubcommand(s => s.setName('send').setDescription('Send a message directly to the review channel'))
+    .addSubcommand(s => s.setName('test').setDescription('Test — sends the panel to you as a DM'))
+    .addSubcommand(s => s.setName('channel').setDescription('Set the channel for incoming reviews')),
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
@@ -47,10 +47,10 @@ module.exports = {
       const { ModalBuilder: MB2, ActionRowBuilder: AR2, TextInputBuilder: TI2, TextInputStyle: TIS2 } = require('discord.js');
       const modal = new MB2()
         .setCustomId('review_send_modal')
-        .setTitle('Direkt in Review-Channel senden')
+        .setTitle('Send directly to review channel')
         .addComponents(
-          new AR2().addComponents(new TI2().setCustomId('title').setLabel('Überschrift').setStyle(TIS2.Short).setRequired(true).setMaxLength(100)),
-          new AR2().addComponents(new TI2().setCustomId('content').setLabel('Nachricht').setStyle(TIS2.Paragraph).setRequired(true).setMaxLength(2000)),
+          new AR2().addComponents(new TI2().setCustomId('title').setLabel('Title').setStyle(TIS2.Short).setRequired(true).setMaxLength(100)),
+          new AR2().addComponents(new TI2().setCustomId('content').setLabel('Message').setStyle(TIS2.Paragraph).setRequired(true).setMaxLength(2000)),
         );
       return interaction.showModal(modal);
     }

@@ -364,7 +364,7 @@ module.exports = {
           new ButtonBuilder().setCustomId(`review_star:${n}`).setLabel('⭐'.repeat(n)).setStyle(ButtonStyle.Secondary)
         );
         return interaction.reply({
-          content: '**Wie bewertest du unseren Server?**\nKlicke auf eine Sternanzahl:',
+          content: '**How would you rate our server?**\nClick on a star rating:',
           components: [new ActionRowBuilder().addComponents(starBtns)],
           ephemeral: true,
         });
@@ -375,16 +375,16 @@ module.exports = {
         const stars = interaction.customId.split(':')[1];
         const modal = new ModalBuilder()
           .setCustomId(`review_improve_modal:${stars}`)
-          .setTitle(`${'⭐'.repeat(parseInt(stars))} Bewertung`)
+          .setTitle(`${'⭐'.repeat(parseInt(stars))} Rating`)
           .addComponents(
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('improve')
-                .setLabel('Was können wir verbessern?')
+                .setLabel('What can we improve?')
                 .setStyle(TextInputStyle.Paragraph)
                 .setRequired(false)
                 .setMaxLength(1000)
-                .setPlaceholder('Schreib uns dein Feedback (optional)...')
+                .setPlaceholder('Share your feedback with us (optional)...')
             ),
           );
         return interaction.showModal(modal);
@@ -456,7 +456,7 @@ module.exports = {
           }
         }
 
-        await interaction.reply({ content: `⏳ DMs werden verschickt...`, ephemeral: true });
+        await interaction.reply({ content: `⏳ Sending DMs to all members...`, ephemeral: true });
 
         const guild = interaction.guild;
         const members = await guild.members.fetch();
@@ -469,7 +469,7 @@ module.exports = {
         }
 
         return interaction.followUp({
-          content: `✅ DM an **${sent}** Member verschickt. (${failed} fehlgeschlagen — DMs geschlossen)`,
+          content: `✅ DM sent to **${sent}** members. (${failed} failed — DMs closed)`,
           ephemeral: true,
         });
       }
@@ -502,7 +502,7 @@ module.exports = {
           }
         } else {
           await interaction.channel.send({ embeds: [embed], components: [row] });
-          return interaction.reply({ content: '✅ Review-Panel gepostet!', ephemeral: true });
+          return interaction.reply({ content: '✅ Review panel posted!', ephemeral: true });
         }
       }
 
@@ -511,9 +511,9 @@ module.exports = {
         const title   = interaction.fields.getTextInputValue('title');
         const content = interaction.fields.getTextInputValue('content');
         const data    = readData('review.json');
-        if (!data.channel) return interaction.reply({ content: '❌ Kein Review-Channel gesetzt. Nutze `/review channel`.', ephemeral: true });
+        if (!data.channel) return interaction.reply({ content: '❌ No review channel set. Use `/review channel`.', ephemeral: true });
         const ch = interaction.guild.channels.cache.get(data.channel);
-        if (!ch) return interaction.reply({ content: '❌ Review-Channel nicht gefunden.', ephemeral: true });
+        if (!ch) return interaction.reply({ content: '❌ Review channel not found.', ephemeral: true });
         const embed = new EmbedBuilder()
           .setColor('#5865F2')
           .setTitle(title)
@@ -521,7 +521,7 @@ module.exports = {
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp();
         await ch.send({ embeds: [embed] });
-        return interaction.reply({ content: `✅ Nachricht in <#${data.channel}> gepostet!`, ephemeral: true });
+        return interaction.reply({ content: `✅ Message posted in <#${data.channel}>!`, ephemeral: true });
       }
 
       // ── Review: improvement modal submitted ──────────────────────────────
@@ -531,12 +531,12 @@ module.exports = {
 
         const data = readData('review.json');
         if (!data.channel)
-          return interaction.reply({ content: '❌ Kein Review-Channel konfiguriert. Frag einen Admin.', ephemeral: true });
+          return interaction.reply({ content: '❌ No review channel configured. Ask an admin.', ephemeral: true });
 
         const guildId = interaction.guildId || data.guildId;
         const channel = interaction.client.guilds.cache.get(guildId)?.channels.cache.get(data.channel);
         if (!channel)
-          return interaction.reply({ content: '❌ Review-Channel nicht gefunden.', ephemeral: true });
+          return interaction.reply({ content: '❌ Review channel not found.', ephemeral: true });
 
         const starStr = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
         const embed = new EmbedBuilder()
@@ -544,10 +544,10 @@ module.exports = {
           .setTitle(starStr)
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp();
-        if (improve) embed.addFields({ name: '💡 Was können wir verbessern?', value: improve });
+        if (improve) embed.addFields({ name: '💡 What can we improve?', value: improve });
 
         await channel.send({ embeds: [embed] });
-        return interaction.reply({ content: '✅ Danke für deine Bewertung!', ephemeral: true });
+        return interaction.reply({ content: '✅ Thanks for your review!', ephemeral: true });
       }
 
       // ── Application: setup modal ───────────────────────────────────────────
@@ -929,7 +929,7 @@ module.exports = {
         data.channel    = channelId;
         data.guildId    = interaction.guildId;
         writeData('review.json', data);
-        return interaction.update({ content: `✅ Reviews werden in <#${channelId}> gepostet.`, embeds: [], components: [] });
+        return interaction.update({ content: `✅ Reviews will be posted in <#${channelId}>.`, embeds: [], components: [] });
       }
     }
 

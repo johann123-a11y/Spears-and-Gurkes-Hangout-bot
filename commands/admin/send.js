@@ -6,16 +6,16 @@ const {
 function buildModal(test) {
   return new ModalBuilder()
     .setCustomId(test ? 'send_dm_modal_test' : 'send_dm_modal')
-    .setTitle(test ? 'Send DM — TEST (nur du)' : 'Send DM to all Members')
+    .setTitle(test ? 'Send DM — TEST (only you)' : 'Send DM to all Members')
     .addComponents(
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('title').setLabel('Überschrift').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100)
+        new TextInputBuilder().setCustomId('title').setLabel('Title').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100)
       ),
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('subtitle').setLabel('Unterzeile (optional)').setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(150)
+        new TextInputBuilder().setCustomId('subtitle').setLabel('Subtitle (optional)').setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(150)
       ),
       new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('content').setLabel('Nachricht').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(2000)
+        new TextInputBuilder().setCustomId('content').setLabel('Message').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(2000)
       ),
       new ActionRowBuilder().addComponents(
         new TextInputBuilder().setCustomId('footer').setLabel('Footer (optional)').setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(100)
