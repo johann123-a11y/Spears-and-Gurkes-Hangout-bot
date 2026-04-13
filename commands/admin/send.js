@@ -1,6 +1,6 @@
 const {
   SlashCommandBuilder, ModalBuilder, ActionRowBuilder,
-  TextInputBuilder, TextInputStyle,
+  TextInputBuilder, TextInputStyle, PermissionFlagsBits,
 } = require('discord.js');
 
 function buildModal(test) {
@@ -29,6 +29,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('send')
     .setDescription('Send a DM to all server members [Admin Only]')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(s => s.setName('all').setDescription('DM an alle Member schicken'))
     .addSubcommand(s => s.setName('test').setDescription('Test — DM nur an dich')),
 

@@ -1,7 +1,7 @@
 const {
   SlashCommandBuilder, ModalBuilder, ActionRowBuilder,
   TextInputBuilder, TextInputStyle,
-  ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType,
+  ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionFlagsBits,
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 
@@ -28,6 +28,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('review')
     .setDescription('Review system [Admin Only]')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(s => s.setName('panel').setDescription('Review-Panel mit Button in diesem Channel posten'))
     .addSubcommand(s => s.setName('send').setDescription('Nachricht direkt in den Review-Channel schicken'))
     .addSubcommand(s => s.setName('test').setDescription('Test — schickt dir das Panel als DM'))
