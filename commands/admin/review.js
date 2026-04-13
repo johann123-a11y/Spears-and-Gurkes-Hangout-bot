@@ -28,7 +28,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('review')
     .setDescription('Review system [Admin Only]')
-    .addSubcommand(s => s.setName('send').setDescription('Review-Panel in diesem Channel posten'))
+    .addSubcommand(s => s.setName('panel').setDescription('Review-Panel in diesem Channel posten'))
     .addSubcommand(s => s.setName('test').setDescription('Test — schickt dir das Panel als DM'))
     .addSubcommand(s => s.setName('channel').setDescription('Channel für eingehende Reviews setzen')),
 
@@ -38,7 +38,7 @@ module.exports = {
 
     const sub = interaction.options.getSubcommand();
 
-    if (sub === 'send') return interaction.showModal(buildPanelModal(false));
+    if (sub === 'panel') return interaction.showModal(buildPanelModal(false));
     if (sub === 'test') return interaction.showModal(buildPanelModal(true));
 
     if (sub === 'channel') {
