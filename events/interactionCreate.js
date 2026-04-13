@@ -476,6 +476,38 @@ module.exports = {
         });
       }
 
+      // ── Review panel modal (send / test) ─────────────────────────────────
+      if (interaction.customId === 'review_panel_modal' || interaction.customId === 'review_panel_modal_test') {
+        const isTest      = interaction.customId === 'review_panel_modal_test';
+        const title       = interaction.fields.getTextInputValue('title');
+        const description = interaction.fields.getTextInputValue('description');
+        const footer      = interaction.fields.getTextInputValue('footer') || interaction.guild.name;
+
+        const { EmbedBuilder: EB2, ActionRowBuilder: AR2, ButtonBuilder: BB2, ButtonStyle: BS2 } = require('discord.js');
+        const embed = new EB2()
+          .setColor('#5865F2')
+          .setTitle(title)
+          .setDescription(description)
+          .setFooter({ text: isTest ? `${footer} — TEST` : footer })
+          .setTimestamp();
+
+        const row = new AR2().addComponents(
+          new BB2().setCustomId('review_submit_btn').setLabel('Submit Review').setStyle(BS2.Primary).setEmoji('⭐'),
+        );
+
+        if (isTest) {
+          try {
+            await interaction.user.send({ embeds: [embed], components: [row] });
+            return interaction.reply({ content: '✅ Test-DM wurde dir geschickt!', ephemeral: true });
+          } catch {
+            return interaction.reply({ content: '❌ Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
+          }
+        } else {
+          await interaction.channel.send({ embeds: [embed], components: [row] });
+          return interaction.reply({ content: '✅ Review-Panel gepostet!', ephemeral: true });
+        }
+      }
+
       // ── Review modal ──────────────────────────────────────────────────────
       if (interaction.customId === 'review_modal') {
         const title  = interaction.fields.getTextInputValue('review_title');
