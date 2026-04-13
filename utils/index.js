@@ -1,6 +1,50 @@
-const fs = require('fs');
-const path = require('path');
 const config = require('../config.json');
+const Store = require('../models/Store');
+
+// In-memory cache
+const cache = {};
+
+// Called once on startup to load all data from MongoDB into cache
+async function loadCache() {
+  const all = await Store.find({});
+  for (const doc of all) {
+    cache[doc.key] = doc.data;
+  }
+}
+
+function getDefault(filename) {
+  const defaults = {
+    'tickets.json': { panels: {}, group: { enabled: false, channelId: null, messageId: null }, description: { title: 'Create Ticket', text: null }, perms: { viewRoles: ['1487852923663945828'], pingRoles: ['1487852923663945828'] } },
+    'openTickets.json': {},
+    'strikes.json': {},
+    'giveaways.json': {},
+    'welcome.json': { enabled: true, channel: '1451957422724878529', message: 'Welcome {member} to **{server}**! You are member #{membercount}. Enjoy your stay!' },
+    'loa.json': {},
+    'afk.json': {},
+    'perms.json': {},
+    'leave.json': {},
+    'sticky.json': {},
+    'logs.json': { channel: null },
+    'applications.json': { panels: {} },
+    'applicationResults.json': {},
+    'activitychecks.json': {},
+  };
+  return defaults[filename] ?? {};
+}
+
+function readData(filename) {
+  return cache[filename] ?? getDefault(filename);
+}
+
+function writeData(filename, data) {
+  cache[filename] = data;
+  // Fire-and-forget save to MongoDB
+  Store.findOneAndUpdate(
+    { key: filename },
+    { key: filename, data },
+    { upsert: true, new: true }
+  ).catch(err => console.error(`Failed to save ${filename}:`, err));
+}
 
 function parseTime(timeStr) {
   if (!timeStr) return 0;
@@ -34,22 +78,6 @@ function formatTime(ms) {
   return parts.join(' ') || '0s';
 }
 
-function readData(filename) {
-  const dataDir = path.join(__dirname, '..', 'data');
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  const filePath = path.join(dataDir, filename);
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({}));
-    return {};
-  }
-  try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); }
-  catch { return {}; }
-}
-
-function writeData(filename, data) {
-  const filePath = path.join(__dirname, '..', 'data', filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
 
 const promoteOrder = config.promoteOrder;
 
@@ -108,7 +136,7 @@ function checkPerm(member, commandName) {
 }
 
 module.exports = {
-  parseTime, formatTime, readData, writeData,
+  parseTime, formatTime, readData, writeData, loadCache,
   promoteOrder, getMemberRoleLevel,
   hasPermission, checkPerm,
   COMMAND_DEFAULTS, COMMAND_LABELS,

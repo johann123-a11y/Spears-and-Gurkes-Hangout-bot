@@ -49,4 +49,8 @@ for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
   }
 }
 
-connectDB().then(() => client.login(process.env.TOKEN));
+const { loadCache } = require('./utils');
+connectDB().then(async () => {
+  await loadCache();
+  client.login(process.env.TOKEN);
+});
