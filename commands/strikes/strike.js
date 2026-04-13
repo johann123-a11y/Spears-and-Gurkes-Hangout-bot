@@ -87,11 +87,18 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
       .setThumbnail(targetMember.user.displayAvatarURL())
       .setTimestamp();
 
+    const sendChannel = channel || interaction?.channel;
     if (channel) channel.send({ content: `<@${targetMember.user.id}>`, embeds: [embed], allowedMentions: { users: [targetMember.user.id] } });
     else if (interaction) await interaction.editReply({ content: `<@${targetMember.user.id}>`, embeds: [embed], allowedMentions: { users: [targetMember.user.id] } });
 
     // Auto-demote at 3 strikes
     if (count >= 3) {
+      if (sendChannel) {
+        sendChannel.send({
+          content: `<@&1451942809585061990> <@${targetMember.user.id}> has **3/3 Strikes** and has been automatically demoted.`,
+          allowedMentions: { roles: ['1451942809585061990'], users: [targetMember.user.id] },
+        }).catch(() => {});
+      }
       await autoDemote(targetMember, guild, channel, interaction);
       strikes[userId] = { count: 0, entries: [] };
       writeData('strikes.json', strikes);
