@@ -434,8 +434,8 @@ module.exports = {
       }
 
       // ── /send DM modal ────────────────────────────────────────────────────
-      if (interaction.customId === 'send_dm_modal' || interaction.customId === 'leave_mass_dm_modal') {
-        const isLeave = interaction.customId === 'leave_mass_dm_modal';
+      if (interaction.customId === 'send_dm_modal') {
+        const isLeave = false;
         const title    = interaction.fields.getTextInputValue('title');
         const subtitle = interaction.fields.getTextInputValue('subtitle') || null;
         const content  = interaction.fields.getTextInputValue('content');
