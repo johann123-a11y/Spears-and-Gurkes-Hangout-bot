@@ -13,7 +13,9 @@ for (const folder of fs.readdirSync(commandsPath)) {
   if (!fs.statSync(folderPath).isDirectory()) continue;
   for (const file of fs.readdirSync(folderPath).filter(f => f.endsWith('.js'))) {
     const command = require(path.join(folderPath, file));
-    if (command.data) {
+    if (Array.isArray(command)) {
+      for (const cmd of command) if (cmd.data) slashCommands.push(cmd.data.toJSON());
+    } else if (command.data) {
       slashCommands.push(command.data.toJSON());
     }
   }
