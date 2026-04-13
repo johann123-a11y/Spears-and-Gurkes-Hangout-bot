@@ -434,21 +434,31 @@ module.exports = {
       }
 
       // ── /send DM modal ────────────────────────────────────────────────────
-      if (interaction.customId === 'send_dm_modal') {
+      if (interaction.customId === 'send_dm_modal' || interaction.customId === 'send_dm_modal_test') {
+        const isTest  = interaction.customId === 'send_dm_modal_test';
         const isLeave = false;
         const title    = interaction.fields.getTextInputValue('title');
         const subtitle = interaction.fields.getTextInputValue('subtitle') || null;
         const content  = interaction.fields.getTextInputValue('content');
         const footer   = interaction.fields.getTextInputValue('footer') || null;
 
-        await interaction.reply({ content: `⏳ Sending DMs to all members...`, ephemeral: true });
-
         const embed = new EmbedBuilder()
-          .setColor(isLeave ? '#ED4245' : '#5865F2')
+          .setColor('#5865F2')
           .setTitle(title)
           .setDescription((subtitle ? `**${subtitle}**\n\n` : '') + content)
           .setFooter({ text: footer || interaction.guild.name })
           .setTimestamp();
+
+        if (isTest) {
+          try {
+            await interaction.user.send({ embeds: [embed] });
+            return interaction.reply({ content: '✅ Test-DM wurde dir geschickt!', ephemeral: true });
+          } catch {
+            return interaction.reply({ content: '❌ Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
+          }
+        }
+
+        await interaction.reply({ content: `⏳ DMs werden verschickt...`, ephemeral: true });
 
         const guild = interaction.guild;
         const members = await guild.members.fetch();
@@ -461,7 +471,7 @@ module.exports = {
         }
 
         return interaction.followUp({
-          content: `✅ DM sent to **${sent}** members. (${failed} failed — DMs closed)`,
+          content: `✅ DM an **${sent}** Member verschickt. (${failed} fehlgeschlagen — DMs geschlossen)`,
           ephemeral: true,
         });
       }
