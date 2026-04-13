@@ -358,43 +358,33 @@ module.exports = {
         return sendTicketOverview(interaction, 'update');
       }
 
-      // ── Review: submit button ────────────────────────────────────────────
+      // ── Review: submit button → show star buttons ─────────────────────────
       if (interaction.customId === 'review_submit_btn') {
+        const starBtns = [1,2,3,4,5].map(n =>
+          new ButtonBuilder().setCustomId(`review_star:${n}`).setLabel('⭐'.repeat(n)).setStyle(ButtonStyle.Secondary)
+        );
+        return interaction.reply({
+          content: '**Wie bewertest du unseren Server?**\nKlicke auf eine Sternanzahl:',
+          components: [new ActionRowBuilder().addComponents(starBtns)],
+          ephemeral: true,
+        });
+      }
+
+      // ── Review: star clicked → show improvement modal ─────────────────────
+      if (interaction.customId.startsWith('review_star:')) {
+        const stars = interaction.customId.split(':')[1];
         const modal = new ModalBuilder()
-          .setCustomId('review_modal')
-          .setTitle('Submit your Review')
+          .setCustomId(`review_improve_modal:${stars}`)
+          .setTitle(`${'⭐'.repeat(parseInt(stars))} Bewertung`)
           .addComponents(
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
-                .setCustomId('review_title')
-                .setLabel('Überschrift / Title')
-                .setStyle(TextInputStyle.Short)
-                .setRequired(true)
-                .setMaxLength(100)
-            ),
-            new ActionRowBuilder().addComponents(
-              new TextInputBuilder()
-                .setCustomId('review_text')
-                .setLabel('Deine Review / Your Review')
-                .setStyle(TextInputStyle.Paragraph)
-                .setRequired(true)
-                .setMaxLength(800)
-            ),
-            new ActionRowBuilder().addComponents(
-              new TextInputBuilder()
-                .setCustomId('review_improve')
-                .setLabel('Was können wir verbessern? (optional)')
+                .setCustomId('improve')
+                .setLabel('Was können wir verbessern?')
                 .setStyle(TextInputStyle.Paragraph)
                 .setRequired(false)
-                .setMaxLength(500)
-            ),
-            new ActionRowBuilder().addComponents(
-              new TextInputBuilder()
-                .setCustomId('review_rating')
-                .setLabel('Bewertung / Rating (1-5 ⭐)')
-                .setStyle(TextInputStyle.Short)
-                .setRequired(true)
-                .setMaxLength(1)
+                .setMaxLength(1000)
+                .setPlaceholder('Schreib uns dein Feedback (optional)...')
             ),
           );
         return interaction.showModal(modal);
@@ -534,38 +524,30 @@ module.exports = {
         return interaction.reply({ content: `✅ Nachricht in <#${data.channel}> gepostet!`, ephemeral: true });
       }
 
-      // ── Review modal ──────────────────────────────────────────────────────
-      if (interaction.customId === 'review_modal') {
-        const title   = interaction.fields.getTextInputValue('review_title');
-        const text    = interaction.fields.getTextInputValue('review_text');
-        const improve = interaction.fields.getTextInputValue('review_improve') || null;
-        const rating  = interaction.fields.getTextInputValue('review_rating').trim();
-        const stars   = parseInt(rating);
-        if (isNaN(stars) || stars < 1 || stars > 5)
-          return interaction.reply({ content: '❌ Bewertung muss zwischen 1 und 5 sein.', ephemeral: true });
+      // ── Review: improvement modal submitted ──────────────────────────────
+      if (interaction.customId.startsWith('review_improve_modal:')) {
+        const stars   = parseInt(interaction.customId.split(':')[1]);
+        const improve = interaction.fields.getTextInputValue('improve') || null;
 
         const data = readData('review.json');
         if (!data.channel)
           return interaction.reply({ content: '❌ Kein Review-Channel konfiguriert. Frag einen Admin.', ephemeral: true });
 
-        const channel = interaction.client.guilds.cache.get(interaction.guildId || data.guildId)
-          ?.channels.cache.get(data.channel);
+        const guildId = interaction.guildId || data.guildId;
+        const channel = interaction.client.guilds.cache.get(guildId)?.channels.cache.get(data.channel);
         if (!channel)
           return interaction.reply({ content: '❌ Review-Channel nicht gefunden.', ephemeral: true });
 
         const starStr = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
         const embed = new EmbedBuilder()
           .setColor('#FFD700')
-          .setTitle(title)
-          .setDescription(text)
-          .addFields({ name: 'Bewertung', value: starStr, inline: true })
-        if (improve) embed.addFields({ name: '💡 Verbesserungsvorschläge', value: improve });
-        embed
+          .setTitle(starStr)
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp();
+        if (improve) embed.addFields({ name: '💡 Was können wir verbessern?', value: improve });
 
         await channel.send({ embeds: [embed] });
-        return interaction.reply({ content: '✅ Danke für deine Review!', ephemeral: true });
+        return interaction.reply({ content: '✅ Danke für deine Bewertung!', ephemeral: true });
       }
 
       // ── Application: setup modal ───────────────────────────────────────────
