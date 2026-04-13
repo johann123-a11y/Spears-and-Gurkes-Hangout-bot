@@ -52,13 +52,22 @@ async function performDemote(member, newRole, reason, executor, channel, interac
   const oldRoleKey   = currentLevel >= 0 ? promoteOrder[currentLevel] : null;
   const oldRoleId    = oldRoleKey ? config.roles[oldRoleKey] : null;
 
+  // Support both a Discord Role object (slash) and a role key string (prefix)
+  const newRoleId   = typeof newRole === 'string' ? config.roles[newRole] : newRole.id;
+  const newRoleName = typeof newRole === 'string' ? newRole : newRole.name;
+
+  if (!newRoleId || newRoleId.endsWith('_ROLE_ID')) {
+    const msg = `❌ Role not configured. Use \`/setrole set\`.`;
+    return channel ? channel.send(msg) : interaction.editReply(msg);
+  }
+
   try {
     for (const key of promoteOrder) {
       const id = config.roles[key];
       if (id && !id.endsWith('_ROLE_ID') && member.roles.cache.has(id))
         await member.roles.remove(id);
     }
-    await member.roles.add(newRole.id);
+    await member.roles.add(newRoleId);
   } catch (err) {
     const msg = `❌ Could not change roles: ${err.message}`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
@@ -76,14 +85,14 @@ async function performDemote(member, newRole, reason, executor, channel, interac
       { name: 'Demoted by',   value: `<@${executor.id}>`,    inline: true },
       { name: '\u200b',       value: '\u200b',                inline: true },
       { name: 'Old Role',     value: oldRoleDisplay,          inline: true },
-      { name: 'New Role',     value: `<@&${newRole.id}>`,     inline: true },
+      { name: 'New Role',     value: `<@&${newRoleId}>`,      inline: true },
       { name: '\u200b',       value: '\u200b',                inline: true },
       { name: 'Reason',       value: reason },
     )
     .setThumbnail(member.user.displayAvatarURL())
     .setTimestamp();
 
-  const mentionedRoles = [newRole.id, ...(oldRoleId && !oldRoleId.endsWith('_ROLE_ID') ? [oldRoleId] : [])];
+  const mentionedRoles = [newRoleId, ...(oldRoleId && !oldRoleId.endsWith('_ROLE_ID') ? [oldRoleId] : [])];
   const payload = {
     content: `<@${member.user.id}>`,
     embeds: [embed],
@@ -97,7 +106,7 @@ async function performDemote(member, newRole, reason, executor, channel, interac
     action: 'Staff Demoted',
     executor: executor.tag,
     target: member.user.tag,
-    fields: { 'Old Role': oldRoleKey || 'None', 'New Role': newRole.name, Reason: reason },
+    fields: { 'Old Role': oldRoleKey || 'None', 'New Role': newRoleName, Reason: reason },
     color: '#ED4245',
   });
 }

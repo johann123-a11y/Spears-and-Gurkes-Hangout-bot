@@ -92,7 +92,6 @@ async function checkTimers(client) {
   if (giveawaysChanged) writeData('giveaways.json', giveaways);
 
   // --- Activity check expiry ---
-  const config = require('../config.json');
   const { handleStrike } = require('../commands/strikes/strike');
   const checks = readData('activitychecks.json');
   let checksChanged = false;
@@ -120,7 +119,6 @@ async function checkTimers(client) {
           if (gwMsg) await gwMsg.edit({ components: [] }).catch(() => {});
 
           // Post results
-          const { EmbedBuilder } = require('discord.js');
           const embed = new EmbedBuilder()
             .setColor(notResponded.size > 0 ? '#ED4245' : '#57F287')
             .setTitle('📋 Activity Check Results')
