@@ -85,6 +85,15 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
+        name: '📨 Mass DM & Reviews [Admin] — Slash only',
+        value: [
+          '`/send` — DM an alle Member (Überschrift, Unterzeile, Text, Footer)',
+          '`/leave` — Abschied-DM an alle Member',
+          '`/review send` — Postet ein Review-Panel im Channel',
+          '`/review channel` — Setzt den Channel für eingehende Reviews',
+        ].join('\n'),
+      },
+      {
         name: '🎫 Tickets [Admin] — Slash only',
         value: [
           '`/ticket setup` — Create a panel (form)',

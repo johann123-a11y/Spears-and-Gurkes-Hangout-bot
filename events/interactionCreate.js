@@ -358,6 +358,40 @@ module.exports = {
         return sendTicketOverview(interaction, 'update');
       }
 
+      // ── Review: submit button ────────────────────────────────────────────
+      if (interaction.customId === 'review_submit_btn') {
+        const modal = new ModalBuilder()
+          .setCustomId('review_modal')
+          .setTitle('Submit your Review')
+          .addComponents(
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId('review_title')
+                .setLabel('Überschrift / Title')
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true)
+                .setMaxLength(100)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId('review_text')
+                .setLabel('Deine Review / Your Review')
+                .setStyle(TextInputStyle.Paragraph)
+                .setRequired(true)
+                .setMaxLength(1000)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId('review_rating')
+                .setLabel('Bewertung / Rating (1-5 ⭐)')
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true)
+                .setMaxLength(1)
+            ),
+          );
+        return interaction.showModal(modal);
+      }
+
       if (interaction.customId === 'ticket_desc_edit_btn') {
         const tickets = readData('tickets.json');
         const current = tickets.description || {};
@@ -397,6 +431,70 @@ module.exports = {
         await interaction.reply({ content: '✅ Giveaway started!', ephemeral: true });
         await createGiveaway(interaction.channel, ms, winners, prize, description, interaction.user.id);
         return;
+      }
+
+      // ── /send DM modal ────────────────────────────────────────────────────
+      if (interaction.customId === 'send_dm_modal' || interaction.customId === 'leave_mass_dm_modal') {
+        const isLeave = interaction.customId === 'leave_mass_dm_modal';
+        const title    = interaction.fields.getTextInputValue('title');
+        const subtitle = interaction.fields.getTextInputValue('subtitle') || null;
+        const content  = interaction.fields.getTextInputValue('content');
+        const footer   = interaction.fields.getTextInputValue('footer') || null;
+
+        await interaction.reply({ content: `⏳ Sending DMs to all members...`, ephemeral: true });
+
+        const embed = new EmbedBuilder()
+          .setColor(isLeave ? '#ED4245' : '#5865F2')
+          .setTitle(title)
+          .setDescription((subtitle ? `**${subtitle}**\n\n` : '') + content)
+          .setFooter({ text: footer || interaction.guild.name })
+          .setTimestamp();
+
+        const guild = interaction.guild;
+        const members = await guild.members.fetch();
+        let sent = 0, failed = 0;
+        for (const [, member] of members) {
+          if (member.user.bot) continue;
+          const ok = await member.user.send({ embeds: [embed] }).then(() => true).catch(() => false);
+          if (ok) sent++; else failed++;
+          if ((sent + failed) % 10 === 0) await new Promise(r => setTimeout(r, 1000));
+        }
+
+        return interaction.followUp({
+          content: `✅ DM sent to **${sent}** members. (${failed} failed — DMs closed)`,
+          ephemeral: true,
+        });
+      }
+
+      // ── Review modal ──────────────────────────────────────────────────────
+      if (interaction.customId === 'review_modal') {
+        const title  = interaction.fields.getTextInputValue('review_title');
+        const text   = interaction.fields.getTextInputValue('review_text');
+        const rating = interaction.fields.getTextInputValue('review_rating').trim();
+        const stars  = parseInt(rating);
+        if (isNaN(stars) || stars < 1 || stars > 5)
+          return interaction.reply({ content: '❌ Bewertung muss zwischen 1 und 5 sein.', ephemeral: true });
+
+        const data = readData('review.json');
+        if (!data.channel)
+          return interaction.reply({ content: '❌ Kein Review-Channel konfiguriert. Frag einen Admin.', ephemeral: true });
+
+        const channel = interaction.client.guilds.cache.get(interaction.guildId || data.guildId)
+          ?.channels.cache.get(data.channel);
+        if (!channel)
+          return interaction.reply({ content: '❌ Review-Channel nicht gefunden.', ephemeral: true });
+
+        const starStr = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
+        const embed = new EmbedBuilder()
+          .setColor('#FFD700')
+          .setTitle(title)
+          .setDescription(text)
+          .addFields({ name: 'Bewertung', value: starStr })
+          .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
+          .setTimestamp();
+
+        await channel.send({ embeds: [embed] });
+        return interaction.reply({ content: '✅ Danke für deine Review!', ephemeral: true });
       }
 
       // ── Application: setup modal ───────────────────────────────────────────
@@ -771,6 +869,15 @@ module.exports = {
         return interaction.update({ content: `✅ Ticket log channel set to <#${channelId}>.`, embeds: [], components: [] });
       }
 
+      // review: set channel
+      if (interaction.customId === 'review_channel_select') {
+        const channelId = interaction.values[0];
+        const data      = readData('review.json');
+        data.channel    = channelId;
+        data.guildId    = interaction.guildId;
+        writeData('review.json', data);
+        return interaction.update({ content: `✅ Reviews werden in <#${channelId}> gepostet.`, embeds: [], components: [] });
+      }
     }
 
     // ── String Select Menus ───────────────────────────────────────────────────
