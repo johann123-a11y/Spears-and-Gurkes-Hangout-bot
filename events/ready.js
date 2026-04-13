@@ -56,17 +56,40 @@ async function checkTimers(client) {
 
   // --- Giveaway expiry ---
   const giveaways = readData('giveaways.json');
+  let giveawaysChanged = false;
   for (const [msgId, gw] of Object.entries(giveaways)) {
     if (!gw.ended && gw.endTime <= now) {
       try {
         const guild = client.guilds.cache.get(gw.guildId);
-        if (guild) {
-          const channel = await guild.channels.fetch(gw.channelId).catch(() => null);
-          await endGiveaway(msgId, guild, channel);
+        if (!guild) continue;
+        const channel = await guild.channels.fetch(gw.channelId).catch(() => null);
+        if (!channel) {
+          giveaways[msgId].fetchFailures = (gw.fetchFailures || 0) + 1;
+          if (giveaways[msgId].fetchFailures >= 3) {
+            giveaways[msgId].ended = true;
+            console.log(`Giveaway ${msgId} cancelled — channel not found after 3 attempts.`);
+          }
+          giveawaysChanged = true;
+          continue;
         }
+        const msg = await channel.messages.fetch(msgId).catch(() => null);
+        if (!msg) {
+          giveaways[msgId].fetchFailures = (gw.fetchFailures || 0) + 1;
+          if (giveaways[msgId].fetchFailures >= 3) {
+            giveaways[msgId].ended = true;
+            console.log(`Giveaway ${msgId} cancelled — message not found after 3 attempts.`);
+          }
+          giveawaysChanged = true;
+          continue;
+        }
+        // Reset failures on success
+        giveaways[msgId].fetchFailures = 0;
+        giveawaysChanged = true;
+        await endGiveaway(msgId, guild, channel);
       } catch { /* ignore */ }
     }
   }
+  if (giveawaysChanged) writeData('giveaways.json', giveaways);
 
   // --- Activity check expiry ---
   const config = require('../config.json');
