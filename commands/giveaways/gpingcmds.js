@@ -62,4 +62,13 @@ const gpingweeklyCmd = {
   },
 };
 
-module.exports = [gpingCmd, qpingCmd, gpingdailyCmd, gpingweeklyCmd];
+// ── /partnerping ──────────────────────────────────────────────────────────────
+const partnerpingCmd = {
+  name: 'partnerping',
+  data: makeCmd('partnerping', 'Send a partner ping'),
+  async executeSlash(interaction) {
+    await send(interaction, `<@&1459670504960036975>`);
+  },
+};
+
+module.exports = [gpingCmd, qpingCmd, gpingdailyCmd, gpingweeklyCmd, partnerpingCmd];
