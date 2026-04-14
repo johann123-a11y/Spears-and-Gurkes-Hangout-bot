@@ -1,4 +1,3 @@
-const { EmbedBuilder } = require('discord.js');
 const { readData } = require('../utils');
 
 module.exports = {
@@ -15,13 +14,6 @@ module.exports = {
       .replace('{server}', member.guild.name)
       .replace('{membercount}', member.guild.memberCount.toString());
 
-    const embed = new EmbedBuilder()
-      .setColor('#57F287')
-      .setTitle('👋 Welcome!')
-      .setDescription(text)
-      .setThumbnail(member.user.displayAvatarURL())
-      .setTimestamp();
-
-    channel.send({ embeds: [embed] }).catch(() => {});
+    channel.send({ content: text, allowedMentions: { users: [member.id] } }).catch(() => {});
   },
 };
