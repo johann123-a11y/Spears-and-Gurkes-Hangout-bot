@@ -204,6 +204,40 @@ module.exports = {
         return interaction.update({ content: '✅ Questions saved! Use `/application group` and `/application open` to publish.', embeds: [], components: [] });
       }
 
+      // ── Application: delete last question button ──────────────────────────
+      if (interaction.customId.startsWith('app_addq_delete:')) {
+        const panelId = interaction.customId.split(':')[1];
+        const apps    = readData('applications.json');
+        const panel   = apps.panels?.[panelId];
+        if (!panel) return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
+        if (!panel.questions.length)
+          return interaction.reply({ content: '❌ There are no questions to delete.', ephemeral: true });
+
+        const removed = panel.questions.pop();
+        writeData('applications.json', apps);
+
+        const qList = panel.questions.length
+          ? panel.questions.map((q, i) => `${i + 1}. [${q.type === 'yesno' ? 'Yes/No' : 'Text'}] ${q.text}`).join('\n')
+          : 'None yet — add them below!';
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
+        );
+        if (panel.questions.length > 0)
+          row.addComponents(new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('🗑️ Delete Last').setStyle(ButtonStyle.Danger));
+
+        return interaction.update({
+          embeds: [new EmbedBuilder()
+            .setColor('#FEE75C').setTitle(`📋 ${panel.name} — Questions`)
+            .addFields({ name: `${panel.questions.length} Question(s)`, value: qList })
+            .setFooter({ text: `Deleted: "${removed.text}"` })
+            .setTimestamp()],
+          components: [row],
+        });
+      }
+
       // ── Application: action buttons on result ──────────────────────────────
       if (interaction.customId.startsWith('app_accept:')) {
         const resultId = interaction.customId.split(':')[1];
@@ -695,40 +729,6 @@ module.exports = {
             new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
           )],
           ephemeral: true,
-        });
-      }
-
-      // ── Application: delete last question button ──────────────────────────
-      if (interaction.customId.startsWith('app_addq_delete:')) {
-        const panelId = interaction.customId.split(':')[1];
-        const apps    = readData('applications.json');
-        const panel   = apps.panels?.[panelId];
-        if (!panel) return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
-        if (!panel.questions.length)
-          return interaction.reply({ content: '❌ There are no questions to delete.', ephemeral: true });
-
-        const removed = panel.questions.pop();
-        writeData('applications.json', apps);
-
-        const qList = panel.questions.length
-          ? panel.questions.map((q, i) => `${i + 1}. [${q.type === 'yesno' ? 'Yes/No' : 'Text'}] ${q.text}`).join('\n')
-          : 'None yet — add them below!';
-
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
-        );
-        if (panel.questions.length > 0)
-          row.addComponents(new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('🗑️ Delete Last').setStyle(ButtonStyle.Danger));
-
-        return interaction.update({
-          embeds: [new EmbedBuilder()
-            .setColor('#FEE75C').setTitle(`📋 ${panel.name} — Questions`)
-            .addFields({ name: `${panel.questions.length} Question(s)`, value: qList })
-            .setFooter({ text: `Deleted: "${removed.text}"` })
-            .setTimestamp()],
-          components: [row],
         });
       }
 
