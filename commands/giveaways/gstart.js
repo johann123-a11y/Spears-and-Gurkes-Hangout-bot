@@ -90,7 +90,7 @@ async function createGiveaway(channel, ms, winners, prize, description, hostId) 
     .setColor('#FFD700')
     .setTitle(`🎉 GIVEAWAY — ${prize}`)
     .setDescription(
-      `${description}\n\nClick the button below to enter!\n\n**Winners:** ${winners}\n**Hosted by:** <@${hostId}>\n**Ends:** <t:${Math.floor(endTime / 1000)}:R>`
+      `${description}\n\nClick the button below to enter!\n\n**Winners:** ${winners}\n**Entries:** 0\n**Hosted by:** <@${hostId}>\n**Ends:** <t:${Math.floor(endTime / 1000)}:R>`
     )
     .setTimestamp(endTime);
 

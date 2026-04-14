@@ -403,6 +403,14 @@ module.exports = {
         if (!gw.participants.includes(interaction.user.id)) {
           gw.participants.push(interaction.user.id);
           writeData('giveaways.json', giveaways);
+          // Update entry count on the embed
+          const gwMsg = interaction.message;
+          const oldEmbed = gwMsg.embeds[0];
+          if (oldEmbed) {
+            const newDesc = oldEmbed.description.replace(/\*\*Entries:\*\* \d+/, `**Entries:** ${gw.participants.length}`);
+            const updatedEmbed = EmbedBuilder.from(oldEmbed).setDescription(newDesc);
+            gwMsg.edit({ embeds: [updatedEmbed] }).catch(() => {});
+          }
           return interaction.reply({ content: '🎉 You joined the giveaway! Good luck!', ephemeral: true });
         } else {
           const leaveBtn = new ButtonBuilder()
@@ -430,6 +438,17 @@ module.exports = {
         if (idx !== -1) {
           gw.participants.splice(idx, 1);
           writeData('giveaways.json', giveaways);
+          // Update entry count on the original giveaway message
+          const channel = interaction.guild.channels.cache.get(gw.channelId);
+          if (channel) {
+            channel.messages.fetch(msgId).then(gwMsg => {
+              const oldEmbed = gwMsg.embeds[0];
+              if (oldEmbed) {
+                const newDesc = oldEmbed.description.replace(/\*\*Entries:\*\* \d+/, `**Entries:** ${gw.participants.length}`);
+                gwMsg.edit({ embeds: [EmbedBuilder.from(oldEmbed).setDescription(newDesc)] }).catch(() => {});
+              }
+            }).catch(() => {});
+          }
         }
         return interaction.update({ content: '👋 You left the giveaway.', components: [] });
       }
