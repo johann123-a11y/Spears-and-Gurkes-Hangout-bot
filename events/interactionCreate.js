@@ -64,7 +64,7 @@ module.exports = {
           .setCustomId(`strikes_add_modal:${userId}`)
           .setTitle('Add Strike')
           .addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('reason').setLabel('Reason for strike').setStyle(TextInputStyle.Short).setRequired(true)
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for strike').setStyle(TextInputStyle.Short).setRequired(false)
           ));
         return interaction.showModal(modal);
       }
@@ -77,7 +77,7 @@ module.exports = {
           .setCustomId(`strikes_remove_modal:${userId}`)
           .setTitle('Remove Strike')
           .addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('reason').setLabel('Reason for removal').setStyle(TextInputStyle.Short).setRequired(true)
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for removal').setStyle(TextInputStyle.Short).setRequired(false)
           ));
         return interaction.showModal(modal);
       }
@@ -104,10 +104,10 @@ module.exports = {
           .setTitle('Set LOA')
           .addComponents(
             new ActionRowBuilder().addComponents(
-              new TextInputBuilder().setCustomId('duration').setLabel('Duration (e.g. 3d, 1w, 12h)').setStyle(TextInputStyle.Short).setRequired(true)
+              new TextInputBuilder().setCustomId('duration').setLabel('Duration (e.g. 3d, 1w, 12h)').setStyle(TextInputStyle.Short).setRequired(false)
             ),
             new ActionRowBuilder().addComponents(
-              new TextInputBuilder().setCustomId('reason').setLabel('Reason').setStyle(TextInputStyle.Short).setRequired(true)
+              new TextInputBuilder().setCustomId('reason').setLabel('Reason').setStyle(TextInputStyle.Short).setRequired(false)
             ),
           );
         return interaction.showModal(modal);
@@ -184,7 +184,7 @@ module.exports = {
           .setCustomId(`app_addq_modal:${panelId}:yesno`)
           .setTitle('Add Yes/No Question')
           .addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('question').setLabel('Question text').setStyle(TextInputStyle.Short).setRequired(true)
+            new TextInputBuilder().setCustomId('question').setLabel('Question text').setStyle(TextInputStyle.Short).setRequired(false)
           ));
         return interaction.showModal(modal);
       }
@@ -195,7 +195,7 @@ module.exports = {
           .setCustomId(`app_addq_modal:${panelId}:text`)
           .setTitle('Add Text Answer Question')
           .addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('question').setLabel('Question text').setStyle(TextInputStyle.Short).setRequired(true)
+            new TextInputBuilder().setCustomId('question').setLabel('Question text').setStyle(TextInputStyle.Short).setRequired(false)
           ));
         return interaction.showModal(modal);
       }
@@ -245,7 +245,7 @@ module.exports = {
           .setCustomId(`app_accept_modal:${resultId}`)
           .setTitle('Accept Application')
           .addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('reason').setLabel('Reason for acceptance').setStyle(TextInputStyle.Paragraph).setRequired(true)
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for acceptance').setStyle(TextInputStyle.Paragraph).setRequired(false)
           ));
         return interaction.showModal(modal);
       }
@@ -256,7 +256,7 @@ module.exports = {
           .setCustomId(`app_deny_modal:${resultId}`)
           .setTitle('Deny Application')
           .addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('reason').setLabel('Reason for denial').setStyle(TextInputStyle.Paragraph).setRequired(true)
+            new TextInputBuilder().setCustomId('reason').setLabel('Reason for denial').setStyle(TextInputStyle.Paragraph).setRequired(false)
           ));
         return interaction.showModal(modal);
       }
@@ -515,7 +515,7 @@ module.exports = {
           .setTitle('Set Ticket Panel Description')
           .addComponents(
             new ActionRowBuilder().addComponents(
-              new TextInputBuilder().setCustomId('desc_title').setLabel('Title (e.g. Create Ticket)').setStyle(TextInputStyle.Short).setValue(current.title || 'Create Ticket').setRequired(true)
+              new TextInputBuilder().setCustomId('desc_title').setLabel('Title (e.g. Create Ticket)').setStyle(TextInputStyle.Short).setValue(current.title || 'Create Ticket').setRequired(false)
             ),
             new ActionRowBuilder().addComponents(
               new TextInputBuilder().setCustomId('desc_subtitle').setLabel('Subtitle — shown bold').setStyle(TextInputStyle.Short).setValue(current.subtitle || '').setRequired(false)
@@ -777,7 +777,7 @@ module.exports = {
       // ── Application: accept modal ─────────────────────────────────────────
       if (interaction.customId.startsWith('app_accept_modal:')) {
         const resultId = interaction.customId.split(':')[1];
-        const reason   = interaction.fields.getTextInputValue('reason');
+        const reason   = interaction.fields.getTextInputValue('reason').trim() || 'No reason provided.';
         const results  = readData('applicationResults.json');
         const result   = results[resultId];
         if (!result) return interaction.reply({ content: '❌ Application not found.', ephemeral: true });
@@ -824,7 +824,7 @@ module.exports = {
       // ── Application: deny modal ───────────────────────────────────────────
       if (interaction.customId.startsWith('app_deny_modal:')) {
         const resultId = interaction.customId.split(':')[1];
-        const reason   = interaction.fields.getTextInputValue('reason');
+        const reason   = interaction.fields.getTextInputValue('reason').trim() || 'No reason provided.';
         const results  = readData('applicationResults.json');
         const result   = results[resultId];
         if (!result) return interaction.reply({ content: '❌ Application not found.', ephemeral: true });
@@ -1302,7 +1302,7 @@ module.exports = {
           .setCustomId(`ticket_edit_modal:${panelId}:${m.field}`)
           .setTitle(m.title)
           .addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('value').setLabel(m.inputLabel).setStyle(TextInputStyle.Short).setRequired(true)
+            new TextInputBuilder().setCustomId('value').setLabel(m.inputLabel).setStyle(TextInputStyle.Short).setRequired(false)
           ));
         await interaction.showModal(modal);
         return;
