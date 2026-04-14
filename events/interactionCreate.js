@@ -790,10 +790,11 @@ module.exports = {
         const resultEmbed = new EmbedBuilder()
           .setColor('#57F287').setTitle('✅ Application Accepted')
           .addFields(
-            { name: '👤 Applicant',   value: result.username,         inline: true },
-            { name: '📋 For',         value: result.forWhat,          inline: true },
-            { name: '✅ Accepted by', value: interaction.user.tag,    inline: true },
-            { name: 'Reason',         value: reason },
+            { name: '👤 Applicant',   value: `<@${result.userId}> (${result.username})`, inline: true },
+            { name: '📋 For',         value: result.forWhat,                              inline: true },
+            { name: '✅ Accepted by', value: `<@${interaction.user.id}>`,                inline: true },
+            { name: '📝 Reason',      value: reason },
+            ...result.answers.map(a => ({ name: a.question, value: a.answer || '—' })),
           ).setTimestamp();
 
         // DM the applicant
@@ -815,7 +816,9 @@ module.exports = {
           if (ch) await ch.send({ embeds: [resultEmbed] }).catch(() => {});
         }
 
-        return interaction.update({ embeds: [resultEmbed], components: [] });
+        // Delete pending message so channel stays clean
+        await interaction.deferUpdate();
+        await interaction.message.delete().catch(() => {});
       }
 
       // ── Application: deny modal ───────────────────────────────────────────
@@ -834,10 +837,11 @@ module.exports = {
         const resultEmbed = new EmbedBuilder()
           .setColor('#ED4245').setTitle('❌ Application Denied')
           .addFields(
-            { name: '👤 Applicant', value: result.username,       inline: true },
-            { name: '📋 For',       value: result.forWhat,        inline: true },
-            { name: '❌ Denied by', value: interaction.user.tag,  inline: true },
-            { name: 'Reason',       value: reason },
+            { name: '👤 Applicant', value: `<@${result.userId}> (${result.username})`, inline: true },
+            { name: '📋 For',       value: result.forWhat,                              inline: true },
+            { name: '❌ Denied by', value: `<@${interaction.user.id}>`,                inline: true },
+            { name: '📝 Reason',    value: reason },
+            ...result.answers.map(a => ({ name: a.question, value: a.answer || '—' })),
           ).setTimestamp();
 
         // DM the applicant
@@ -859,7 +863,9 @@ module.exports = {
           if (ch) await ch.send({ embeds: [resultEmbed] }).catch(() => {});
         }
 
-        return interaction.update({ embeds: [resultEmbed], components: [] });
+        // Delete pending message so channel stays clean
+        await interaction.deferUpdate();
+        await interaction.message.delete().catch(() => {});
       }
 
       // Ticket setup modal
