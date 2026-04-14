@@ -4,6 +4,30 @@ const { readData, writeData } = require('./index');
 // In-memory sessions: userId → { panelId, panelName, forWhat, questions, answers, currentIndex, dmChannelId }
 const sessions = new Map();
 
+function saveSession(userId, session) {
+  // strip non-serialisable client ref before saving
+  const { client, ...rest } = session;
+  const stored = readData('appSessions.json');
+  stored[userId] = rest;
+  writeData('appSessions.json', stored);
+}
+
+function deleteSession(userId) {
+  sessions.delete(userId);
+  const stored = readData('appSessions.json');
+  delete stored[userId];
+  writeData('appSessions.json', stored);
+}
+
+async function restoreSession(userId, client) {
+  if (sessions.has(userId)) return sessions.get(userId);
+  const stored = readData('appSessions.json');
+  if (!stored[userId]) return null;
+  const s = { ...stored[userId], client };
+  sessions.set(userId, s);
+  return s;
+}
+
 // ── Start a DM application session ───────────────────────────────────────────
 async function startApplication(interaction, panelId) {
   const apps  = readData('applications.json');
@@ -44,7 +68,7 @@ async function startApplication(interaction, panelId) {
     });
   }
 
-  sessions.set(interaction.user.id, {
+  const session = {
     panelId,
     panelName: panel.name,
     forWhat:   panel.forWhat,
@@ -54,10 +78,12 @@ async function startApplication(interaction, panelId) {
     dmChannelId: dmChannel.id,
     guildId: interaction.guildId,
     client: interaction.client,
-  });
+  };
+  sessions.set(interaction.user.id, session);
+  saveSession(interaction.user.id, session);
 
   await interaction.reply({ content: '✅ Check your DMs! I\'ve sent you the application questions.', ephemeral: true });
-  await sendQuestion(dmChannel, sessions.get(interaction.user.id));
+  await sendQuestion(dmChannel, session);
 }
 
 // ── Send the current question ─────────────────────────────────────────────────
@@ -86,17 +112,21 @@ async function sendQuestion(dmChannel, session) {
 
 // ── Handle a text answer from DMs ─────────────────────────────────────────────
 async function handleDMAnswer(message) {
-  const session = sessions.get(message.author.id);
+  let session = sessions.get(message.author.id);
+  if (!session) session = await restoreSession(message.author.id, message.client);
   if (!session) return;
   if (message.channel.id !== session.dmChannelId) return;
 
   const q = session.questions[session.currentIndex];
-  if (q.type === 'yesno') return; // handled by button
 
   const answer = message.content.trim();
   if (answer.toLowerCase() === 'cancel') {
-    sessions.delete(message.author.id);
+    deleteSession(message.author.id);
     return message.channel.send({ content: '❌ Application cancelled.' });
+  }
+
+  if (q.type === 'yesno') {
+    return message.channel.send({ content: '⚠️ Please use the **Yes** or **No** buttons above to answer this question.' });
   }
 
   await processAnswer(message.author, message.channel, session, answer);
@@ -104,8 +134,9 @@ async function handleDMAnswer(message) {
 
 // ── Handle a yes/no button click in DMs ──────────────────────────────────────
 async function handleDMButton(interaction, answer) {
-  const session = sessions.get(interaction.user.id);
-  if (!session) return interaction.reply({ content: '❌ No active session.', ephemeral: true });
+  let session = sessions.get(interaction.user.id);
+  if (!session) session = await restoreSession(interaction.user.id, interaction.client);
+  if (!session) return interaction.reply({ content: '❌ No active session. Please start a new application.', ephemeral: true });
 
   await interaction.update({ components: [] });
   await processAnswer(interaction.user, interaction.channel, session, answer);
@@ -118,9 +149,10 @@ async function processAnswer(user, dmChannel, session, answer) {
   session.currentIndex++;
 
   if (session.currentIndex >= session.questions.length) {
-    sessions.delete(user.id);
+    deleteSession(user.id);
     await finalizeApplication(user, dmChannel, session);
   } else {
+    saveSession(user.id, session);
     await sendQuestion(dmChannel, session);
   }
 }
