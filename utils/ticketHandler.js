@@ -126,6 +126,11 @@ async function createTicketChannel(interaction, panel, answers) {
     .setLabel('🔒 Close Ticket')
     .setStyle(ButtonStyle.Danger);
 
+  const requestCloseBtn = new ButtonBuilder()
+    .setCustomId('ticket_request_close_btn')
+    .setLabel('📩 Request Close')
+    .setStyle(ButtonStyle.Secondary);
+
   // Build content with ping mentions
   const pingContent = [
     `<@${interaction.user.id}>`,
@@ -135,7 +140,7 @@ async function createTicketChannel(interaction, panel, answers) {
   await ticketChannel.send({
     content: pingContent,
     embeds: [embed],
-    components: [new ActionRowBuilder().addComponents(closeBtn)],
+    components: [new ActionRowBuilder().addComponents(closeBtn, requestCloseBtn)],
     allowedMentions: { users: [interaction.user.id], roles: pingRoles },
   });
 
@@ -264,10 +269,29 @@ async function handleCloseModal(interaction) {
   setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
 }
 
+// ── Button: "Request Close" button in ticket channel (any member) ─────────────
+async function handleRequestCloseButton(interaction) {
+  const openTickets = readData('openTickets.json');
+  if (!openTickets[interaction.channelId])
+    return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
+
+  await interaction.reply({ content: '✅ Close request sent.', ephemeral: true });
+  await interaction.channel.send({
+    embeds: [new EmbedBuilder()
+      .setColor('#FEE75C').setTitle('📩 Close Request')
+      .setDescription(`<@${interaction.user.id}> has requested this ticket to be closed.`)
+      .setTimestamp()],
+    components: [new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
+    )],
+  });
+}
+
 module.exports = {
   handleTicketOpen,
   handleTicketQuestionsModal,
   handleCloseButton,
   handleCloseModal,
+  handleRequestCloseButton,
   createTicketChannel,
 };

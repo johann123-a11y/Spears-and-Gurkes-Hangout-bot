@@ -8,6 +8,7 @@ const {
   handleTicketQuestionsModal,
   handleCloseButton,
   handleCloseModal,
+  handleRequestCloseButton,
 } = require('../utils/ticketHandler');
 const { buildDescEmbed, sendTicketOverview } = require('../commands/tickets/ticket');
 const { startApplication, handleDMButton } = require('../utils/applicationDM');
@@ -46,9 +47,13 @@ module.exports = {
       if (interaction.customId.startsWith('ticket_open:'))
         return handleTicketOpen(interaction);
 
-      // Ticket close button (inside ticket channel)
+      // Ticket close button (inside ticket channel) — staff only
       if (interaction.customId === 'ticket_close_btn')
         return handleCloseButton(interaction);
+
+      // Ticket request close button — any member can use
+      if (interaction.customId === 'ticket_request_close_btn')
+        return handleRequestCloseButton(interaction);
 
       // ── Strikes buttons ────────────────────────────────────────────────────
       if (interaction.customId.startsWith('strikes_add:')) {
