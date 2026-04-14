@@ -41,6 +41,11 @@ module.exports = {
         )
     )
 
+    // ── /application info ──────────────────────────────────────────────────
+    .addSubcommand(sub =>
+      sub.setName('info').setDescription('Show all configured application panels and settings [Admin]')
+    )
+
     // ── /application set (subcommand group) ───────────────────────────────
     .addSubcommandGroup(group =>
       group.setName('set').setDescription('Set application channels')
@@ -96,6 +101,7 @@ module.exports = {
     if (sub === 'description') return handleDescription(interaction);
     if (sub === 'open')        return handleOpen(interaction);
     if (sub === 'ping')        return handlePing(interaction);
+    if (sub === 'info')        return handleInfo(interaction);
   },
 };
 
@@ -320,6 +326,67 @@ async function handleOpen(interaction) {
   writeData('applications.json', apps);
 
   return interaction.reply({ content: '✅ Application panel sent!', ephemeral: true });
+}
+
+// ── /application info ─────────────────────────────────────────────────────────
+async function handleInfo(interaction) {
+  const apps   = readData('applications.json');
+  const panels = Object.values(apps.panels || {});
+
+  const embed = new EmbedBuilder()
+    .setColor('#5865F2')
+    .setTitle('📋 Application System Info')
+    .setTimestamp();
+
+  // ── Channels ──────────────────────────────────────────────────────────────
+  const ch = apps.channels || {};
+  embed.addFields({
+    name: '📂 Channels',
+    value: [
+      `**Pending:** ${ch.pending  ? `<#${ch.pending}>`  : '*(not set)*'}`,
+      `**Accepted:** ${ch.accepted ? `<#${ch.accepted}>` : '*(not set)*'}`,
+      `**Denied:** ${ch.denied   ? `<#${ch.denied}>`   : '*(not set)*'}`,
+    ].join('\n'),
+  });
+
+  // ── Ping target ───────────────────────────────────────────────────────────
+  embed.addFields({
+    name: '🔔 Ping on new application',
+    value: apps.pingTarget
+      ? (apps.pingTarget.startsWith('role:')
+          ? `<@&${apps.pingTarget.slice(5)}>`
+          : `<@${apps.pingTarget}>`)
+      : '*(not set)*',
+    inline: true,
+  });
+
+  // ── Panel message ─────────────────────────────────────────────────────────
+  embed.addFields({
+    name: '📨 Panel message',
+    value: apps.group?.channelId && apps.group?.messageId
+      ? `[Jump](https://discord.com/channels/${interaction.guildId}/${apps.group.channelId}/${apps.group.messageId})`
+      : '*(not sent yet)*',
+    inline: true,
+  });
+
+  // ── Application panels ────────────────────────────────────────────────────
+  if (panels.length === 0) {
+    embed.addFields({ name: '📄 Panels', value: '*(none created yet)*' });
+  } else {
+    for (const panel of panels) {
+      const qList = panel.questions?.length
+        ? panel.questions.map((q, i) =>
+            `${i + 1}. [${q.type === 'yesno' ? 'Yes/No' : 'Text'}] ${q.text}`
+          ).join('\n')
+        : '*(no questions)*';
+      embed.addFields({
+        name: `📄 ${panel.name} — for: ${panel.forWhat}`,
+        value: qList.length > 1024 ? qList.substring(0, 1021) + '...' : qList,
+      });
+    }
+  }
+
+  return interaction.reply({ embeds: [embed], ephemeral: true });
 }
 
 module.exports.getAppId = getAppId;
