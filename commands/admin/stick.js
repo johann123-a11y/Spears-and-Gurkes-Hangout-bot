@@ -52,16 +52,12 @@ module.exports = {
 
 async function setStick(channel, text, message) {
   const sticky = readData('sticky.json');
+  const oldMsgId = sticky[channel.id]?.messageId;
 
-  // Delete old sticky message if exists
-  if (sticky[channel.id]?.messageId) {
-    const old = await channel.messages.fetch(sticky[channel.id].messageId).catch(() => null);
-    if (old) await old.delete().catch(() => {});
-  }
+  // Delete command message immediately (fire-and-forget)
+  if (message) message.delete().catch(() => {});
 
-  // Delete the command message
-  if (message) await message.delete().catch(() => {});
-
+  // Send new sticky first so it appears instantly
   const embed = new EmbedBuilder()
     .setColor('#FEE75C')
     .setDescription(`📌 ${text}`);
@@ -70,6 +66,13 @@ async function setStick(channel, text, message) {
 
   sticky[channel.id] = { text, messageId: sent.id };
   writeData('sticky.json', sticky);
+
+  // Delete old sticky in background after new one is already posted
+  if (oldMsgId) {
+    channel.messages.fetch(oldMsgId)
+      .then(old => old.delete())
+      .catch(() => {});
+  }
 }
 
 async function removeStick(channel, replyChannel, interaction) {
