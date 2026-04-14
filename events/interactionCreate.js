@@ -1099,6 +1099,35 @@ module.exports = {
         return startApplication(interaction, panelId);
       }
 
+      // ── Application: info edit — select panel to edit questions ──────────────
+      if (interaction.customId === 'app_info_edit_select') {
+        const panelId = interaction.values[0];
+        const apps    = readData('applications.json');
+        const panel   = apps.panels?.[panelId];
+        if (!panel) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
+
+        const qList = panel.questions?.length
+          ? panel.questions.map((q, i) => `${i + 1}. [${q.type === 'yesno' ? 'Yes/No' : 'Text'}] ${q.text}`).join('\n')
+          : 'None yet — add them below!';
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
+        );
+        if (panel.questions?.length > 0)
+          row.addComponents(new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('🗑️ Delete Last').setStyle(ButtonStyle.Danger));
+
+        return interaction.update({
+          embeds: [new EmbedBuilder()
+            .setColor('#5865F2').setTitle(`✏️ Editing: ${panel.name}`)
+            .addFields({ name: `${panel.questions?.length || 0} Question(s)`, value: qList })
+            .setFooter({ text: 'Add or remove questions, then click Done' })
+            .setTimestamp()],
+          components: [row],
+        });
+      }
+
       // ── Application: group select ──────────────────────────────────────────
       if (interaction.customId === 'app_group_select') {
         const panelIds = interaction.values;

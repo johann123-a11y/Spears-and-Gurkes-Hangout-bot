@@ -386,7 +386,21 @@ async function handleInfo(interaction) {
     }
   }
 
-  return interaction.reply({ embeds: [embed], ephemeral: true });
+  const components = [];
+
+  if (panels.length > 0) {
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId('app_info_edit_select')
+      .setPlaceholder('✏️ Select a panel to edit questions...')
+      .addOptions(panels.map(p => ({
+        label: p.name,
+        description: `${p.questions?.length || 0} question(s) • for: ${p.forWhat.substring(0, 50)}`,
+        value: p.id,
+      })));
+    components.push(new ActionRowBuilder().addComponents(menu));
+  }
+
+  return interaction.reply({ embeds: [embed], components, ephemeral: true });
 }
 
 module.exports.getAppId = getAppId;
