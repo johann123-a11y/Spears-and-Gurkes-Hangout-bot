@@ -1,8 +1,17 @@
-const { readData } = require('../utils');
+const { readData, writeData } = require('../utils');
+
+// Deduplicate: track recently welcomed users to prevent double-firing
+const recentlyWelcomed = new Map();
 
 module.exports = {
   name: 'guildMemberAdd',
   async execute(member, client) {
+    const key = `${member.guild.id}:${member.id}`;
+    const now = Date.now();
+    if (recentlyWelcomed.has(key) && now - recentlyWelcomed.get(key) < 10_000) return;
+    recentlyWelcomed.set(key, now);
+    setTimeout(() => recentlyWelcomed.delete(key), 10_000);
+
     const data = readData('welcome.json');
     if (!data.enabled || !data.channel) return;
 
