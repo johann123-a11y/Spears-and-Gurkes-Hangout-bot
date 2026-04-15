@@ -34,7 +34,7 @@ module.exports = {
       if (hasLink && mediaFilter.enabled && !mediaFilter.allowedChannels.includes(message.channel.id)) {
         await message.delete().catch(() => {});
         const warn = await message.channel.send({
-          content: `⚠️ <@${message.author.id}> Links sind hier nicht erlaubt!`,
+          content: `⚠️ <@${message.author.id}> Links are not allowed here!`,
           allowedMentions: { users: [message.author.id] },
         });
         setTimeout(() => warn.delete().catch(() => {}), 8000);
@@ -48,7 +48,7 @@ module.exports = {
       if (hasInvite && partnerFilter.enabled && !isTicket && !partnerFilter.allowedChannels.includes(message.channel.id)) {
         await message.delete().catch(() => {});
         const warn = await message.channel.send({
-          content: `⚠️ <@${message.author.id}> Discord-Invites sind hier nicht erlaubt!`,
+          content: `⚠️ <@${message.author.id}> Discord invites are not allowed here!`,
           allowedMentions: { users: [message.author.id] },
         });
         setTimeout(() => warn.delete().catch(() => {}), 8000);
