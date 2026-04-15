@@ -28,6 +28,9 @@ function getDefault(filename) {
     'applications.json': { panels: {} },
     'applicationResults.json': {},
     'activitychecks.json': {},
+    'mediaFilter.json':   { enabled: false, allowedChannels: [] },
+    'partnerFilter.json': { enabled: false, allowedChannels: [] },
+    'appSessions.json':   {},
   };
   return defaults[filename] ?? {};
 }

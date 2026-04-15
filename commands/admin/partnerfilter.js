@@ -1,23 +1,13 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 
-function getData() {
-  const d = readData('partnerFilter.json') || {};
-  return { enabled: d.enabled ?? false, allowedChannels: d.allowedChannels ?? [] };
-}
-
 module.exports = {
   name: 'partner',
   data: new SlashCommandBuilder()
     .setName('partner')
     .setDescription('Discord invite filter settings [Admin]')
-
-    .addSubcommand(sub =>
-      sub.setName('on').setDescription('Enable Discord invite filter [Admin]')
-    )
-    .addSubcommand(sub =>
-      sub.setName('off').setDescription('Disable Discord invite filter [Admin]')
-    )
+    .addSubcommand(sub => sub.setName('on').setDescription('Enable Discord invite filter [Admin]'))
+    .addSubcommand(sub => sub.setName('off').setDescription('Disable Discord invite filter [Admin]'))
     .addSubcommand(sub =>
       sub.setName('add')
         .setDescription('Add a channel where Discord invites are allowed [Admin]')
@@ -28,24 +18,27 @@ module.exports = {
         .setDescription('Remove a channel from the allowed invite list [Admin]')
         .addChannelOption(o => o.setName('channel').setDescription('Channel').setRequired(true))
     )
-    .addSubcommand(sub =>
-      sub.setName('info').setDescription('Show current invite filter settings [Admin]')
-    ),
+    .addSubcommand(sub => sub.setName('info').setDescription('Show invite filter settings [Admin]')),
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
       return interaction.reply({ content: '❌ Only **Administrators** can use this.', ephemeral: true });
 
-    const sub  = interaction.options.getSubcommand();
-    const data = getData();
+    const sub = interaction.options.getSubcommand();
+
+    // Always read fresh + guarantee structure
+    const raw  = readData('partnerFilter.json');
+    const data = {
+      enabled:         raw?.enabled         ?? false,
+      allowedChannels: Array.isArray(raw?.allowedChannels) ? raw.allowedChannels : [],
+    };
 
     if (sub === 'on') {
       data.enabled = true;
       writeData('partnerFilter.json', data);
       return interaction.reply({
         embeds: [new EmbedBuilder().setColor('#57F287').setTitle('✅ Invite Filter Enabled')
-          .setDescription('Discord invites are now **blocked** except in allowed channels and tickets.')
-          .setTimestamp()],
+          .setDescription('Discord invites are now **blocked** except in allowed channels and tickets.').setTimestamp()],
         ephemeral: true,
       });
     }
@@ -55,8 +48,7 @@ module.exports = {
       writeData('partnerFilter.json', data);
       return interaction.reply({
         embeds: [new EmbedBuilder().setColor('#ED4245').setTitle('🔴 Invite Filter Disabled')
-          .setDescription('Discord invites are now allowed everywhere.')
-          .setTimestamp()],
+          .setDescription('Discord invites are now allowed everywhere.').setTimestamp()],
         ephemeral: true,
       });
     }
@@ -94,11 +86,10 @@ module.exports = {
       return interaction.reply({
         embeds: [new EmbedBuilder().setColor('#5865F2').setTitle('🤝 Invite Filter Info')
           .addFields(
-            { name: 'Status', value: data.enabled ? '✅ Enabled' : '🔴 Disabled', inline: true },
+            { name: 'Status',           value: data.enabled ? '✅ Enabled' : '🔴 Disabled', inline: true },
             { name: 'Allowed Channels', value: channels },
-            { name: 'Always Allowed', value: '✅ Ticket channels are always exempt' },
-          ).setFooter({ text: 'Staff with ManageMessages are always exempt' })
-          .setTimestamp()],
+            { name: 'Always Allowed',   value: '✅ Ticket channels are always exempt' },
+          ).setFooter({ text: 'Staff with ManageMessages are always exempt' }).setTimestamp()],
         ephemeral: true,
       });
     }

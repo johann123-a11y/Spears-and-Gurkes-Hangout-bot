@@ -1,23 +1,13 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 
-function getData() {
-  const d = readData('mediaFilter.json') || {};
-  return { enabled: d.enabled ?? false, allowedChannels: d.allowedChannels ?? [] };
-}
-
 module.exports = {
   name: 'media',
   data: new SlashCommandBuilder()
     .setName('media')
     .setDescription('Link filter settings [Admin]')
-
-    .addSubcommand(sub =>
-      sub.setName('on').setDescription('Enable link filter — links only allowed in set channels [Admin]')
-    )
-    .addSubcommand(sub =>
-      sub.setName('off').setDescription('Disable link filter [Admin]')
-    )
+    .addSubcommand(sub => sub.setName('on').setDescription('Enable link filter [Admin]'))
+    .addSubcommand(sub => sub.setName('off').setDescription('Disable link filter [Admin]'))
     .addSubcommand(sub =>
       sub.setName('add')
         .setDescription('Add a channel where links are allowed [Admin]')
@@ -28,24 +18,27 @@ module.exports = {
         .setDescription('Remove a channel from the allowed list [Admin]')
         .addChannelOption(o => o.setName('channel').setDescription('Channel').setRequired(true))
     )
-    .addSubcommand(sub =>
-      sub.setName('info').setDescription('Show current link filter settings [Admin]')
-    ),
+    .addSubcommand(sub => sub.setName('info').setDescription('Show link filter settings [Admin]')),
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
       return interaction.reply({ content: '❌ Only **Administrators** can use this.', ephemeral: true });
 
-    const sub  = interaction.options.getSubcommand();
-    const data = getData();
+    const sub = interaction.options.getSubcommand();
+
+    // Always read fresh + guarantee structure
+    const raw  = readData('mediaFilter.json');
+    const data = {
+      enabled:         raw?.enabled         ?? false,
+      allowedChannels: Array.isArray(raw?.allowedChannels) ? raw.allowedChannels : [],
+    };
 
     if (sub === 'on') {
       data.enabled = true;
       writeData('mediaFilter.json', data);
       return interaction.reply({
         embeds: [new EmbedBuilder().setColor('#57F287').setTitle('✅ Link Filter Enabled')
-          .setDescription('Links are now **blocked** everywhere except in allowed channels.')
-          .setTimestamp()],
+          .setDescription('Links are now **blocked** everywhere except in allowed channels.').setTimestamp()],
         ephemeral: true,
       });
     }
@@ -55,8 +48,7 @@ module.exports = {
       writeData('mediaFilter.json', data);
       return interaction.reply({
         embeds: [new EmbedBuilder().setColor('#ED4245').setTitle('🔴 Link Filter Disabled')
-          .setDescription('Links are now allowed everywhere.')
-          .setTimestamp()],
+          .setDescription('Links are now allowed everywhere.').setTimestamp()],
         ephemeral: true,
       });
     }
@@ -94,10 +86,9 @@ module.exports = {
       return interaction.reply({
         embeds: [new EmbedBuilder().setColor('#5865F2').setTitle('🔗 Link Filter Info')
           .addFields(
-            { name: 'Status', value: data.enabled ? '✅ Enabled' : '🔴 Disabled', inline: true },
+            { name: 'Status',           value: data.enabled ? '✅ Enabled' : '🔴 Disabled', inline: true },
             { name: 'Allowed Channels', value: channels },
-          ).setFooter({ text: 'Staff with ManageMessages are always exempt' })
-          .setTimestamp()],
+          ).setFooter({ text: 'Staff with ManageMessages are always exempt' }).setTimestamp()],
         ephemeral: true,
       });
     }
