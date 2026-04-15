@@ -33,10 +33,10 @@ module.exports = {
       const openTickets = readData('openTickets.json') || {};
       const isTicket    = !!openTickets[message.channel.id];
 
-      // ── Link filter ───────────────────────────────────────────────────────
+      // ── Link filter (skip if message only contains Discord invites) ──────────
       const mRaw = readData('mediaFilter.json');
       const mediaFilter = { enabled: mRaw?.enabled ?? false, allowedChannels: Array.isArray(mRaw?.allowedChannels) ? mRaw.allowedChannels : [] };
-      if (hasLink && mediaFilter.enabled && !isTicket && !mediaFilter.allowedChannels.includes(message.channel.id)) {
+      if (hasLink && !hasInvite && mediaFilter.enabled && !isTicket && !mediaFilter.allowedChannels.includes(message.channel.id)) {
         await message.delete().catch(() => {});
         const warn = await message.channel.send({
           content: `⚠️ <@${message.author.id}> Links are not allowed here!`,

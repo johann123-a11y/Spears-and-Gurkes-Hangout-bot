@@ -31,6 +31,7 @@ function getDefault(filename) {
     'mediaFilter.json':   { enabled: false, allowedChannels: [] },
     'partnerFilter.json': { enabled: false, allowedChannels: [] },
     'appSessions.json':   {},
+    'staffConfig.json':   { staffRoleId: null },
   };
   return defaults[filename] ?? {};
 }

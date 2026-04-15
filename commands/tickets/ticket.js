@@ -24,8 +24,12 @@ function buildDescEmbed(desc) {
 }
 
 function isStaff(member) {
-  return member.permissions.has(PermissionFlagsBits.ManageChannels)
-    || member.permissions.has(PermissionFlagsBits.Administrator);
+  if (member.permissions.has(PermissionFlagsBits.ManageChannels)) return true;
+  if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
+  // Check configured staff role (set via /staff role set)
+  const staffConfig = readData('staffConfig.json');
+  if (staffConfig.staffRoleId && member.roles.cache.has(staffConfig.staffRoleId)) return true;
+  return false;
 }
 
 const STYLES = {
