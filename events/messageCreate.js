@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { readData, writeData, formatTime } = require('../utils');
+const { PermissionFlagsBits } = require('discord.js');
 const config = require('../config.json');
 const { setStick } = require('../commands/admin/stick');
 const { handleDMAnswer } = require('../utils/applicationDM');
@@ -18,6 +19,42 @@ module.exports = {
       return;
     }
 
+
+    // ── Auto-Mod: link filter ─────────────────────────────────────────────────
+    const isStaff = message.member?.permissions.has(PermissionFlagsBits.ManageMessages);
+
+    if (!isStaff) {
+      const urlRegex = /https?:\/\/\S+/gi;
+      const inviteRegex = /discord(?:\.gg|app\.com\/invite)\/\S+/gi;
+      const hasLink   = urlRegex.test(message.content);
+      const hasInvite = inviteRegex.test(message.content);
+
+      // ── Link filter ───────────────────────────────────────────────────────
+      const mediaFilter = readData('mediaFilter.json') || { enabled: false, allowedChannels: [] };
+      if (hasLink && mediaFilter.enabled && !mediaFilter.allowedChannels.includes(message.channel.id)) {
+        await message.delete().catch(() => {});
+        const warn = await message.channel.send({
+          content: `⚠️ <@${message.author.id}> Links sind hier nicht erlaubt!`,
+          allowedMentions: { users: [message.author.id] },
+        });
+        setTimeout(() => warn.delete().catch(() => {}), 8000);
+        return;
+      }
+
+      // ── Invite filter ─────────────────────────────────────────────────────
+      const partnerFilter = readData('partnerFilter.json') || { enabled: false, allowedChannels: [] };
+      const openTickets   = readData('openTickets.json') || {};
+      const isTicket      = !!openTickets[message.channel.id];
+      if (hasInvite && partnerFilter.enabled && !isTicket && !partnerFilter.allowedChannels.includes(message.channel.id)) {
+        await message.delete().catch(() => {});
+        const warn = await message.channel.send({
+          content: `⚠️ <@${message.author.id}> Discord-Invites sind hier nicht erlaubt!`,
+          allowedMentions: { users: [message.author.id] },
+        });
+        setTimeout(() => warn.delete().catch(() => {}), 8000);
+        return;
+      }
+    }
 
     // --- AFK: author sent a message, remove their AFK ---
     const afk = readData('afk.json');

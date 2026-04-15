@@ -76,6 +76,25 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
+        name: '🔗 Link Filter [Administrator] — Slash only',
+        value: [
+          '`/media on / off` — Enable/disable link filter',
+          '`/media add #channel` — Allow links in a channel',
+          '`/media remove #channel` — Remove channel from allowed list',
+          '`/media info` — Show current link filter settings',
+        ].join('\n'),
+      },
+      {
+        name: '🤝 Invite Filter [Administrator] — Slash only',
+        value: [
+          '`/partner on / off` — Enable/disable Discord invite filter',
+          '`/partner add #channel` — Allow invites in a channel',
+          '`/partner remove #channel` — Remove channel from allowed list',
+          '`/partner info` — Show current invite filter settings',
+          '*Ticket channels are always exempt from the invite filter.*',
+        ].join('\n'),
+      },
+      {
         name: '👋 Welcome [Admin]',
         value: [
           '`?welcome enable / disable` — Toggle welcome messages',
