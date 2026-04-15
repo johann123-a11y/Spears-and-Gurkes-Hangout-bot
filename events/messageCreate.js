@@ -30,9 +30,13 @@ module.exports = {
       const hasInvite = inviteRegex.test(message.content);
 
       // ── Link filter ───────────────────────────────────────────────────────
+      const openTickets = readData('openTickets.json') || {};
+      const isTicket    = !!openTickets[message.channel.id];
+
+      // ── Link filter ───────────────────────────────────────────────────────
       const mRaw = readData('mediaFilter.json');
       const mediaFilter = { enabled: mRaw?.enabled ?? false, allowedChannels: Array.isArray(mRaw?.allowedChannels) ? mRaw.allowedChannels : [] };
-      if (hasLink && mediaFilter.enabled && !mediaFilter.allowedChannels.includes(message.channel.id)) {
+      if (hasLink && mediaFilter.enabled && !isTicket && !mediaFilter.allowedChannels.includes(message.channel.id)) {
         await message.delete().catch(() => {});
         const warn = await message.channel.send({
           content: `⚠️ <@${message.author.id}> Links are not allowed here!`,
@@ -45,8 +49,6 @@ module.exports = {
       // ── Invite filter ─────────────────────────────────────────────────────
       const pRaw = readData('partnerFilter.json');
       const partnerFilter = { enabled: pRaw?.enabled ?? false, allowedChannels: Array.isArray(pRaw?.allowedChannels) ? pRaw.allowedChannels : [] };
-      const openTickets   = readData('openTickets.json') || {};
-      const isTicket      = !!openTickets[message.channel.id];
       if (hasInvite && partnerFilter.enabled && !isTicket && !partnerFilter.allowedChannels.includes(message.channel.id)) {
         await message.delete().catch(() => {});
         const warn = await message.channel.send({
