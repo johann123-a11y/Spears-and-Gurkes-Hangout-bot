@@ -45,6 +45,9 @@ async function startApplication(interaction, panelId) {
   if (panel.questions.length === 0)
     return interaction.reply({ content: '❌ This application has no questions configured yet.', ephemeral: true });
 
+  // Defer immediately so the interaction doesn't expire while we open DMs
+  await interaction.deferReply({ ephemeral: true });
+
   // Try to open DMs
   let dmChannel;
   try {
@@ -62,10 +65,7 @@ async function startApplication(interaction, panelId) {
         .setTimestamp()],
     });
   } catch {
-    return interaction.reply({
-      content: '❌ I couldn\'t send you a DM! Please enable DMs from server members and try again.',
-      ephemeral: true,
-    });
+    return interaction.editReply({ content: '❌ I couldn\'t send you a DM! Please enable DMs from server members and try again.' });
   }
 
   const session = {
@@ -82,7 +82,7 @@ async function startApplication(interaction, panelId) {
   sessions.set(interaction.user.id, session);
   saveSession(interaction.user.id, session);
 
-  await interaction.reply({ content: '✅ Check your DMs! I\'ve sent you the application questions.', ephemeral: true });
+  await interaction.editReply({ content: '✅ Check your DMs! I\'ve sent you the application questions.' });
   await sendQuestion(dmChannel, session);
 }
 
