@@ -2,7 +2,7 @@ const {
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
-const { readData, writeData } = require('./index');
+const { readData, writeData, isStaffMember } = require('./index');
 const { sendLog } = require('./logger');
 
 // ── Button: user clicks a ticket panel button ─────────────────────────────────
@@ -189,8 +189,7 @@ async function handleCloseButton(interaction) {
   if (!openTickets[interaction.channelId])
     return interaction.reply({ content: '❌ This ticket is no longer active.', ephemeral: true });
 
-  if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels) &&
-      !interaction.member.permissions.has(PermissionFlagsBits.Administrator))
+  if (!isStaffMember(interaction.member))
     return interaction.reply({ content: '❌ Only **Staff** can close tickets.', ephemeral: true });
 
   // Ask for reason via modal

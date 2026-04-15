@@ -155,6 +155,6 @@ function checkPerm(member, commandName) {
 module.exports = {
   parseTime, formatTime, readData, writeData, loadCache,
   promoteOrder, getMemberRoleLevel,
-  hasPermission, checkPerm,
+  hasPermission, checkPerm, isStaffMember,
   COMMAND_DEFAULTS, COMMAND_LABELS,
 };
