@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { readData, writeData, formatTime, checkPerm } = require('../utils');
+const { readData, writeData, formatTime } = require('../utils');
 const config = require('../config.json');
 const { setStick } = require('../commands/admin/stick');
 const { handleDMAnswer } = require('../utils/applicationDM');
@@ -18,21 +18,6 @@ module.exports = {
       return;
     }
 
-    // ── Auto-Mod: invite link filter ──────────────────────────────────────────
-    const inviteRegex = /discord\.gg\/\S+/gi;
-    const invites = message.content.match(inviteRegex);
-    if (invites && invites.length > 1) {
-      const exempt = checkPerm(message.member, 'invitefilter');
-      if (!exempt) {
-        await message.delete().catch(() => {});
-        const warn = await message.channel.send({
-          content: `⚠️ <@${message.author.id}> Du kannst nur **1 Partner-Invite** pro Nachricht posten!`,
-          allowedMentions: { users: [message.author.id] },
-        });
-        setTimeout(() => warn.delete().catch(() => {}), 8000);
-        return;
-      }
-    }
 
     // --- AFK: author sent a message, remove their AFK ---
     const afk = readData('afk.json');

@@ -17,7 +17,6 @@ const COMMAND_DESCRIPTIONS = {
   greroll:      'Rerolls giveaway winners',
   afk:          'Sets yourself as AFK with optional time limit',
   help:         'Shows all available commands',
-  invitefilter: 'Who can bypass the invite link filter (post multiple invites)',
 };
 
 const COMMAND_GROUPS = [
@@ -25,7 +24,6 @@ const COMMAND_GROUPS = [
   { name: '⚠️ Strikes',    cmds: ['strike', 'strikes'] },
   { name: '🎉 Giveaways',  cmds: ['gstart', 'gend', 'greroll'] },
   { name: '💬 General',    cmds: ['afk', 'help'] },
-  { name: '🛡️ Auto-Mod',   cmds: ['invitefilter'] },
 ];
 
 const LEVEL_CHOICES = [
