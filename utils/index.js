@@ -32,6 +32,7 @@ function getDefault(filename) {
     'partnerFilter.json': { enabled: false, allowedChannels: [] },
     'appSessions.json':   {},
     'staffConfig.json':   { staffRoleId: null },
+    'review.json':        { channel: null, guildId: null },
   };
   return defaults[filename] ?? {};
 }

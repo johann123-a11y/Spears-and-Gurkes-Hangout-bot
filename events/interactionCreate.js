@@ -685,12 +685,12 @@ module.exports = {
 
         const data = readData('review.json');
         if (!data.channel)
-          return interaction.reply({ content: '❌ No review channel configured. Ask an admin.', ephemeral: true });
+          return interaction.reply({ content: '❌ No review channel configured. Ask an admin to use `/review channel`.', ephemeral: true });
 
-        const guildId = interaction.guildId || data.guildId;
-        const channel = interaction.client.guilds.cache.get(guildId)?.channels.cache.get(data.channel);
+        const channel = interaction.guild?.channels.cache.get(data.channel)
+          ?? interaction.client.guilds.cache.get(data.guildId)?.channels.cache.get(data.channel);
         if (!channel)
-          return interaction.reply({ content: '❌ Review channel not found.', ephemeral: true });
+          return interaction.reply({ content: '❌ Review channel not found. Ask an admin to re-set it with `/review channel`.', ephemeral: true });
 
         const starStr = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
         const embed = new EmbedBuilder()
