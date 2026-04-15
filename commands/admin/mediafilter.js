@@ -2,7 +2,8 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('disc
 const { readData, writeData } = require('../../utils');
 
 function getData() {
-  return readData('mediaFilter.json') || { enabled: false, allowedChannels: [] };
+  const d = readData('mediaFilter.json') || {};
+  return { enabled: d.enabled ?? false, allowedChannels: d.allowedChannels ?? [] };
 }
 
 module.exports = {
