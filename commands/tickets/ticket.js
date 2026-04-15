@@ -173,15 +173,11 @@ module.exports = {
 
     // ── perms group ───────────────────────────────────────────────────────────
     if (group === 'perms') {
-      if (sub === 'info') {
-        if (!isStaff(interaction.member))
-          return interaction.reply({ content: '❌ Only **Staff** can use this command.', ephemeral: true });
-        return handlePermsInfo(interaction);
-      }
       if (!interaction.member.permissions.has('Administrator'))
         return interaction.reply({ content: '❌ Only **Administrators** can manage permissions.', ephemeral: true });
       if (sub === 'ping')  return handlePermsPing(interaction);
       if (sub === 'view')  return handlePermsView(interaction);
+      if (sub === 'info')  return handlePermsInfo(interaction);
       if (sub === 'clear') return handlePermsClear(interaction);
     }
 

@@ -80,6 +80,14 @@ async function createTicketChannel(interaction, panel, answers) {
   const viewRoles = tickets.perms?.viewRoles || [];
   const pingRoles = tickets.perms?.pingRoles || [];
 
+  // Collect staff role IDs (from DB + config fallback)
+  const staffConfig = readData('staffConfig.json');
+  const config = require('../config.json');
+  const staffRoleIds = new Set();
+  if (staffConfig?.staffRoleId) staffRoleIds.add(staffConfig.staffRoleId);
+  const fallbackId = config.roles?.staffTeam;
+  if (fallbackId && !fallbackId.endsWith('_ROLE_ID')) staffRoleIds.add(fallbackId);
+
   // Build permission overwrites
   const permOverwrites = [
     { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
@@ -91,8 +99,13 @@ async function createTicketChannel(interaction, panel, answers) {
       id: interaction.client.user.id,
       allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ReadMessageHistory],
     },
+    // Staff role can see and manage all tickets
+    ...[...staffRoleIds].map(roleId => ({
+      id: roleId,
+      allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory],
+    })),
     // View roles can see all tickets
-    ...viewRoles.map(roleId => ({
+    ...viewRoles.filter(id => !staffRoleIds.has(id)).map(roleId => ({
       id: roleId,
       allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory],
     })),
