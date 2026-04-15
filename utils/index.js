@@ -132,14 +132,21 @@ const COMMAND_LABELS = {
   staffTeam: '🔵 Staff Team',
 };
 
-function checkPerm(member, commandName) {
+function isStaffMember(member) {
   if (!member) return false;
   if (member.permissions.has('Administrator')) return true;
+  // Check role set via /staff role set command
   const staffConfig = readData('staffConfig.json');
-  const staffRoleId = staffConfig?.staffRoleId;
-  const hasStaffRole = staffRoleId ? member.roles.cache.has(staffRoleId) : false;
-  console.log(`[checkPerm] cmd=${commandName} user=${member.user?.tag} staffRoleId=${staffRoleId} hasStaffRole=${hasStaffRole} memberRoles=${[...member.roles.cache.keys()].join(',')}`);
-  if (hasStaffRole) return true;
+  if (staffConfig?.staffRoleId && member.roles.cache.has(staffConfig.staffRoleId)) return true;
+  // Fallback: check staffTeam role from config.json
+  const fallbackId = config.roles?.staffTeam;
+  if (fallbackId && !fallbackId.endsWith('_ROLE_ID') && member.roles.cache.has(fallbackId)) return true;
+  return false;
+}
+
+function checkPerm(member, commandName) {
+  if (!member) return false;
+  if (isStaffMember(member)) return true;
   const perms = readData('perms.json');
   const level = perms[commandName] ?? COMMAND_DEFAULTS[commandName] ?? 'everyone';
   return hasPermission(member, level);

@@ -23,11 +23,17 @@ function buildDescEmbed(desc) {
   return embed;
 }
 
+const config = require('../../config.json');
+
 function isStaff(member) {
   if (member.permissions.has(PermissionFlagsBits.ManageChannels)) return true;
   if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
+  // Check role set via /staff role set command
   const staffConfig = readData('staffConfig.json');
   if (staffConfig?.staffRoleId && member.roles.cache.has(staffConfig.staffRoleId)) return true;
+  // Fallback: check staffTeam role from config.json
+  const fallbackId = config.roles?.staffTeam;
+  if (fallbackId && !fallbackId.endsWith('_ROLE_ID') && member.roles.cache.has(fallbackId)) return true;
   return false;
 }
 
