@@ -117,6 +117,8 @@ const COMMAND_DEFAULTS = {
   gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam',
   // General (configurable)
   afk: 'everyone', help: 'everyone', hereping: 'staffTeam',
+  // Auto-mod: who is exempt from the invite link filter (can post multiple invites)
+  invitefilter: 'staffTeam',
 };
 
 const COMMAND_LABELS = {

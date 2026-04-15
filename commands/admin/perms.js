@@ -7,16 +7,17 @@ const { readData, writeData, COMMAND_DEFAULTS, COMMAND_LABELS } = require('../..
 
 // Only configurable commands — all admin/setup commands are hardcoded Administrator
 const COMMAND_DESCRIPTIONS = {
-  mute:    'Timeouts a user for a duration',
-  unmute:  'Removes a timeout from a user',
-  clear:   'Deletes messages (1–100)',
-  strike:  'Adds or removes a strike from a staff member',
-  strikes: 'Shows all strikes + add/remove buttons',
-  gstart:  'Starts a giveaway',
-  gend:    'Ends a giveaway early',
-  greroll: 'Rerolls giveaway winners',
-  afk:     'Sets yourself as AFK with optional time limit',
-  help:    'Shows all available commands',
+  mute:         'Timeouts a user for a duration',
+  unmute:       'Removes a timeout from a user',
+  clear:        'Deletes messages (1–100)',
+  strike:       'Adds or removes a strike from a staff member',
+  strikes:      'Shows all strikes + add/remove buttons',
+  gstart:       'Starts a giveaway',
+  gend:         'Ends a giveaway early',
+  greroll:      'Rerolls giveaway winners',
+  afk:          'Sets yourself as AFK with optional time limit',
+  help:         'Shows all available commands',
+  invitefilter: 'Who can bypass the invite link filter (post multiple invites)',
 };
 
 const COMMAND_GROUPS = [
@@ -24,6 +25,7 @@ const COMMAND_GROUPS = [
   { name: '⚠️ Strikes',    cmds: ['strike', 'strikes'] },
   { name: '🎉 Giveaways',  cmds: ['gstart', 'gend', 'greroll'] },
   { name: '💬 General',    cmds: ['afk', 'help'] },
+  { name: '🛡️ Auto-Mod',   cmds: ['invitefilter'] },
 ];
 
 const LEVEL_CHOICES = [
