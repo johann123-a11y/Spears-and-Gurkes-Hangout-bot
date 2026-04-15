@@ -23,13 +23,11 @@ function buildDescEmbed(desc) {
   return embed;
 }
 
-const config = require('../../config.json');
-
 function isStaff(member) {
   if (member.permissions.has(PermissionFlagsBits.ManageChannels)) return true;
   if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
-  const staffRoleId = config.roles?.staffTeam;
-  if (staffRoleId && member.roles.cache.has(staffRoleId)) return true;
+  const staffConfig = readData('staffConfig.json');
+  if (staffConfig?.staffRoleId && member.roles.cache.has(staffConfig.staffRoleId)) return true;
   return false;
 }
 

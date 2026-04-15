@@ -31,6 +31,7 @@ function getDefault(filename) {
     'mediaFilter.json':   { enabled: false, allowedChannels: [] },
     'partnerFilter.json': { enabled: false, allowedChannels: [] },
     'appSessions.json':   {},
+    'staffConfig.json':   { staffRoleId: null },
     'review.json':        { channel: null, guildId: null },
   };
   return defaults[filename] ?? {};
@@ -134,9 +135,8 @@ const COMMAND_LABELS = {
 function checkPerm(member, commandName) {
   if (!member) return false;
   if (member.permissions.has('Administrator')) return true;
-  // Check staff team role from config
-  const staffRoleId = config.roles?.staffTeam;
-  if (staffRoleId && member.roles.cache.has(staffRoleId)) return true;
+  const staffConfig = readData('staffConfig.json');
+  if (staffConfig?.staffRoleId && member.roles.cache.has(staffConfig.staffRoleId)) return true;
   const perms = readData('perms.json');
   const level = perms[commandName] ?? COMMAND_DEFAULTS[commandName] ?? 'everyone';
   return hasPermission(member, level);
