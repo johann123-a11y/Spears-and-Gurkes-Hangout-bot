@@ -55,6 +55,29 @@ module.exports = {
       if (interaction.customId === 'ticket_request_close_btn')
         return handleRequestCloseButton(interaction);
 
+      // Save transcript button
+      if (interaction.customId.startsWith('transcript_save:')) {
+        const { markSaved } = require('../utils/transcripts');
+        const ticketId = parseInt(interaction.customId.split(':')[1]);
+        const ok = await markSaved(ticketId);
+        if (ok) {
+          await interaction.update({
+            components: interaction.message.components.map(row => ({
+              ...row.toJSON(),
+              components: row.components.map(c => {
+                if (c.customId === `transcript_save:${ticketId}`) {
+                  return { ...c.toJSON(), label: '✅ Transcript Saved', disabled: true };
+                }
+                return c.toJSON();
+              }),
+            })),
+          });
+        } else {
+          return interaction.reply({ content: '❌ Transcript not found.', ephemeral: true });
+        }
+        return;
+      }
+
       // ── Strikes buttons ────────────────────────────────────────────────────
       if (interaction.customId.startsWith('strikes_add:')) {
         if (!checkPerm(interaction.member, 'strike'))

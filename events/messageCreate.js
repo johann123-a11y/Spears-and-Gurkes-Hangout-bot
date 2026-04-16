@@ -1,9 +1,9 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData, writeData, formatTime } = require('../utils');
-const { PermissionFlagsBits } = require('discord.js');
 const config = require('../config.json');
 const { setStick } = require('../commands/admin/stick');
 const { handleDMAnswer } = require('../utils/applicationDM');
+const { sendLog } = require('../utils/logger');
 
 // Per-channel lock to prevent double-posting sticky on rapid messages
 const stickyLocks = new Set();
@@ -19,6 +19,17 @@ module.exports = {
       return;
     }
 
+
+    // ── Log @everyone / @here pings ──────────────────────────────────────────
+    if (message.mentions.everyone) {
+      sendLog(client, {
+        action: message.content.includes('@everyone') ? '@everyone Ping' : '@here Ping',
+        executor: message.author.tag,
+        target: `<#${message.channel.id}>`,
+        fields: { 'Content': message.content.length > 512 ? message.content.substring(0, 509) + '...' : message.content },
+        color: '#FEE75C',
+      });
+    }
 
     // ── Auto-Mod: link filter ─────────────────────────────────────────────────
     const isStaff = message.member?.permissions.has(PermissionFlagsBits.ManageMessages);

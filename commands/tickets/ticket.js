@@ -444,8 +444,8 @@ async function sendTicketOverview(interaction, method = 'reply') {
 
 // ── /ticket add ───────────────────────────────────────────────────────────────
 async function handleAdd(interaction) {
-  if (!readData('openTickets.json')[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  const ticket = readData('openTickets.json')[interaction.channelId];
+  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const user = interaction.options.getUser('user');
   try {
@@ -455,6 +455,13 @@ async function handleAdd(interaction) {
       [PermissionFlagsBits.ReadMessageHistory]: true,
     });
     interaction.reply({ content: `✅ **${user.tag}** has been added to this ticket.` });
+    sendLog(interaction.client, {
+      action: 'Ticket Member Added',
+      executor: interaction.user.tag,
+      target: user.tag,
+      fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, Channel: `<#${interaction.channelId}>` },
+      color: '#57F287',
+    });
   } catch (err) {
     interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }
@@ -462,13 +469,20 @@ async function handleAdd(interaction) {
 
 // ── /ticket remove ────────────────────────────────────────────────────────────
 async function handleRemove(interaction) {
-  if (!readData('openTickets.json')[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  const ticket = readData('openTickets.json')[interaction.channelId];
+  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const user = interaction.options.getUser('user');
   try {
     await interaction.channel.permissionOverwrites.delete(user.id);
     interaction.reply({ content: `✅ **${user.tag}** has been removed from this ticket.` });
+    sendLog(interaction.client, {
+      action: 'Ticket Member Removed',
+      executor: interaction.user.tag,
+      target: user.tag,
+      fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, Channel: `<#${interaction.channelId}>` },
+      color: '#FEE75C',
+    });
   } catch (err) {
     interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }
@@ -476,13 +490,21 @@ async function handleRemove(interaction) {
 
 // ── /ticket rename ────────────────────────────────────────────────────────────
 async function handleRename(interaction) {
-  if (!readData('openTickets.json')[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  const ticket = readData('openTickets.json')[interaction.channelId];
+  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
+  const oldName = interaction.channel.name;
   const newName = interaction.options.getString('name').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   try {
     await interaction.channel.setName(newName);
     interaction.reply({ content: `✅ Ticket renamed to **${newName}**.` });
+    sendLog(interaction.client, {
+      action: 'Ticket Renamed',
+      executor: interaction.user.tag,
+      target: `<#${interaction.channelId}>`,
+      fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, 'Old Name': oldName, 'New Name': newName },
+      color: '#5865F2',
+    });
   } catch (err) {
     interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }
@@ -490,16 +512,24 @@ async function handleRename(interaction) {
 
 // ── /ticket move ──────────────────────────────────────────────────────────────
 async function handleMove(interaction) {
-  if (!readData('openTickets.json')[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  const ticket = readData('openTickets.json')[interaction.channelId];
+  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const category = interaction.options.getChannel('category');
   if (category.type !== ChannelType.GuildCategory)
     return interaction.reply({ content: '❌ Please select a **Category**.', ephemeral: true });
 
+  const oldCategory = interaction.channel.parent?.name || '—';
   try {
     await interaction.channel.setParent(category.id, { lockPermissions: false });
     interaction.reply({ content: `✅ Ticket moved to **${category.name}**.` });
+    sendLog(interaction.client, {
+      action: 'Ticket Moved',
+      executor: interaction.user.tag,
+      target: `<#${interaction.channelId}>`,
+      fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, 'From': oldCategory, 'To': category.name },
+      color: '#5865F2',
+    });
   } catch (err) {
     interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
   }

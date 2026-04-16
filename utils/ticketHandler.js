@@ -4,6 +4,13 @@ const {
 } = require('discord.js');
 const { readData, writeData, isStaffMember } = require('./index');
 const { sendLog } = require('./logger');
+const { saveTranscript, fetchAllMessages } = require('./transcripts');
+
+function getBaseUrl() {
+  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL;
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  return null;
+}
 
 // ── Button: user clicks a ticket panel button ─────────────────────────────────
 async function handleTicketOpen(interaction) {
@@ -87,7 +94,6 @@ async function createTicketChannel(interaction, panel, answers) {
   if (staffConfig?.staffRoleId) staffRoleIds.add(staffConfig.staffRoleId);
   const fallbackId = config.roles?.staffTeam;
   if (fallbackId && !fallbackId.endsWith('_ROLE_ID')) staffRoleIds.add(fallbackId);
-  console.log(`[ticket] staffRoleIds=${[...staffRoleIds].join(',')} staffConfig=${JSON.stringify(staffConfig)}`);
 
   // Build permission overwrites
   const permOverwrites = [
@@ -158,13 +164,19 @@ async function createTicketChannel(interaction, panel, answers) {
     allowedMentions: { users: [interaction.user.id], roles: pingRoles },
   });
 
+  // Assign ticket ID
+  tickets.ticketCounter = (tickets.ticketCounter || 0) + 1;
+  const ticketId = tickets.ticketCounter;
+  writeData('tickets.json', tickets);
+
   // Save open ticket
   const openTickets = readData('openTickets.json');
   openTickets[ticketChannel.id] = {
+    ticketId,
     userId:    interaction.user.id,
     panelId:   panel.id,
     panelName: panel.name,
-    openedAt:  new Date().toISOString(),
+    openedAt:  Date.now(),
     answers,
   };
   writeData('openTickets.json', openTickets);
@@ -177,10 +189,11 @@ async function createTicketChannel(interaction, panel, answers) {
         embeds: [new EmbedBuilder()
           .setColor('#57F287').setTitle('🎫 Ticket Opened')
           .addFields(
-            { name: 'Panel',     value: panel.name,                              inline: true },
-            { name: 'Opened by', value: interaction.user.tag,                    inline: true },
-            { name: 'Channel',   value: `<#${ticketChannel.id}>`,                inline: true },
-            { name: 'Time',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+            { name: '🎟️ Ticket ID',  value: `#${ticketId}`,                          inline: true },
+            { name: 'Panel',          value: panel.name,                              inline: true },
+            { name: 'Opened by',      value: `<@${interaction.user.id}>`,             inline: true },
+            { name: 'Channel',        value: `<#${ticketChannel.id}>`,                inline: true },
+            { name: 'Time',           value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
           ).setTimestamp()],
       }).catch(() => {});
     }
@@ -190,7 +203,7 @@ async function createTicketChannel(interaction, panel, answers) {
     action: 'Ticket Opened',
     executor: interaction.user.tag,
     target: panel.name,
-    fields: { Channel: `<#${ticketChannel.id}>` },
+    fields: { 'Ticket ID': `#${ticketId}`, Channel: `<#${ticketChannel.id}>` },
     color: '#5865F2',
   });
 
@@ -235,6 +248,27 @@ async function handleCloseModal(interaction) {
 
   await interaction.reply({ content: '🔒 Closing ticket in **3 seconds**...' });
 
+  // Fetch all messages for transcript BEFORE deleting channel
+  const messages = await fetchAllMessages(interaction.channel);
+  const ticketId  = ticket.ticketId || 0;
+  const closedAt  = Date.now();
+  const expiresAt = closedAt + 3 * 24 * 60 * 60 * 1000; // 3 days
+
+  // Save transcript
+  await saveTranscript(ticketId, {
+    ticketId,
+    panelName:  ticket.panelName,
+    openedBy:   { id: ticket.userId, tag: (await interaction.client.users.fetch(ticket.userId).catch(() => ({ tag: 'Unknown' }))).tag },
+    closedBy:   { id: interaction.user.id, tag: interaction.user.tag },
+    openedAt:   ticket.openedAt,
+    closedAt,
+    reason,
+    answers:    ticket.answers || [],
+    messages,
+    saved:      false,
+    expiresAt,
+  });
+
   // DM the user
   try {
     const user = await interaction.client.users.fetch(ticket.userId);
@@ -244,28 +278,47 @@ async function handleCloseModal(interaction) {
         .addFields(
           { name: 'Panel',     value: ticket.panelName,                          inline: true },
           { name: 'Closed by', value: interaction.user.tag,                      inline: true },
-          { name: 'Time',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`,  inline: true },
+          { name: 'Time',      value: `<t:${Math.floor(closedAt / 1000)}:F>`,    inline: true },
           { name: 'Reason',    value: reason },
         ).setTimestamp()],
     });
   } catch { /* DMs disabled */ }
 
-  // Ticket log
+  // Ticket log with transcript buttons
   const tickets = readData('tickets.json');
   if (tickets.logChannelId) {
     const logCh = interaction.client.channels.cache.get(tickets.logChannelId);
     if (logCh) {
-      logCh.send({
-        embeds: [new EmbedBuilder()
-          .setColor('#ED4245').setTitle('🔒 Ticket Closed')
-          .addFields(
-            { name: 'Panel',     value: ticket.panelName,                          inline: true },
-            { name: 'Closed by', value: interaction.user.tag,                      inline: true },
-            { name: 'Opened by', value: `<@${ticket.userId}>`,                     inline: true },
-            { name: 'Time',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`,  inline: true },
-            { name: 'Reason',    value: reason },
-          ).setTimestamp()],
-      }).catch(() => {});
+      const embed = new EmbedBuilder()
+        .setColor('#ED4245').setTitle('🔒 Ticket Closed')
+        .addFields(
+          { name: '🎟️ Ticket ID',  value: `#${ticketId}`,                        inline: true },
+          { name: 'Panel',          value: ticket.panelName,                      inline: true },
+          { name: 'Opened by',      value: `<@${ticket.userId}>`,                 inline: true },
+          { name: 'Closed by',      value: `<@${interaction.user.id}>`,           inline: true },
+          { name: 'Open Time',      value: `<t:${Math.floor(ticket.openedAt / 1000)}:F>`, inline: true },
+          { name: 'Closed Time',    value: `<t:${Math.floor(closedAt / 1000)}:F>`, inline: true },
+          { name: 'Reason',         value: reason },
+        ).setFooter({ text: `Transcript auto-deletes in 3 days` }).setTimestamp();
+
+      const baseUrl = getBaseUrl();
+      const components = [];
+      const btns = [];
+
+      if (baseUrl) {
+        btns.push(new ButtonBuilder()
+          .setLabel('📄 View Transcript')
+          .setStyle(ButtonStyle.Link)
+          .setURL(`${baseUrl}/transcript/${ticketId}`));
+      }
+      btns.push(new ButtonBuilder()
+        .setCustomId(`transcript_save:${ticketId}`)
+        .setLabel('💾 Save Transcript')
+        .setStyle(ButtonStyle.Secondary));
+
+      if (btns.length > 0) components.push(new ActionRowBuilder().addComponents(btns));
+
+      logCh.send({ embeds: [embed], components }).catch(() => {});
     }
   }
 
@@ -273,7 +326,7 @@ async function handleCloseModal(interaction) {
     action: 'Ticket Closed',
     executor: interaction.user.tag,
     target: `<@${ticket.userId}>`,
-    fields: { Panel: ticket.panelName, Reason: reason },
+    fields: { 'Ticket ID': `#${ticketId}`, Panel: ticket.panelName, Reason: reason },
     color: '#ED4245',
   });
 

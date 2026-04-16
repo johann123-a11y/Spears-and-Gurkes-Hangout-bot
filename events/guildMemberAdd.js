@@ -1,4 +1,5 @@
 const { readData, writeData } = require('../utils');
+const { sendLog } = require('../utils/logger');
 
 // Deduplicate: track recently welcomed users to prevent double-firing
 const recentlyWelcomed = new Map();
@@ -24,5 +25,16 @@ module.exports = {
       .replace('{membercount}', member.guild.memberCount.toString());
 
     channel.send({ content: text, allowedMentions: { users: [member.id] } }).catch(() => {});
+
+    sendLog(client, {
+      action: 'Member Joined',
+      executor: member.user.tag,
+      target: `<@${member.id}>`,
+      fields: {
+        'Account Created': `<t:${Math.floor(member.user.createdAt / 1000)}:R>`,
+        'Members': `${member.guild.memberCount}`,
+      },
+      color: '#57F287',
+    });
   },
 };
