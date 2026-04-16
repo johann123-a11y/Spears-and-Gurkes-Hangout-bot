@@ -560,7 +560,8 @@ module.exports = {
       }
 
       // ── Activity check modal ──────────────────────────────────────────────
-      if (interaction.customId === 'activitycheck_modal') {
+      if (interaction.customId.startsWith('activitycheck_modal')) {
+        const roleId = interaction.customId.split(':')[1] || null;
         const message = interaction.fields.getTextInputValue('message');
         const durationStr = interaction.fields.getTextInputValue('duration');
         const ms = parseTime(durationStr);
@@ -568,27 +569,36 @@ module.exports = {
 
         const deadline = Date.now() + ms;
 
-        const { EmbedBuilder: ACEmbed, ButtonBuilder: ACBtn, ButtonStyle: ACStyle, ActionRowBuilder: ACRow } = require('discord.js');
-        const embed = new ACEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#5865F2')
           .setTitle('📋 Activity Check')
           .setDescription(message)
-          .addFields({ name: '⏰ Deadline', value: `<t:${Math.floor(deadline / 1000)}:R> (<t:${Math.floor(deadline / 1000)}:f>)` })
+          .addFields(
+            { name: '⏰ Deadline', value: `<t:${Math.floor(deadline / 1000)}:R> (<t:${Math.floor(deadline / 1000)}:f>)` },
+            ...(roleId ? [{ name: '👥 Role', value: `<@&${roleId}>` }] : []),
+          )
           .setTimestamp();
 
-        const btn = new ACBtn()
+        const btn = new ButtonBuilder()
           .setCustomId('activitycheck_confirm')
           .setLabel('✅ I\'m active!')
-          .setStyle(ACStyle.Success);
+          .setStyle(ButtonStyle.Success);
 
+        const pingContent = roleId ? `<@&${roleId}>` : '';
         await interaction.reply({ content: '✅ Activity check posted!', ephemeral: true });
-        const msg = await interaction.channel.send({ embeds: [embed], components: [new ACRow().addComponents(btn)] });
+        const msg = await interaction.channel.send({
+          content: pingContent || undefined,
+          embeds: [embed],
+          components: [new ActionRowBuilder().addComponents(btn)],
+          allowedMentions: roleId ? { roles: [roleId] } : {},
+        });
 
         const checks = readData('activitychecks.json');
         checks[msg.id] = {
           channelId: interaction.channel.id,
           guildId: interaction.guild.id,
           deadline,
+          roleId: roleId || null,
           respondedUserIds: [],
           processed: false,
         };

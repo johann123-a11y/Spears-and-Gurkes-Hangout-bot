@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Partials, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -66,11 +66,67 @@ for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
   }
 }
 
-const { loadCache } = require('./utils');
+const { loadCache, readData, writeData } = require('./utils');
+
+// ── Activity check result poster ──────────────────────────────────────────────
+async function processExpiredActivityChecks() {
+  const checks = readData('activitychecks.json');
+  const now = Date.now();
+  let changed = false;
+
+  for (const [msgId, check] of Object.entries(checks)) {
+    if (check.processed || check.deadline > now) continue;
+    check.processed = true;
+    changed = true;
+
+    const channel = client.channels.cache.get(check.channelId);
+    if (!channel) continue;
+
+    const responded = check.respondedUserIds || [];
+    let notResponded = [];
+
+    if (check.roleId) {
+      try {
+        const guild = client.guilds.cache.get(check.guildId);
+        if (guild) {
+          await guild.members.fetch();
+          notResponded = [...guild.members.cache.values()]
+            .filter(m => !m.user.bot && m.roles.cache.has(check.roleId) && !responded.includes(m.id));
+        }
+      } catch {}
+    }
+
+    const respondedStr  = responded.length  > 0 ? responded.map(id => `<@${id}>`).join('\n')           : '*Niemand hat geantwortet.*';
+    const notRespondedStr = notResponded.length > 0 ? notResponded.map(m => `<@${m.id}>`).join('\n') : check.roleId ? '🎉 Alle haben geantwortet!' : '';
+
+    const fields = [
+      { name: `✅ Aktiv (${responded.length})`, value: respondedStr },
+    ];
+    if (check.roleId) {
+      fields.push({ name: `❌ Inaktiv (${notResponded.length})`, value: notRespondedStr });
+    }
+
+    const resultEmbed = new EmbedBuilder()
+      .setColor(notResponded.length === 0 ? '#57F287' : '#ED4245')
+      .setTitle('📋 Activity Check — Ergebnis')
+      .addFields(fields)
+      .setTimestamp();
+
+    channel.send({ embeds: [resultEmbed] }).catch(() => {});
+
+    // Disable the confirm button on the original message
+    channel.messages.fetch(msgId).then(m => m.edit({ components: [] })).catch(() => {});
+  }
+
+  if (changed) writeData('activitychecks.json', checks);
+}
+
 connectDB().then(async () => {
   await loadCache();
   await cleanupExpired();
   // Re-run cleanup every 6 hours
   setInterval(cleanupExpired, 6 * 60 * 60 * 1000);
+  // Check activity checks every 60 seconds
+  setInterval(processExpiredActivityChecks, 60 * 1000);
   client.login(process.env.TOKEN);
 });
