@@ -3,7 +3,6 @@ const {
   ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { readData, writeData, isStaffMember } = require('./index');
-const { sendLog } = require('./logger');
 const { saveTranscript, fetchAllMessages } = require('./transcripts');
 
 function getBaseUrl() {
@@ -199,14 +198,6 @@ async function createTicketChannel(interaction, panel, answers) {
     }
   }
 
-  sendLog(interaction.client, {
-    action: 'Ticket Opened',
-    executor: interaction.user.tag,
-    target: panel.name,
-    fields: { 'Ticket ID': `#${ticketId}`, Channel: `<#${ticketChannel.id}>` },
-    color: '#5865F2',
-  });
-
   await interaction.editReply({ content: `✅ Your ticket has been created: <#${ticketChannel.id}>` });
 }
 
@@ -321,14 +312,6 @@ async function handleCloseModal(interaction) {
       logCh.send({ embeds: [embed], components }).catch(() => {});
     }
   }
-
-  sendLog(interaction.client, {
-    action: 'Ticket Closed',
-    executor: interaction.user.tag,
-    target: `<@${ticket.userId}>`,
-    fields: { 'Ticket ID': `#${ticketId}`, Panel: ticket.panelName, Reason: reason },
-    color: '#ED4245',
-  });
 
   delete openTickets[interaction.channelId];
   writeData('openTickets.json', openTickets);
