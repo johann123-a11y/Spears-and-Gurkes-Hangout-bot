@@ -87,6 +87,7 @@ async function createTicketChannel(interaction, panel, answers) {
   if (staffConfig?.staffRoleId) staffRoleIds.add(staffConfig.staffRoleId);
   const fallbackId = config.roles?.staffTeam;
   if (fallbackId && !fallbackId.endsWith('_ROLE_ID')) staffRoleIds.add(fallbackId);
+  console.log(`[ticket] staffRoleIds=${[...staffRoleIds].join(',')} staffConfig=${JSON.stringify(staffConfig)}`);
 
   // Build permission overwrites
   const permOverwrites = [
