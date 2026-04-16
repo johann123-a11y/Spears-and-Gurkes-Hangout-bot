@@ -60,22 +60,10 @@ module.exports = {
         const { markSaved } = require('../utils/transcripts');
         const ticketId = parseInt(interaction.customId.split(':')[1]);
         const ok = await markSaved(ticketId);
-        if (ok) {
-          await interaction.update({
-            components: interaction.message.components.map(row => ({
-              ...row.toJSON(),
-              components: row.components.map(c => {
-                if (c.customId === `transcript_save:${ticketId}`) {
-                  return { ...c.toJSON(), label: '✅ Transcript Saved', disabled: true };
-                }
-                return c.toJSON();
-              }),
-            })),
-          });
-        } else {
-          return interaction.reply({ content: '❌ Transcript not found.', ephemeral: true });
-        }
-        return;
+        return interaction.reply({
+          content: ok ? '✅ Transcript saved permanently — it will never be auto-deleted.' : '❌ Transcript not found.',
+          ephemeral: true,
+        });
       }
 
       // ── Strikes buttons ────────────────────────────────────────────────────
