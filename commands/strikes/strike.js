@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { readData, writeData, checkPerm, getMemberRoleLevel, promoteOrder } = require('../../utils');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { readData, writeData, getMemberRoleLevel, promoteOrder } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 const config = require('../../config.json');
 
@@ -8,7 +8,8 @@ module.exports = {
   description: 'Add or remove a strike from a staff member. [SrMod+]',
   data: new SlashCommandBuilder()
     .setName('strike')
-    .setDescription('Manage staff member strikes [SrMod+]')
+    .setDescription('Manage staff member strikes [Admin Only]')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(sub =>
       sub.setName('add')
         .setDescription('Add a strike to a staff member')
@@ -23,8 +24,8 @@ module.exports = {
     ),
 
   async execute(message, args) {
-    if (!checkPerm(message.member, 'strike'))
-      return message.reply('❌ Only **SrMod** or above can use this command.');
+    if (!message.member.permissions.has('Administrator'))
+      return message.reply('❌ Only **Admins** can use this command.');
 
     // ?strike remove @user {reason}  OR  ?strike @user {reason}
     let action = 'add';
@@ -45,8 +46,8 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!checkPerm(interaction.member, 'strike'))
-      return interaction.reply({ content: '❌ Only **SrMod** or above can use this command.', ephemeral: true });
+    if (!interaction.member.permissions.has('Administrator'))
+      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
 
     const action = interaction.options.getSubcommand();
     const user = interaction.options.getUser('user');

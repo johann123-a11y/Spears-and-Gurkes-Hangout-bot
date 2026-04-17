@@ -68,8 +68,8 @@ module.exports = {
 
       // ── Strikes buttons ────────────────────────────────────────────────────
       if (interaction.customId.startsWith('strikes_add:')) {
-        if (!checkPerm(interaction.member, 'strike'))
-          return interaction.reply({ content: '❌ Only **SrMod+** can add strikes.', ephemeral: true });
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: '❌ Only **Admins** can add strikes.', ephemeral: true });
         const userId = interaction.customId.split(':')[1];
         const modal  = new ModalBuilder()
           .setCustomId(`strikes_add_modal:${userId}`)
@@ -81,8 +81,8 @@ module.exports = {
       }
 
       if (interaction.customId.startsWith('strikes_remove:')) {
-        if (!checkPerm(interaction.member, 'strike'))
-          return interaction.reply({ content: '❌ Only **SrMod+** can remove strikes.', ephemeral: true });
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: '❌ Only **Admins** can remove strikes.', ephemeral: true });
         const userId = interaction.customId.split(':')[1];
         const modal  = new ModalBuilder()
           .setCustomId(`strikes_remove_modal:${userId}`)

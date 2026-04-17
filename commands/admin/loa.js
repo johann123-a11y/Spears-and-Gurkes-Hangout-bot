@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { parseTime, formatTime, readData, writeData } = require('../../utils');
 
 module.exports = {
@@ -7,6 +7,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('loa')
     .setDescription('Manage LOA for staff members [Admin Only]')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(sub =>
       sub.setName('set')
         .setDescription('Set a staff member on LOA')

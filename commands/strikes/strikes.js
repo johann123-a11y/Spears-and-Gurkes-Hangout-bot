@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData } = require('../../utils');
 
 module.exports = {
@@ -6,7 +6,8 @@ module.exports = {
   description: 'Shows all strikes of a user.',
   data: new SlashCommandBuilder()
     .setName('strikes')
-    .setDescription('Shows all strikes of a staff member')
+    .setDescription('Shows all strikes of a staff member [Admin Only]')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addUserOption(o => o.setName('user').setDescription('Staff member').setRequired(true)),
 
   async execute(message, args) {
@@ -16,6 +17,9 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
+    if (!interaction.member.permissions.has('Administrator'))
+      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+
     const user    = interaction.options.getUser('user');
     const strikes = readData('strikes.json');
     const count   = strikes[user.id]?.count ?? 0;
