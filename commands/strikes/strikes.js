@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData } = require('../../utils');
 
 module.exports = {
@@ -22,22 +22,8 @@ module.exports = {
 
     const user    = interaction.options.getUser('user');
     const strikes = readData('strikes.json');
-    const count   = strikes[user.id]?.count ?? 0;
 
-    const addBtn = new ButtonBuilder()
-      .setCustomId(`strikes_add:${user.id}`)
-      .setLabel('➕ Add Strike')
-      .setStyle(ButtonStyle.Danger);
-
-    const removeBtn = new ButtonBuilder()
-      .setCustomId(`strikes_remove:${user.id}`)
-      .setLabel('➖ Remove Strike')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(count === 0);
-
-    const row = new ActionRowBuilder().addComponents(addBtn, removeBtn);
-
-    interaction.reply({ embeds: [buildEmbed(user, strikes)], components: [row] });
+    interaction.reply({ embeds: [buildEmbed(user, strikes)] });
   },
 };
 
