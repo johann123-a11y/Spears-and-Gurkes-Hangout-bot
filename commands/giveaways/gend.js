@@ -66,16 +66,28 @@ async function endGiveaway(msgId, guild, replyChannel, interaction) {
 
   const winnerMentions = winners.length > 0
     ? winners.map(m => `<@${m.user.id}>`).join(', ')
-    : 'No valid entries.';
+    : '*No valid entries.*';
 
+  const endedAt = Math.floor(Date.now() / 1000);
+
+  // Keep original info, just swap in winner + ended state
   const embed = new EmbedBuilder()
     .setColor('#ED4245')
     .setTitle(`🎉 GIVEAWAY ENDED — ${gw.prize}`)
-    .setDescription(`**Winner(s):** ${winnerMentions}`)
+    .setDescription(
+      `${gw.description || ''}\n\n` +
+      `🏆 **Winner(s):** ${winnerMentions}\n\n` +
+      `**Winners:** ${gw.winners}\n` +
+      `**Entries:** ${participantIds.length}\n` +
+      `**Hosted by:** <@${gw.hostId}>\n` +
+      `**Ended:** <t:${endedAt}:R>`
+    )
     .setTimestamp();
 
   await gwMsg.edit({ embeds: [embed], components: [] });
-  channel.send(`🎉 Congratulations ${winnerMentions}! You won **${gw.prize}**!`);
+
+  if (winners.length > 0)
+    channel.send(`🎉 Congratulations ${winnerMentions}! You won **${gw.prize}**!`);
 
   giveaways[msgId].ended = true;
   giveaways[msgId].winnerIds = winners.map(m => m.user.id);
