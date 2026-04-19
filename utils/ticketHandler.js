@@ -228,48 +228,43 @@ async function handleCloseButton(interaction) {
   await interaction.showModal(modal);
 }
 
-// ── Modal: close reason submitted ────────────────────────────────────────────
-async function handleCloseModal(interaction) {
-  const reason      = interaction.fields.getTextInputValue('close_reason');
+// ── Shared close logic (used by modal AND /ticket close command) ──────────────
+async function closeTicket(channel, reason, closedBy, client) {
   const openTickets = readData('openTickets.json');
-  const ticket      = openTickets[interaction.channelId];
-
-  if (!ticket)
-    return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
-
-  await interaction.reply({ content: '🔒 Closing ticket in **3 seconds**...' });
+  const ticket      = openTickets[channel.id];
+  if (!ticket) return false;
 
   // Fetch all messages for transcript BEFORE deleting channel
-  const messages = await fetchAllMessages(interaction.channel);
+  const messages  = await fetchAllMessages(channel);
   const ticketId  = ticket.ticketId || 0;
   const closedAt  = Date.now();
   const expiresAt = closedAt + 3 * 24 * 60 * 60 * 1000; // 3 days
 
   // Save transcript
+  const openedByUser = await client.users.fetch(ticket.userId).catch(() => ({ tag: 'Unknown', id: ticket.userId }));
   await saveTranscript(ticketId, {
     ticketId,
-    panelName:  ticket.panelName,
-    openedBy:   { id: ticket.userId, tag: (await interaction.client.users.fetch(ticket.userId).catch(() => ({ tag: 'Unknown' }))).tag },
-    closedBy:   { id: interaction.user.id, tag: interaction.user.tag },
-    openedAt:   ticket.openedAt,
+    panelName: ticket.panelName,
+    openedBy:  { id: ticket.userId, tag: openedByUser.tag },
+    closedBy:  { id: closedBy.id, tag: closedBy.tag },
+    openedAt:  ticket.openedAt,
     closedAt,
     reason,
-    answers:    ticket.answers || [],
+    answers:   ticket.answers || [],
     messages,
-    saved:      false,
+    saved:     false,
     expiresAt,
   });
 
-  // DM the user
+  // DM the ticket opener
   try {
-    const user = await interaction.client.users.fetch(ticket.userId);
-    await user.send({
+    await openedByUser.send({
       embeds: [new EmbedBuilder()
         .setColor('#ED4245').setTitle('🔒 Your Ticket Was Closed')
         .addFields(
-          { name: 'Panel',     value: ticket.panelName,                          inline: true },
-          { name: 'Closed by', value: interaction.user.tag,                      inline: true },
-          { name: 'Time',      value: `<t:${Math.floor(closedAt / 1000)}:F>`,    inline: true },
+          { name: 'Panel',     value: ticket.panelName,                       inline: true },
+          { name: 'Closed by', value: closedBy.tag,                           inline: true },
+          { name: 'Time',      value: `<t:${Math.floor(closedAt / 1000)}:F>`, inline: true },
           { name: 'Reason',    value: reason },
         ).setTimestamp()],
     });
@@ -278,24 +273,22 @@ async function handleCloseModal(interaction) {
   // Ticket log with transcript buttons
   const tickets = readData('tickets.json');
   if (tickets.logChannelId) {
-    const logCh = interaction.client.channels.cache.get(tickets.logChannelId);
+    const logCh = client.channels.cache.get(tickets.logChannelId);
     if (logCh) {
       const embed = new EmbedBuilder()
         .setColor('#ED4245').setTitle('🔒 Ticket Closed')
         .addFields(
-          { name: '🎟️ Ticket ID',  value: `#${ticketId}`,                        inline: true },
-          { name: 'Panel',          value: ticket.panelName,                      inline: true },
-          { name: 'Opened by',      value: `<@${ticket.userId}>`,                 inline: true },
-          { name: 'Closed by',      value: `<@${interaction.user.id}>`,           inline: true },
-          { name: 'Open Time',      value: `<t:${Math.floor(ticket.openedAt / 1000)}:F>`, inline: true },
-          { name: 'Closed Time',    value: `<t:${Math.floor(closedAt / 1000)}:F>`, inline: true },
-          { name: 'Reason',         value: reason },
-        ).setFooter({ text: `Transcript auto-deletes in 3 days` }).setTimestamp();
+          { name: '🎟️ Ticket ID', value: `#${ticketId}`,                              inline: true },
+          { name: 'Panel',         value: ticket.panelName,                             inline: true },
+          { name: 'Opened by',     value: `<@${ticket.userId}>`,                        inline: true },
+          { name: 'Closed by',     value: `<@${closedBy.id}>`,                          inline: true },
+          { name: 'Open Time',     value: `<t:${Math.floor(ticket.openedAt / 1000)}:F>`, inline: true },
+          { name: 'Closed Time',   value: `<t:${Math.floor(closedAt / 1000)}:F>`,       inline: true },
+          { name: 'Reason',        value: reason },
+        ).setFooter({ text: 'Transcript auto-deletes in 3 days' }).setTimestamp();
 
       const baseUrl = getBaseUrl();
-      const components = [];
       const btns = [];
-
       if (baseUrl) {
         btns.push(new ButtonBuilder()
           .setLabel('📄 View Transcript')
@@ -307,15 +300,28 @@ async function handleCloseModal(interaction) {
         .setLabel('💾 Save Transcript')
         .setStyle(ButtonStyle.Secondary));
 
-      if (btns.length > 0) components.push(new ActionRowBuilder().addComponents(btns));
-
-      logCh.send({ embeds: [embed], components }).catch(() => {});
+      logCh.send({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(btns)],
+      }).catch(() => {});
     }
   }
 
-  delete openTickets[interaction.channelId];
+  delete openTickets[channel.id];
   writeData('openTickets.json', openTickets);
-  setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
+  setTimeout(() => channel.delete().catch(() => {}), 5000);
+  return true;
+}
+
+// ── Modal: close reason submitted ────────────────────────────────────────────
+async function handleCloseModal(interaction) {
+  const reason      = interaction.fields.getTextInputValue('close_reason');
+  const openTickets = readData('openTickets.json');
+  if (!openTickets[interaction.channelId])
+    return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
+
+  await interaction.reply({ content: '🔒 Closing ticket in **3 seconds**...' });
+  await closeTicket(interaction.channel, reason, interaction.user, interaction.client);
 }
 
 // ── Button: "Request Close" button in ticket channel (any member) ─────────────
@@ -343,4 +349,5 @@ module.exports = {
   handleCloseModal,
   handleRequestCloseButton,
   createTicketChannel,
+  closeTicket,
 };

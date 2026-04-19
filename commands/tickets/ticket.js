@@ -7,6 +7,7 @@ const {
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
+const { closeTicket } = require('../../utils/ticketHandler');
 
 function getPanelId(name) {
   return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -537,58 +538,15 @@ async function handleMove(interaction) {
 
 // ── /ticket close ─────────────────────────────────────────────────────────────
 async function handleClose(interaction, forcedReason, forcedBy) {
-  const reason = forcedReason || interaction.options?.getString('reason') || 'No reason provided.';
-  const by     = forcedBy || interaction.user;
-
+  const reason     = forcedReason || interaction.options?.getString('reason') || 'No reason provided.';
+  const by         = forcedBy || interaction.user;
   const openTickets = readData('openTickets.json');
-  const ticket      = openTickets[interaction.channelId];
-  if (!ticket)
+
+  if (!openTickets[interaction.channelId])
     return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
 
   await interaction.reply({ content: '🔒 Closing ticket in **5 seconds**...' });
-
-  try {
-    const user = await interaction.client.users.fetch(ticket.userId);
-    await user.send({
-      embeds: [new EmbedBuilder()
-        .setColor('#ED4245').setTitle('🔒 Your Ticket Was Closed')
-        .addFields(
-          { name: 'Panel',     value: ticket.panelName,                          inline: true },
-          { name: 'Closed by', value: by.tag,                                    inline: true },
-          { name: 'Time',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`,  inline: true },
-          { name: 'Reason',    value: reason },
-        ).setTimestamp()],
-    });
-  } catch { /* DMs disabled */ }
-
-  const tickets = readData('tickets.json');
-  if (tickets.logChannelId) {
-    const logCh = interaction.client.channels.cache.get(tickets.logChannelId);
-    if (logCh) {
-      logCh.send({
-        embeds: [new EmbedBuilder()
-          .setColor('#ED4245').setTitle('🔒 Ticket Closed')
-          .addFields(
-            { name: 'Panel',     value: ticket.panelName,                          inline: true },
-            { name: 'Closed by', value: by.tag,                                    inline: true },
-            { name: 'Opened by', value: `<@${ticket.userId}>`,                     inline: true },
-            { name: 'Time',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`,  inline: true },
-            { name: 'Reason',    value: reason },
-          ).setTimestamp()],
-      }).catch(() => {});
-    }
-  }
-
-  sendLog(interaction.client, {
-    action: 'Ticket Closed', executor: by.tag,
-    target: `<@${ticket.userId}>`,
-    fields: { Panel: ticket.panelName, Reason: reason },
-    color: '#ED4245',
-  });
-
-  delete openTickets[interaction.channelId];
-  writeData('openTickets.json', openTickets);
-  setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
+  await closeTicket(interaction.channel, reason, by, interaction.client);
 }
 
 // ── /ticket requestclose ──────────────────────────────────────────────────────
