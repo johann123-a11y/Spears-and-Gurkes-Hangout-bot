@@ -27,7 +27,6 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      await member.roles.remove(oldRole.id);
       await member.roles.add(newRole.id);
     } catch (err) {
       return interaction.editReply({ content: `❌ Could not change roles: ${err.message}` });
