@@ -495,10 +495,19 @@ async function handleRename(interaction) {
   if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
 
   const oldName = interaction.channel.name;
-  const newName = interaction.options.getString('name').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const newName = interaction.options.getString('name')
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')       // multiple dashes → single dash
+    .replace(/^-|-$/g, '');    // trim leading/trailing dashes
+
+  if (!newName) return interaction.reply({ content: '❌ Invalid name.', ephemeral: true });
+
+  await interaction.deferReply();
   try {
     await interaction.channel.setName(newName);
-    interaction.reply({ content: `✅ Ticket renamed to **${newName}**.` });
+    interaction.editReply({ content: `✅ Ticket renamed to **${newName}**.` });
     sendLog(interaction.client, {
       action: 'Ticket Renamed',
       executor: interaction.user.tag,
@@ -507,7 +516,7 @@ async function handleRename(interaction) {
       color: '#5865F2',
     });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
+    interaction.editReply({ content: `❌ Failed: ${err.message}` });
   }
 }
 
