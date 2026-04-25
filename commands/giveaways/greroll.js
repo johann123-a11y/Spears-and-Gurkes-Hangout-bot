@@ -53,21 +53,21 @@ async function rerollGiveaway(msgId, count, guild, replyChannel, interaction) {
     return interaction ? interaction.editReply(msg) : replyChannel.send(msg);
   }
 
-  const reaction = gwMsg.reactions.cache.get('🎉');
-  const users = reaction ? (await reaction.users.fetch()).filter(u => !u.bot) : new Map();
-  const userArray = [...users.values()];
+  const participantIds = gw.participants || [];
+  if (participantIds.length === 0) {
+    const msg = '❌ No participants in this giveaway.';
+    return interaction ? interaction.editReply(msg) : replyChannel.send(msg);
+  }
 
-  const winnerCount = Math.min(count, userArray.length);
+  const winnerCount = Math.min(count, participantIds.length);
   const winners = [];
-  const pool = [...userArray];
+  const pool = [...participantIds];
   for (let i = 0; i < winnerCount; i++) {
     const idx = Math.floor(Math.random() * pool.length);
     winners.push(pool.splice(idx, 1)[0]);
   }
 
-  const winnerMentions = winners.length > 0
-    ? winners.map(u => `<@${u.id}>`).join(', ')
-    : 'No valid entries.';
+  const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')
