@@ -133,7 +133,7 @@ async function createTicketChannel(interaction, panel, answers) {
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
     .setTitle(`🎫 ${panel.name}`)
-    .setDescription(`Ticket opened by <@${interaction.user.id}>\n\nA staff member will be with you shortly.`)
+    .setDescription(`Ticket opened by <@${interaction.user.id}>\n\nA staff member will be with you shortly.\n\n⚠️ If you ping anyone, your ticket will get closed and you won't get paid.`)
     .setThumbnail(interaction.user.displayAvatarURL())
     .setTimestamp();
 
