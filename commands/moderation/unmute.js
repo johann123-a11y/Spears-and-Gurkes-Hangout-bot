@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { checkPerm } = require('../../utils');
+const { checkPerm, readData, writeData } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 
 module.exports = {
@@ -19,6 +19,7 @@ module.exports = {
 
     try {
       await target.timeout(null);
+      removePermMute(target.user.id);
       message.channel.send({ embeds: [buildEmbed(target.user, message.author.tag)] });
       sendLog(message.client, { action: 'User Unmuted', executor: message.author.tag, target: target.user.tag, color: '#57F287' });
     } catch {
@@ -36,6 +37,7 @@ module.exports = {
 
     try {
       await member.timeout(null);
+      removePermMute(user.id);
       interaction.reply({ embeds: [buildEmbed(user, interaction.user.tag)] });
       sendLog(interaction.client, { action: 'User Unmuted', executor: interaction.user.tag, target: user.tag, color: '#57F287' });
     } catch {
@@ -43,6 +45,11 @@ module.exports = {
     }
   },
 };
+
+function removePermMute(userId) {
+  const data = readData('permMutes.json');
+  if (data[userId]) { delete data[userId]; writeData('permMutes.json', data); }
+}
 
 function buildEmbed(user, by) {
   return new EmbedBuilder()

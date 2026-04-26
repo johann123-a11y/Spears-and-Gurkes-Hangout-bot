@@ -68,6 +68,21 @@ for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
 
 const { loadCache, readData, writeData } = require('./utils');
 
+// ── Permanent mute renewer ────────────────────────────────────────────────────
+async function renewPermMutes() {
+  const { readData } = require('./utils');
+  const permMutes = readData('permMutes.json');
+  if (!Object.keys(permMutes).length) return;
+  const { MAX_TIMEOUT } = require('./commands/moderation/mute');
+  for (const [userId, data] of Object.entries(permMutes)) {
+    const guild = client.guilds.cache.get(data.guildId);
+    if (!guild) continue;
+    const member = await guild.members.fetch(userId).catch(() => null);
+    if (!member) continue;
+    await member.timeout(MAX_TIMEOUT, data.reason).catch(() => {});
+  }
+}
+
 // ── Activity check result poster ──────────────────────────────────────────────
 async function processExpiredActivityChecks() {
   const checks = readData('activitychecks.json');
@@ -128,5 +143,8 @@ connectDB().then(async () => {
   setInterval(cleanupExpired, 6 * 60 * 60 * 1000);
   // Check activity checks every 60 seconds
   setInterval(processExpiredActivityChecks, 60 * 1000);
+  // Renew permanent mutes every 24 hours
+  setInterval(renewPermMutes, 24 * 60 * 60 * 1000);
+  renewPermMutes();
   client.login(process.env.TOKEN);
 });
