@@ -13,6 +13,18 @@ module.exports = {
     recentlyWelcomed.set(key, now);
     setTimeout(() => recentlyWelcomed.delete(key), 10_000);
 
+    // Always log join regardless of welcome settings
+    sendLog(client, {
+      action: 'Member Joined',
+      executor: member.user.tag,
+      target: `<@${member.id}>`,
+      fields: {
+        'Account Created': `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+        'Members': `${member.guild.memberCount}`,
+      },
+      color: '#57F287',
+    });
+
     const data = readData('welcome.json');
     if (!data.enabled || !data.channel) return;
 
@@ -25,16 +37,5 @@ module.exports = {
       .replace('{membercount}', member.guild.memberCount.toString());
 
     channel.send({ content: text, allowedMentions: { users: [member.id] } }).catch(() => {});
-
-    sendLog(client, {
-      action: 'Member Joined',
-      executor: member.user.tag,
-      target: `<@${member.id}>`,
-      fields: {
-        'Account Created': `<t:${Math.floor(member.user.createdAt / 1000)}:R>`,
-        'Members': `${member.guild.memberCount}`,
-      },
-      color: '#57F287',
-    });
   },
 };
