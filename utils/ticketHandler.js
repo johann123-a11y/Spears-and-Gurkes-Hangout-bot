@@ -80,9 +80,15 @@ async function createTicketChannel(interaction, panel, answers) {
   const guild     = interaction.guild;
   const tickets   = readData('tickets.json');
   const category  = guild.channels.cache.get(panel.categoryId);
-  const safeName    = interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
-  const panelSlug   = (panel.name || 'ticket').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 30);
-  const channelName = `${panelSlug}-${safeName}`;
+  const safeName  = interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
+  const panelSlug = (panel.name || 'ticket').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 30);
+
+  // Append answers (skip first question which is usually IGN) to channel name
+  const answerSlugs = (answers || [])
+    .slice(1)
+    .map(a => a.answer.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 15))
+    .filter(s => s && s !== '');
+  const channelName = `${panelSlug}${answerSlugs.length ? '-' + answerSlugs.join('-') : ''}-${safeName}`.substring(0, 90);
 
   const viewRoles = tickets.perms?.viewRoles || [];
   const pingRoles = tickets.perms?.pingRoles || [];
