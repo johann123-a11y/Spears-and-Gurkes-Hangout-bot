@@ -440,6 +440,16 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
+      // ── RPS buttons ───────────────────────────────────────────────────────
+      if (interaction.customId.startsWith('rps_join:')) {
+        const { handleJoin } = require('../commands/general/rps');
+        return handleJoin(interaction);
+      }
+      if (interaction.customId.startsWith('rps_pick:')) {
+        const { handlePick } = require('../commands/general/rps');
+        return handlePick(interaction);
+      }
+
       // ── Giveaway join button ───────────────────────────────────────────────
       if (interaction.customId.startsWith('giveaway_join:')) {
         const msgId = interaction.customId.split(':')[1];
