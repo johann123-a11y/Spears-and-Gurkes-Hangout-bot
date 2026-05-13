@@ -83,14 +83,14 @@ async function createTicketChannel(interaction, panel, answers) {
   const safeName  = interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
   const panelSlug = (panel.name || 'ticket').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 30);
 
-  // For spawner panels: include all 3 answers in the channel name
+  // For spawner panels: only the answers, no panel slug, no username
   const isSpawnerPanel = (panel.name || '').toLowerCase().includes('spawner');
   let channelName;
   if (isSpawnerPanel && answers?.length) {
     const answerSlugs = answers
-      .map(a => a.answer.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 15))
+      .map(a => a.answer.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 20))
       .filter(s => s && s !== '');
-    channelName = `${panelSlug}-${answerSlugs.join('-')}-${safeName}`.substring(0, 90);
+    channelName = answerSlugs.join('-').substring(0, 90);
   } else {
     channelName = `${panelSlug}-${safeName}`;
   }
