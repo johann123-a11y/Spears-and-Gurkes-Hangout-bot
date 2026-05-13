@@ -4,6 +4,7 @@ const config = require('../config.json');
 const { setStick } = require('../commands/admin/stick');
 const { handleDMAnswer } = require('../utils/applicationDM');
 const { sendLog } = require('../utils/logger');
+const { handleGuess } = require('../commands/general/guessthenumber');
 
 // Per-channel lock to prevent double-posting sticky on rapid messages
 const stickyLocks = new Set();
@@ -135,6 +136,9 @@ module.exports = {
         .catch(() => {})
         .finally(() => stickyLocks.delete(message.channel.id));
     }
+
+    // --- Guess the Number ---
+    handleGuess(message);
 
     // --- Prefix command handling ---
     const prefix = config.prefix;
