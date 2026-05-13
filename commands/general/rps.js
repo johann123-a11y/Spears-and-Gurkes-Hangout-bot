@@ -97,8 +97,7 @@ module.exports = {
     )
     .addSubcommand(sub =>
       sub.setName('end')
-        .setDescription('End an RPS lobby early and pick winners')
-        .addStringOption(o => o.setName('message_id').setDescription('Message ID of the RPS lobby').setRequired(true))
+        .setDescription('Delete the active RPS lobby in this channel')
     )
     .addSubcommand(sub =>
       sub.setName('duel')
@@ -162,12 +161,20 @@ module.exports = {
 
     // ── /rps end ──────────────────────────────────────────────────────────────
     if (sub === 'end') {
-      const msgId = interaction.options.getString('message_id');
-      if (!lobbies.has(msgId))
-        return interaction.reply({ content: '❌ No active RPS lobby found with that ID.', ephemeral: true });
+      // Find active lobby in this channel
+      const entry = [...lobbies.entries()].find(([, l]) => l.channelId === interaction.channelId);
+      if (!entry)
+        return interaction.reply({ content: '❌ No active RPS lobby in this channel.', ephemeral: true });
 
-      await interaction.reply({ content: '🎯 Ending lobby and picking players...', ephemeral: true });
-      endLobby(msgId, interaction.client);
+      const [msgId, lobby] = entry;
+      lobby.ended = true;
+      lobbies.delete(msgId);
+
+      // Delete the lobby message
+      const msg = await interaction.channel.messages.fetch(msgId).catch(() => null);
+      if (msg) await msg.delete().catch(() => {});
+
+      return interaction.reply({ content: '🗑️ RPS lobby deleted.', ephemeral: true });
     }
 
     // ── /rps duel ─────────────────────────────────────────────────────────────
