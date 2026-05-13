@@ -1022,6 +1022,12 @@ module.exports = {
         return;
       }
 
+      // ── Guess the Number modal ────────────────────────────────────────────
+      if (interaction.customId === 'guessthenumber_modal') {
+        const { handleModal } = require('../commands/general/guessthenumber');
+        return handleModal(interaction);
+      }
+
       // ── CheckLOA set modal ─────────────────────────────────────────────────
       if (interaction.customId.startsWith('checkloa_set_modal:')) {
         const userId      = interaction.customId.split(':')[1];
