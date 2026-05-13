@@ -83,12 +83,17 @@ async function createTicketChannel(interaction, panel, answers) {
   const safeName  = interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
   const panelSlug = (panel.name || 'ticket').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 30);
 
-  // Append answers (skip first question which is usually IGN) to channel name
-  const answerSlugs = (answers || [])
-    .slice(1)
-    .map(a => a.answer.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 15))
-    .filter(s => s && s !== '');
-  const channelName = `${panelSlug}${answerSlugs.length ? '-' + answerSlugs.join('-') : ''}-${safeName}`.substring(0, 90);
+  // For spawner panels: include all 3 answers in the channel name
+  const isSpawnerPanel = (panel.name || '').toLowerCase().includes('spawner');
+  let channelName;
+  if (isSpawnerPanel && answers?.length) {
+    const answerSlugs = answers
+      .map(a => a.answer.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 15))
+      .filter(s => s && s !== '');
+    channelName = `${panelSlug}-${answerSlugs.join('-')}-${safeName}`.substring(0, 90);
+  } else {
+    channelName = `${panelSlug}-${safeName}`;
+  }
 
   const viewRoles = tickets.perms?.viewRoles || [];
   const pingRoles = tickets.perms?.pingRoles || [];
