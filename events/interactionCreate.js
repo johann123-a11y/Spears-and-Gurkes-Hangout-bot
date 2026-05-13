@@ -442,11 +442,11 @@ module.exports = {
 
       // ── Split or Steal buttons ────────────────────────────────────────────
       if (interaction.customId.startsWith('ss_join:')) {
-        const { handleJoin } = require('../commands/general/splitsteal');
+        const { handleJoin } = require('../commands/general/sos');
         return handleJoin(interaction);
       }
       if (interaction.customId.startsWith('ss_pick:')) {
-        const { handlePick } = require('../commands/general/splitsteal');
+        const { handlePick } = require('../commands/general/sos');
         return handlePick(interaction);
       }
 

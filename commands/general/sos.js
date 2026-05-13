@@ -86,9 +86,9 @@ async function endLobby(messageId, client) {
 }
 
 module.exports = {
-  name: 'splitsteal',
+  name: 'sos',
   data: new SlashCommandBuilder()
-    .setName('splitsteal')
+    .setName('sos')
     .setDescription('Split or Steal event [Staff Team]')
     .addSubcommand(sub =>
       sub.setName('start')
@@ -105,7 +105,7 @@ module.exports = {
     ),
 
   async executeSlash(interaction) {
-    if (!checkPerm(interaction.member, 'splitsteal'))
+    if (!checkPerm(interaction.member, 'sos'))
       return interaction.reply({ content: '❌ Only **Staff Team** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
