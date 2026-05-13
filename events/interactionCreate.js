@@ -440,6 +440,16 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
+      // ── Split or Steal buttons ────────────────────────────────────────────
+      if (interaction.customId.startsWith('ss_join:')) {
+        const { handleJoin } = require('../commands/general/splitsteal');
+        return handleJoin(interaction);
+      }
+      if (interaction.customId.startsWith('ss_pick:')) {
+        const { handlePick } = require('../commands/general/splitsteal');
+        return handlePick(interaction);
+      }
+
       // ── RPS buttons ───────────────────────────────────────────────────────
       if (interaction.customId.startsWith('rps_join:')) {
         const { handleJoin } = require('../commands/general/rps');
