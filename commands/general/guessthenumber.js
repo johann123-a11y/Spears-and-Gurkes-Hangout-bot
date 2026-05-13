@@ -14,6 +14,12 @@ module.exports = {
         .setDescription('Maximum number (e.g. 100)')
         .setRequired(true)
         .setMinValue(2)
+    )
+    .addIntegerOption(o =>
+      o.setName('number')
+        .setDescription('Set the exact number to guess (must be between 1 and max)')
+        .setRequired(false)
+        .setMinValue(1)
     ),
 
   async executeSlash(interaction) {
@@ -23,8 +29,13 @@ module.exports = {
     if (activeGames.has(interaction.channelId))
       return interaction.reply({ content: '❌ There is already an active game in this channel!', ephemeral: true });
 
-    const max    = interaction.options.getInteger('max');
-    const number = Math.floor(Math.random() * max) + 1;
+    const max          = interaction.options.getInteger('max');
+    const fixedNumber  = interaction.options.getInteger('number');
+
+    if (fixedNumber !== null && (fixedNumber < 1 || fixedNumber > max))
+      return interaction.reply({ content: `❌ The number must be between **1** and **${max}**.`, ephemeral: true });
+
+    const number = fixedNumber ?? Math.floor(Math.random() * max) + 1;
 
     activeGames.set(interaction.channelId, { number, max });
 
