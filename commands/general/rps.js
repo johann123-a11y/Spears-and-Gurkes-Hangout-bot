@@ -99,6 +99,13 @@ module.exports = {
       sub.setName('end')
         .setDescription('End an RPS lobby early and pick winners')
         .addStringOption(o => o.setName('message_id').setDescription('Message ID of the RPS lobby').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('duel')
+        .setDescription('Directly start an RPS duel between two users')
+        .addUserOption(o => o.setName('user1').setDescription('First player').setRequired(true))
+        .addUserOption(o => o.setName('user2').setDescription('Second player').setRequired(true))
+        .addStringOption(o => o.setName('prize').setDescription('Prize for the winner (optional)').setRequired(false))
     ),
 
   async executeSlash(interaction) {
@@ -161,6 +168,46 @@ module.exports = {
 
       await interaction.reply({ content: '🎯 Ending lobby and picking players...', ephemeral: true });
       endLobby(msgId, interaction.client);
+    }
+
+    // ── /rps duel ─────────────────────────────────────────────────────────────
+    if (sub === 'duel') {
+      const user1 = interaction.options.getUser('user1');
+      const user2 = interaction.options.getUser('user2');
+      const prize = interaction.options.getString('prize') ?? null;
+
+      if (user1.id === user2.id)
+        return interaction.reply({ content: '❌ You cannot duel the same user twice!', ephemeral: true });
+      if (user1.bot || user2.bot)
+        return interaction.reply({ content: '❌ Bots cannot participate in duels.', ephemeral: true });
+
+      const gameId = `duel_${interaction.id}`;
+      duels.set(gameId, {
+        player1: user1.id,
+        player2: user2.id,
+        pick1: null,
+        pick2: null,
+        prize,
+        channelId: interaction.channelId,
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor('#5865F2')
+        .setTitle('✂️ Rock Paper Scissors — FIGHT!')
+        .setDescription(
+          (prize ? `🏆 Prize: **${prize}**\n\n` : '') +
+          `<@${user1.id}> vs <@${user2.id}>\n\n` +
+          `Both players: pick your move below!\n` +
+          `**Paper** beats Rock · **Rock** beats Scissors · **Scissors** beats Paper`
+        )
+        .setTimestamp();
+
+      await interaction.reply({
+        content: `<@${user1.id}> <@${user2.id}>`,
+        embeds: [embed],
+        components: [rpsButtons(gameId)],
+        allowedMentions: { users: [user1.id, user2.id] },
+      });
     }
   },
 
