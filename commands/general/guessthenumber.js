@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
 const { checkPerm } = require('../../utils');
 
 // Active games: channelId → { number, max }
@@ -9,6 +9,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('guessthenumber')
     .setDescription('Guess the Number game [Staff Team]')
+    .setDefaultMemberPermissions(0)
     .addSubcommand(sub =>
       sub.setName('start')
         .setDescription('Start a new Guess the Number game')

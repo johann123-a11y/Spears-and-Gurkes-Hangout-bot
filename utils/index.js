@@ -122,6 +122,7 @@ const COMMAND_DEFAULTS = {
   gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam',
   // General (configurable)
   afk: 'everyone', help: 'everyone', hereping: 'staffTeam',
+  guessthenumber: 'staffTeam', rps: 'staffTeam', sos: 'staffTeam',
 };
 
 const COMMAND_LABELS = {
