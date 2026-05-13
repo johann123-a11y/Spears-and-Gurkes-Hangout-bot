@@ -56,10 +56,19 @@ async function endLobby(messageId, client) {
   const lobby = lobbies.get(messageId);
   if (!lobby || lobby.ended) return;
   lobby.ended = true;
+  lobbies.delete(messageId);
 
-  const channel  = await client.channels.fetch(lobby.channelId).catch(() => null);
-  const lobbyMsg = channel ? await channel.messages.fetch(messageId).catch(() => null) : null;
+  // Use stored channel reference first, fallback to fetch
+  const channel = lobby.channel
+    ?? await client.channels.fetch(lobby.channelId).catch(() => null);
 
+  if (!channel) {
+    console.error('[SOS] Could not resolve channel', lobby.channelId);
+    return;
+  }
+
+  // Disable the join button
+  const lobbyMsg = await channel.messages.fetch(messageId).catch(() => null);
   if (lobbyMsg) {
     const disabled = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('ss_join_disabled').setLabel('🎮 Join').setStyle(ButtonStyle.Primary).setDisabled(true),
@@ -68,8 +77,7 @@ async function endLobby(messageId, client) {
   }
 
   if (lobby.participants.length < 2) {
-    channel?.send({ content: `❌ **${lobby.prize}** Split or Steal ended — not enough participants (need at least 2).` }).catch(() => {});
-    lobbies.delete(messageId);
+    channel.send({ content: `❌ **${lobby.prize}** — Split or Steal ended. Not enough participants (need at least 2).` }).catch(console.error);
     return;
   }
 
@@ -78,11 +86,7 @@ async function endLobby(messageId, client) {
   const [p1] = pool.splice(idx1, 1);
   const p2   = pool[Math.floor(Math.random() * pool.length)];
 
-  lobbies.delete(messageId);
-
-  if (channel) {
-    await startGame(p1, p2, lobby.prize, lobby.channelId, client, opts => channel.send(opts).catch(() => {}));
-  }
+  await startGame(p1, p2, lobby.prize, lobby.channelId, client, opts => channel.send(opts).catch(console.error));
 }
 
 module.exports = {
@@ -146,6 +150,7 @@ module.exports = {
       lobbies.set(msg.id, {
         participants: [],
         prize,
+        channel:   interaction.channel,
         channelId: interaction.channelId,
         guildId:   interaction.guildId,
         endsAt:    Date.now() + ms,
