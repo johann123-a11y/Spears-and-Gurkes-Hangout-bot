@@ -16,7 +16,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has("Administrator"))
-      return message.reply('❌ Only **Admins** can use this command.');
+      return message.reply('Only **Admins** can use this command.');
 
     const action = args[0]?.toLowerCase();
     if (action !== 'enable' && action !== 'disable')
@@ -27,7 +27,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has("Administrator"))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     respond(interaction.options.getString('action'), null, interaction);
   },
@@ -40,7 +40,7 @@ function respond(action, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor(data.enabled ? '#57F287' : '#ED4245')
-    .setTitle(`Welcome Messages ${data.enabled ? 'Enabled ✅' : 'Disabled ❌'}`)
+    .setTitle(`Welcome Messages ${data.enabled ? 'Enabled ' : 'Disabled '}`)
     .setTimestamp();
 
   if (channel) channel.send({ embeds: [embed] });

@@ -9,7 +9,7 @@ const lobbies = new Map();
 // Active games: gameId → { player1, player2, pick1, pick2, prize, channelId }
 const games   = new Map();
 
-// ── Helper: try to halve a prize string (e.g. "10m" → "5m") ─────────────────
+// Helper: try to halve a prize string (e.g. "10m" → "5m") 
 function halfPrize(prize) {
   const m = prize.trim().match(/^(\d+(?:\.\d+)?)\s*(k|m|b)?$/i);
   if (!m) return null;
@@ -114,7 +114,7 @@ module.exports = {
 
     const sub = interaction.options.getSubcommand();
 
-    // ── /sos start ────────────────────────────────────────────────────────────
+    // /sos start 
     if (sub === 'start') {
       const prize  = interaction.options.getString('prize');
       const durStr = interaction.options.getString('duration');
@@ -159,7 +159,7 @@ module.exports = {
       setTimeout(() => endLobby(msg.id, interaction.client), ms);
     }
 
-    // ── /sos duel ─────────────────────────────────────────────────────────────
+    // /sos duel 
     if (sub === 'duel') {
       const user1 = interaction.options.getUser('user1');
       const user2 = interaction.options.getUser('user2');
@@ -177,7 +177,7 @@ module.exports = {
     }
   },
 
-  // ── Button: join lobby ────────────────────────────────────────────────────
+  // Button: join lobby 
   async handleJoin(interaction) {
     const messageId = interaction.customId.split(':')[1];
     const lobby     = lobbies.get(messageId);
@@ -190,7 +190,7 @@ module.exports = {
     return interaction.reply({ content: `You joined! (**${lobby.participants.length}** players so far)`, ephemeral: true });
   },
 
-  // ── Button: pick split or steal ───────────────────────────────────────────
+  // Button: pick split or steal 
   async handlePick(interaction) {
     const [, gameId, pick] = interaction.customId.split(':');
     const game = games.get(gameId);
@@ -218,7 +218,7 @@ module.exports = {
 
     if (!game.pick1 || !game.pick2) return;
 
-    // ── Both picked — resolve ─────────────────────────────────────────────
+    // Both picked — resolve 
     games.delete(gameId);
     const channel = await interaction.client.channels.fetch(game.channelId).catch(() => null);
 

@@ -16,7 +16,7 @@ async function sendLog(client, { action, executor, target, fields = {}, color = 
 
   const embed = new EmbedBuilder()
     .setColor(color)
-    .setTitle(`📋 ${action}`)
+    .setTitle(`${action}`)
     .addFields(
       { name: 'Executed by', value: executor, inline: true },
       ...(target ? [{ name: 'Target', value: target, inline: true }] : []),

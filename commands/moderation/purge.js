@@ -18,14 +18,14 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has('Administrator'))
-      return message.reply('❌ Only **Administrators** can use this command.');
+      return message.reply('Only **Administrators** can use this command.');
 
     const target = message.mentions.members.first();
     const amount = parseInt(args[1]);
 
     if (!target) return message.reply('Usage: `?purge @user {amount}`');
     if (isNaN(amount) || amount < 1 || amount > 100)
-      return message.reply('❌ Please provide a number between **1** and **100**.');
+      return message.reply('Please provide a number between **1** and **100**.');
 
     await message.delete().catch(() => {});
 
@@ -36,7 +36,7 @@ module.exports = {
       .slice(0, amount);
 
     if (toDelete.length === 0) {
-      const reply = await message.channel.send(`❌ No recent messages from **${target.user.tag}** found.`);
+      const reply = await message.channel.send(`No recent messages from **${target.user.tag}** found.`);
       return setTimeout(() => reply.delete().catch(() => {}), 5000);
     }
 
@@ -46,7 +46,7 @@ module.exports = {
     const reply = await message.channel.send({
       embeds: [new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('🗑️ Purge Complete')
+        .setTitle('Purge Complete')
         .addFields(
           { name: 'User',    value: target.user.tag,       inline: true },
           { name: 'Deleted', value: `${count} message(s)`, inline: true },
@@ -68,7 +68,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Administrators** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Administrators** can use this command.', ephemeral: true });
 
     const user   = interaction.options.getUser('user');
     const amount = interaction.options.getInteger('amount');
@@ -81,7 +81,7 @@ module.exports = {
       .slice(0, amount);
 
     if (toDelete.length === 0)
-      return interaction.editReply(`❌ No recent messages from **${user.tag}** found.`);
+      return interaction.editReply(`No recent messages from **${user.tag}** found.`);
 
     const deleted = await interaction.channel.bulkDelete(toDelete, true).catch(() => null);
     const count   = deleted ? deleted.size : toDelete.length;
@@ -89,7 +89,7 @@ module.exports = {
     await interaction.editReply({
       embeds: [new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('🗑️ Purge Complete')
+        .setTitle('Purge Complete')
         .addFields(
           { name: 'User',    value: user.tag,              inline: true },
           { name: 'Deleted', value: `${count} message(s)`, inline: true },

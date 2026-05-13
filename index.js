@@ -68,7 +68,7 @@ for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
 
 const { loadCache, readData, writeData } = require('./utils');
 
-// ── Permanent mute renewer ────────────────────────────────────────────────────
+// Permanent mute renewer 
 async function renewPermMutes() {
   const { readData } = require('./utils');
   const permMutes = readData('permMutes.json');
@@ -83,7 +83,7 @@ async function renewPermMutes() {
   }
 }
 
-// ── Activity check result poster ──────────────────────────────────────────────
+// Activity check result poster 
 async function processExpiredActivityChecks() {
   const checks = readData('activitychecks.json');
   const now = Date.now();
@@ -112,18 +112,18 @@ async function processExpiredActivityChecks() {
     }
 
     const respondedStr  = responded.length  > 0 ? responded.map(id => `<@${id}>`).join('\n')           : '*Niemand hat geantwortet.*';
-    const notRespondedStr = notResponded.length > 0 ? notResponded.map(m => `<@${m.id}>`).join('\n') : check.roleId ? '🎉 Alle haben geantwortet!' : '';
+    const notRespondedStr = notResponded.length > 0 ? notResponded.map(m => `<@${m.id}>`).join('\n') : check.roleId ? 'Alle haben geantwortet!' : '';
 
     const fields = [
-      { name: `✅ Aktiv (${responded.length})`, value: respondedStr },
+      { name: `Aktiv (${responded.length})`, value: respondedStr },
     ];
     if (check.roleId) {
-      fields.push({ name: `❌ Inaktiv (${notResponded.length})`, value: notRespondedStr });
+      fields.push({ name: `Inaktiv (${notResponded.length})`, value: notRespondedStr });
     }
 
     const resultEmbed = new EmbedBuilder()
       .setColor(notResponded.length === 0 ? '#57F287' : '#ED4245')
-      .setTitle('📋 Activity Check — Ergebnis')
+      .setTitle('Activity Check — Ergebnis')
       .addFields(fields)
       .setTimestamp();
 

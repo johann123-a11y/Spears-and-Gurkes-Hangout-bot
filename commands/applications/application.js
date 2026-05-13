@@ -16,23 +16,23 @@ module.exports = {
     .setName('application')
     .setDescription('Application system')
 
-    // ── /application setup ─────────────────────────────────────────────────
+    // /application setup 
     .addSubcommand(sub =>
       sub.setName('setup').setDescription('Create a new application [Admin]')
     )
-    // ── /application group ─────────────────────────────────────────────────
+    // /application group 
     .addSubcommand(sub =>
       sub.setName('group').setDescription('Combine applications into one panel [Admin]')
     )
-    // ── /application description ───────────────────────────────────────────
+    // /application description 
     .addSubcommand(sub =>
       sub.setName('description').setDescription('Set the panel description [Admin]')
     )
-    // ── /application open ──────────────────────────────────────────────────
+    // /application open 
     .addSubcommand(sub =>
       sub.setName('open').setDescription('Send the finished application panel to this channel [Admin]')
     )
-    // ── /application ping ──────────────────────────────────────────────────
+    // /application ping 
     .addSubcommand(sub =>
       sub.setName('ping')
         .setDescription('Set a role or user to ping when a new application arrives [Admin]')
@@ -41,12 +41,12 @@ module.exports = {
         )
     )
 
-    // ── /application info ──────────────────────────────────────────────────
+    // /application info 
     .addSubcommand(sub =>
       sub.setName('info').setDescription('Show all configured application panels and settings [Admin]')
     )
 
-    // ── /application set (subcommand group) ───────────────────────────────
+    // /application set (subcommand group) 
     .addSubcommandGroup(group =>
       group.setName('set').setDescription('Set application channels')
         .addSubcommand(sub =>
@@ -56,7 +56,7 @@ module.exports = {
         )
     )
 
-    // ── /application results (subcommand group) ───────────────────────────
+    // /application results (subcommand group) 
     .addSubcommandGroup(group =>
       group.setName('results').setDescription('Manage application result channels')
         .addSubcommand(sub =>
@@ -76,12 +76,12 @@ module.exports = {
     ),
 
   async execute(message) {
-    message.reply('❌ Please use `/application` slash commands.');
+    message.reply('Please use `/application` slash commands.');
   },
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Administrators** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Administrators** can use this command.', ephemeral: true });
 
     const group = interaction.options.getSubcommandGroup(false);
     const sub   = interaction.options.getSubcommand();
@@ -105,7 +105,7 @@ module.exports = {
   },
 };
 
-// ── /application set channel ──────────────────────────────────────────────────
+// /application set channel 
 async function handleSetChannel(interaction) {
   const channel = interaction.options.getChannel('channel');
   const apps    = readData('applications.json');
@@ -114,21 +114,21 @@ async function handleSetChannel(interaction) {
   writeData('applications.json', apps);
   return interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('✅ Pending Channel Set')
+      .setColor('#57F287').setTitle('Pending Channel Set')
       .setDescription(`New applications will be posted to <#${channel.id}>.`)
       .setTimestamp()],
     ephemeral: true,
   });
 }
 
-// ── /application results accepted|denied ─────────────────────────────────────
+// /application results accepted|denied 
 async function handleSetResultChannel(interaction, type) {
   const channel = interaction.options.getChannel('channel');
   const apps    = readData('applications.json');
   if (!apps.channels) apps.channels = {};
   apps.channels[type] = channel.id;
   writeData('applications.json', apps);
-  const label = type === 'accepted' ? '✅ Accepted' : '❌ Denied';
+  const label = type === 'accepted' ? 'Accepted' : 'Denied';
   return interaction.reply({
     embeds: [new EmbedBuilder()
       .setColor('#57F287').setTitle(`${label} Channel Set`)
@@ -138,7 +138,7 @@ async function handleSetResultChannel(interaction, type) {
   });
 }
 
-// ── /application results view ─────────────────────────────────────────────────
+// /application results view 
 async function handleResultsView(interaction) {
   const results = readData('applicationResults.json');
   const all     = Object.entries(results);
@@ -149,16 +149,16 @@ async function handleResultsView(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('📋 Application Results')
+    .setTitle('Application Results')
     .addFields(
-      { name: '⏳ Pending',  value: `**${pending.length}**`, inline: true },
-      { name: '✅ Accepted', value: `**${accepted}**`,        inline: true },
-      { name: '❌ Denied',   value: `**${denied}**`,          inline: true },
+      { name: 'Pending',  value: `**${pending.length}**`, inline: true },
+      { name: 'Accepted', value: `**${accepted}**`,        inline: true },
+      { name: 'Denied',   value: `**${denied}**`,          inline: true },
     )
     .setTimestamp();
 
   if (pending.length === 0)
-    return interaction.reply({ embeds: [embed.setDescription('✅ No pending applications!')], ephemeral: true });
+    return interaction.reply({ embeds: [embed.setDescription('No pending applications!')], ephemeral: true });
 
   const menu = new StringSelectMenuBuilder()
     .setCustomId('app_result_picker')
@@ -177,7 +177,7 @@ async function handleResultsView(interaction) {
   });
 }
 
-// ── /application ping ─────────────────────────────────────────────────────────
+// /application ping 
 async function handlePing(interaction) {
   const target = interaction.options.getMentionable('target');
   const apps   = readData('applications.json');
@@ -186,18 +186,18 @@ async function handlePing(interaction) {
   writeData('applications.json', apps);
   return interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('✅ Ping Target Set')
+      .setColor('#57F287').setTitle('Ping Target Set')
       .setDescription(`<@${target.id}> will be pinged when a new application arrives.`)
       .setTimestamp()],
     ephemeral: true,
   });
 }
 
-// ── /application setup ────────────────────────────────────────────────────────
+// /application setup 
 async function handleSetup(interaction) {
   const modal = new ModalBuilder()
     .setCustomId('app_setup_modal')
-    .setTitle('📋 Create Application')
+    .setTitle('Create Application')
     .addComponents(
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
@@ -219,12 +219,12 @@ async function handleSetup(interaction) {
   await interaction.showModal(modal);
 }
 
-// ── /application group ────────────────────────────────────────────────────────
+// /application group 
 async function handleGroup(interaction) {
   const apps   = readData('applications.json');
   const panels = Object.values(apps.panels || {});
   if (panels.length === 0)
-    return interaction.reply({ content: '❌ No applications yet. Use `/application setup` first.', ephemeral: true });
+    return interaction.reply({ content: 'No applications yet. Use `/application setup` first.', ephemeral: true });
 
   const menu = new StringSelectMenuBuilder()
     .setCustomId('app_group_select')
@@ -245,14 +245,14 @@ async function handleGroup(interaction) {
   });
 }
 
-// ── /application description ──────────────────────────────────────────────────
+// /application description 
 async function handleDescription(interaction) {
   const apps    = readData('applications.json');
   const current = apps.description || {};
 
   const modal = new ModalBuilder()
     .setCustomId('app_description_modal')
-    .setTitle('📋 Application Panel Description')
+    .setTitle('Application Panel Description')
     .addComponents(
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
@@ -283,13 +283,13 @@ async function handleDescription(interaction) {
   await interaction.showModal(modal);
 }
 
-// ── /application open ─────────────────────────────────────────────────────────
+// /application open 
 async function handleOpen(interaction) {
   const apps   = readData('applications.json');
   const panels = Object.values(apps.panels || {}).filter(Boolean);
 
   if (panels.length === 0)
-    return interaction.reply({ content: '❌ No applications created yet.', ephemeral: true });
+    return interaction.reply({ content: 'No applications created yet.', ephemeral: true });
 
   const groupedIds = apps.group?.panelIds || [];
   const toShow     = groupedIds.length > 0
@@ -297,7 +297,7 @@ async function handleOpen(interaction) {
     : panels;
 
   if (toShow.length === 0)
-    return interaction.reply({ content: '❌ No panels in the group. Use `/application group` first.', ephemeral: true });
+    return interaction.reply({ content: 'No panels in the group. Use `/application group` first.', ephemeral: true });
 
   const desc  = apps.description || {};
   const embed = new EmbedBuilder().setColor('#5865F2').setTimestamp();
@@ -307,7 +307,7 @@ async function handleOpen(interaction) {
 
   const menu = new StringSelectMenuBuilder()
     .setCustomId('app_apply_select')
-    .setPlaceholder('📋 Select an application...')
+    .setPlaceholder('Select an application...')
     .addOptions(toShow.map(p =>
       new StringSelectMenuOptionBuilder()
         .setLabel(p.name)
@@ -325,23 +325,23 @@ async function handleOpen(interaction) {
   apps.group.messageId = sent.id;
   writeData('applications.json', apps);
 
-  return interaction.reply({ content: '✅ Application panel sent!', ephemeral: true });
+  return interaction.reply({ content: 'Application panel sent!', ephemeral: true });
 }
 
-// ── /application info ─────────────────────────────────────────────────────────
+// /application info 
 async function handleInfo(interaction) {
   const apps   = readData('applications.json');
   const panels = Object.values(apps.panels || {});
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('📋 Application System Info')
+    .setTitle('Application System Info')
     .setTimestamp();
 
-  // ── Channels ──────────────────────────────────────────────────────────────
+  // Channels 
   const ch = apps.channels || {};
   embed.addFields({
-    name: '📂 Channels',
+    name: 'Channels',
     value: [
       `**Pending:** ${ch.pending  ? `<#${ch.pending}>`  : '*(not set)*'}`,
       `**Accepted:** ${ch.accepted ? `<#${ch.accepted}>` : '*(not set)*'}`,
@@ -349,9 +349,9 @@ async function handleInfo(interaction) {
     ].join('\n'),
   });
 
-  // ── Ping target ───────────────────────────────────────────────────────────
+  // Ping target 
   embed.addFields({
-    name: '🔔 Ping on new application',
+    name: 'Ping on new application',
     value: apps.pingTarget
       ? (apps.pingTarget.startsWith('role:')
           ? `<@&${apps.pingTarget.slice(5)}>`
@@ -360,18 +360,18 @@ async function handleInfo(interaction) {
     inline: true,
   });
 
-  // ── Panel message ─────────────────────────────────────────────────────────
+  // Panel message 
   embed.addFields({
-    name: '📨 Panel message',
+    name: 'Panel message',
     value: apps.group?.channelId && apps.group?.messageId
       ? `[Jump](https://discord.com/channels/${interaction.guildId}/${apps.group.channelId}/${apps.group.messageId})`
       : '*(not sent yet)*',
     inline: true,
   });
 
-  // ── Application panels ────────────────────────────────────────────────────
+  // Application panels 
   if (panels.length === 0) {
-    embed.addFields({ name: '📄 Panels', value: '*(none created yet)*' });
+    embed.addFields({ name: 'Panels', value: '*(none created yet)*' });
   } else {
     for (const panel of panels) {
       const qList = panel.questions?.length
@@ -380,7 +380,7 @@ async function handleInfo(interaction) {
           ).join('\n')
         : '*(no questions)*';
       embed.addFields({
-        name: `📄 ${panel.name} — for: ${panel.forWhat}`,
+        name: `${panel.name} — for: ${panel.forWhat}`,
         value: qList.length > 1024 ? qList.substring(0, 1021) + '...' : qList,
       });
     }
@@ -391,7 +391,7 @@ async function handleInfo(interaction) {
   if (panels.length > 0) {
     const menu = new StringSelectMenuBuilder()
       .setCustomId('app_info_edit_select')
-      .setPlaceholder('✏️ Select a panel to edit questions...')
+      .setPlaceholder('Select a panel to edit questions...')
       .addOptions(panels.map(p => ({
         label: p.name,
         description: `${p.questions?.length || 0} question(s) • for: ${p.forWhat.substring(0, 50)}`,

@@ -126,11 +126,11 @@ const COMMAND_DEFAULTS = {
 };
 
 const COMMAND_LABELS = {
-  everyone: '🌍 Everyone',
-  jrHelper: '🟢 JrHelper+',
-  srMod: '🟠 SrMod+',
-  admin: '🔴 Admin Only',
-  staffTeam: '🔵 Staff Team',
+  everyone: 'Everyone',
+  jrHelper: 'JrHelper+',
+  srMod: 'SrMod+',
+  admin: 'Admin Only',
+  staffTeam: 'Staff Team',
 };
 
 function isStaffMember(member) {

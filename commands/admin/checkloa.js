@@ -12,7 +12,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has("Administrator"))
-      return message.reply('❌ Only **Admins** can use this command.');
+      return message.reply('Only **Admins** can use this command.');
 
     const target = message.mentions.members.first();
     if (!target) return message.reply('Usage: `?checkloa @user`');
@@ -22,7 +22,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has("Administrator"))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const user   = interaction.options.getUser('user');
     const loa    = readData('loa.json');
@@ -34,18 +34,18 @@ module.exports = {
       components.push(new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`checkloa_clear:${user.id}`)
-          .setLabel('🗑️ Clear LOA')
+          .setLabel('Clear LOA')
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId(`checkloa_set:${user.id}`)
-          .setLabel('✏️ Edit LOA')
+          .setLabel('Edit LOA')
           .setStyle(ButtonStyle.Secondary),
       ));
     } else {
       components.push(new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`checkloa_set:${user.id}`)
-          .setLabel('✏️ Set LOA')
+          .setLabel('Set LOA')
           .setStyle(ButtonStyle.Primary),
       ));
     }
@@ -61,7 +61,7 @@ function buildEmbed(user) {
   if (!data) {
     return new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('📋 LOA Status')
+      .setTitle('LOA Status')
       .setDescription(`**${user.tag}** is not on LOA.`)
       .setTimestamp();
   }
@@ -70,14 +70,14 @@ function buildEmbed(user) {
   if (remaining <= 0) {
     return new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('📋 LOA Status')
+      .setTitle('LOA Status')
       .setDescription(`**${user.tag}**'s LOA has already expired.`)
       .setTimestamp();
   }
 
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('🏖️ LOA Status')
+    .setTitle('LOA Status')
     .addFields(
       { name: 'Staff Member', value: user.tag,          inline: true },
       { name: 'Remaining',    value: formatTime(remaining), inline: true },

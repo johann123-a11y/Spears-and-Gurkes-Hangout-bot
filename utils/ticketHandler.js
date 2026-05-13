@@ -11,14 +11,14 @@ function getBaseUrl() {
   return null;
 }
 
-// ── Button: user clicks a ticket panel button ─────────────────────────────────
+// Button: user clicks a ticket panel button 
 async function handleTicketOpen(interaction) {
   const panelId = interaction.customId.split(':')[1];
   const tickets = readData('tickets.json');
   const panel   = tickets.panels?.[panelId];
 
   if (!panel)
-    return interaction.reply({ content: '❌ This ticket panel no longer exists.', ephemeral: true });
+    return interaction.reply({ content: 'This ticket panel no longer exists.', ephemeral: true });
 
   // Prevent duplicate tickets for same panel
   const openTickets = readData('openTickets.json');
@@ -27,7 +27,7 @@ async function handleTicketOpen(interaction) {
   );
   if (existing) {
     return interaction.reply({
-      content: `❌ You already have an open ticket for **${panel.name}**: <#${existing[0]}>`,
+      content: `You already have an open ticket for **${panel.name}**: <#${existing[0]}>`,
       ephemeral: true,
     });
   }
@@ -56,14 +56,14 @@ async function handleTicketOpen(interaction) {
   }
 }
 
-// ── Modal: user submitted pre-open questions ──────────────────────────────────
+// Modal: user submitted pre-open questions 
 async function handleTicketQuestionsModal(interaction) {
   const panelId = interaction.customId.split(':')[1];
   const tickets = readData('tickets.json');
   const panel   = tickets.panels?.[panelId];
 
   if (!panel)
-    return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
+    return interaction.reply({ content: 'Panel not found.', ephemeral: true });
 
   await interaction.deferReply({ ephemeral: true });
 
@@ -75,7 +75,7 @@ async function handleTicketQuestionsModal(interaction) {
   await createTicketChannel(interaction, panel, answers);
 }
 
-// ── Create the ticket channel ─────────────────────────────────────────────────
+// Create the ticket channel 
 async function createTicketChannel(interaction, panel, answers) {
   const guild     = interaction.guild;
   const tickets   = readData('tickets.json');
@@ -138,14 +138,14 @@ async function createTicketChannel(interaction, panel, answers) {
       permissionOverwrites: permOverwrites,
     });
   } catch (err) {
-    return interaction.editReply({ content: `❌ Could not create ticket channel: ${err.message}` });
+    return interaction.editReply({ content: `Could not create ticket channel: ${err.message}` });
   }
 
   // Build ticket embed
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle(`🎫 ${panel.name}`)
-    .setDescription(`Ticket opened by <@${interaction.user.id}>\n\nA staff member will be with you shortly.\n\n⚠️ If you ping anyone, your ticket will get closed and you won't get paid.`)
+    .setTitle(`${panel.name}`)
+    .setDescription(`Ticket opened by <@${interaction.user.id}>\n\nA staff member will be with you shortly.\n\nIf you ping anyone, your ticket will get closed and you won't get paid.`)
     .setThumbnail(interaction.user.displayAvatarURL())
     .setTimestamp();
 
@@ -154,12 +154,12 @@ async function createTicketChannel(interaction, panel, answers) {
 
   const closeBtn = new ButtonBuilder()
     .setCustomId('ticket_close_btn')
-    .setLabel('🔒 Close Ticket')
+    .setLabel('Close Ticket')
     .setStyle(ButtonStyle.Danger);
 
   const requestCloseBtn = new ButtonBuilder()
     .setCustomId('ticket_request_close_btn')
-    .setLabel('📩 Request Close')
+    .setLabel('Request Close')
     .setStyle(ButtonStyle.Secondary);
 
   // Build content with ping mentions
@@ -198,9 +198,9 @@ async function createTicketChannel(interaction, panel, answers) {
     if (logCh) {
       logCh.send({
         embeds: [new EmbedBuilder()
-          .setColor('#57F287').setTitle('🎫 Ticket Opened')
+          .setColor('#57F287').setTitle('Ticket Opened')
           .addFields(
-            { name: '🎟️ Ticket ID',  value: `#${ticketId}`,                          inline: true },
+            { name: 'Ticket ID',  value: `#${ticketId}`,                          inline: true },
             { name: 'Panel',          value: panel.name,                              inline: true },
             { name: 'Opened by',      value: `<@${interaction.user.id}>`,             inline: true },
             { name: 'Channel',        value: `<#${ticketChannel.id}>`,                inline: true },
@@ -210,17 +210,17 @@ async function createTicketChannel(interaction, panel, answers) {
     }
   }
 
-  await interaction.editReply({ content: `✅ Your ticket has been created: <#${ticketChannel.id}>` });
+  await interaction.editReply({ content: `Your ticket has been created: <#${ticketChannel.id}>` });
 }
 
-// ── Button: "Close Ticket" button in ticket channel ───────────────────────────
+// Button: "Close Ticket" button in ticket channel 
 async function handleCloseButton(interaction) {
   const openTickets = readData('openTickets.json');
   if (!openTickets[interaction.channelId])
-    return interaction.reply({ content: '❌ This ticket is no longer active.', ephemeral: true });
+    return interaction.reply({ content: 'This ticket is no longer active.', ephemeral: true });
 
   if (!isStaffMember(interaction.member))
-    return interaction.reply({ content: '❌ Only **Staff** can close tickets.', ephemeral: true });
+    return interaction.reply({ content: 'Only **Staff** can close tickets.', ephemeral: true });
 
   // Ask for reason via modal
   const modal = new ModalBuilder()
@@ -240,7 +240,7 @@ async function handleCloseButton(interaction) {
   await interaction.showModal(modal);
 }
 
-// ── Shared close logic (used by modal AND /ticket close command) ──────────────
+// Shared close logic (used by modal AND /ticket close command) 
 async function closeTicket(channel, reason, closedBy, client) {
   const openTickets = readData('openTickets.json');
   const ticket      = openTickets[channel.id];
@@ -272,7 +272,7 @@ async function closeTicket(channel, reason, closedBy, client) {
   try {
     await openedByUser.send({
       embeds: [new EmbedBuilder()
-        .setColor('#ED4245').setTitle('🔒 Your Ticket Was Closed')
+        .setColor('#ED4245').setTitle('Your Ticket Was Closed')
         .addFields(
           { name: 'Panel',     value: ticket.panelName,                       inline: true },
           { name: 'Closed by', value: closedBy.tag,                           inline: true },
@@ -288,9 +288,9 @@ async function closeTicket(channel, reason, closedBy, client) {
     const logCh = client.channels.cache.get(tickets.logChannelId);
     if (logCh) {
       const embed = new EmbedBuilder()
-        .setColor('#ED4245').setTitle('🔒 Ticket Closed')
+        .setColor('#ED4245').setTitle('Ticket Closed')
         .addFields(
-          { name: '🎟️ Ticket ID', value: `#${ticketId}`,                              inline: true },
+          { name: 'Ticket ID', value: `#${ticketId}`,                              inline: true },
           { name: 'Panel',         value: ticket.panelName,                             inline: true },
           { name: 'Opened by',     value: `<@${ticket.userId}>`,                        inline: true },
           { name: 'Closed by',     value: `<@${closedBy.id}>`,                          inline: true },
@@ -303,13 +303,13 @@ async function closeTicket(channel, reason, closedBy, client) {
       const btns = [];
       if (baseUrl) {
         btns.push(new ButtonBuilder()
-          .setLabel('📄 View Transcript')
+          .setLabel('View Transcript')
           .setStyle(ButtonStyle.Link)
           .setURL(`${baseUrl}/transcript/${ticketId}`));
       }
       btns.push(new ButtonBuilder()
         .setCustomId(`transcript_save:${ticketId}`)
-        .setLabel('💾 Save Transcript')
+        .setLabel('Save Transcript')
         .setStyle(ButtonStyle.Secondary));
 
       logCh.send({
@@ -325,31 +325,31 @@ async function closeTicket(channel, reason, closedBy, client) {
   return true;
 }
 
-// ── Modal: close reason submitted ────────────────────────────────────────────
+// Modal: close reason submitted 
 async function handleCloseModal(interaction) {
   const reason      = interaction.fields.getTextInputValue('close_reason');
   const openTickets = readData('openTickets.json');
   if (!openTickets[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
+    return interaction.reply({ content: 'This is not an active ticket channel.', ephemeral: true });
 
-  await interaction.reply({ content: '🔒 Closing ticket in **3 seconds**...' });
+  await interaction.reply({ content: 'Closing ticket in **3 seconds**...' });
   await closeTicket(interaction.channel, reason, interaction.user, interaction.client);
 }
 
-// ── Button: "Request Close" button in ticket channel (any member) ─────────────
+// Button: "Request Close" button in ticket channel (any member) 
 async function handleRequestCloseButton(interaction) {
   const openTickets = readData('openTickets.json');
   if (!openTickets[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
+    return interaction.reply({ content: 'This is not an active ticket channel.', ephemeral: true });
 
-  await interaction.reply({ content: '✅ Close request sent.', ephemeral: true });
+  await interaction.reply({ content: 'Close request sent.', ephemeral: true });
   await interaction.channel.send({
     embeds: [new EmbedBuilder()
-      .setColor('#FEE75C').setTitle('📩 Close Request')
+      .setColor('#FEE75C').setTitle('Close Request')
       .setDescription(`<@${interaction.user.id}> has requested this ticket to be closed.`)
       .setTimestamp()],
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
+      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('Close Ticket').setStyle(ButtonStyle.Danger)
     )],
   });
 }

@@ -11,9 +11,9 @@ const duels   = new Map();
 
 function rpsButtons(gameId) {
   return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:rock`).setLabel('🪨 Rock').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:paper`).setLabel('📄 Paper').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:scissors`).setLabel('✂️ Scissors').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:rock`).setLabel('Rock').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:paper`).setLabel('Paper').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:scissors`).setLabel('Scissors').setStyle(ButtonStyle.Secondary),
   );
 }
 
@@ -27,7 +27,7 @@ function determineWinner(pick1, pick2) {
   return 'player2';
 }
 
-const EMOJI = { rock: '🪨', paper: '📄', scissors: '✂️' };
+const EMOJI = { rock: '', paper: '', scissors: '' };
 
 async function endLobby(messageId, client) {
   const lobby = lobbies.get(messageId);
@@ -40,13 +40,13 @@ async function endLobby(messageId, client) {
   // Disable the join button
   if (lobbyMsg) {
     const disabledRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('rps_join_disabled').setLabel('🎮 Join').setStyle(ButtonStyle.Primary).setDisabled(true),
+      new ButtonBuilder().setCustomId('rps_join_disabled').setLabel('Join').setStyle(ButtonStyle.Primary).setDisabled(true),
     );
     lobbyMsg.edit({ components: [disabledRow] }).catch(() => {});
   }
 
   if (lobby.participants.length < 2) {
-    channel?.send({ content: `❌ **${lobby.prize}** RPS ended — not enough participants (need at least 2).` }).catch(() => {});
+    channel?.send({ content: `**${lobby.prize}** RPS ended — not enough participants (need at least 2).` }).catch(() => {});
     lobbies.delete(messageId);
     return;
   }
@@ -63,9 +63,9 @@ async function endLobby(messageId, client) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('✂️ Rock Paper Scissors — FIGHT!')
+    .setTitle('Rock Paper Scissors — FIGHT!')
     .setDescription(
-      `🏆 Prize: **${lobby.prize}**\n\n` +
+      `Prize: **${lobby.prize}**\n\n` +
       `<@${p1}> vs <@${p2}>\n\n` +
       `Both players: pick your move below!\n` +
       `**Paper** beats Rock · **Rock** beats Scissors · **Scissors** beats Paper`
@@ -110,33 +110,33 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'rps'))
-      return interaction.reply({ content: '❌ Only **Staff Team** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Staff Team** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
 
-    // ── /rps start ────────────────────────────────────────────────────────────
+    // /rps start 
     if (sub === 'start') {
       const prize    = interaction.options.getString('prize');
       const durStr   = interaction.options.getString('duration');
       const ms       = parseTime(durStr);
-      if (!ms) return interaction.reply({ content: '❌ Invalid duration. Use e.g. `1m`, `5m`, `1h`.', ephemeral: true });
+      if (!ms) return interaction.reply({ content: 'Invalid duration. Use e.g. `1m`, `5m`, `1h`.', ephemeral: true });
 
       const endsAt   = Date.now() + ms;
       const endsTs   = Math.floor(endsAt / 1000);
 
       const embed = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('✂️ Rock Paper Scissors Event!')
+        .setTitle('Rock Paper Scissors Event!')
         .setDescription(
-          `🏆 **Prize:** ${prize}\n` +
-          `⏰ **Ends:** <t:${endsTs}:R>\n\n` +
+          `**Prize:** ${prize}\n` +
+          `**Ends:** <t:${endsTs}:R>\n\n` +
           `Click **Join** to enter! 2 players will be picked to face off.`
         )
         .setFooter({ text: `Hosted by ${interaction.user.tag}` })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`rps_join:placeholder`).setLabel('🎮 Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`rps_join:placeholder`).setLabel('Join').setStyle(ButtonStyle.Primary),
       );
 
       await interaction.reply({ embeds: [embed], components: [row] });
@@ -144,7 +144,7 @@ module.exports = {
 
       // Update button with real messageId
       const realRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`rps_join:${msg.id}`).setLabel('🎮 Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`rps_join:${msg.id}`).setLabel('Join').setStyle(ButtonStyle.Primary),
       );
       await msg.edit({ components: [realRow] }).catch(() => {});
 
@@ -160,12 +160,12 @@ module.exports = {
       setTimeout(() => endLobby(msg.id, interaction.client), ms);
     }
 
-    // ── /rps end ──────────────────────────────────────────────────────────────
+    // /rps end 
     if (sub === 'end') {
       // Find active lobby in this channel
       const entry = [...lobbies.entries()].find(([, l]) => l.channelId === interaction.channelId);
       if (!entry)
-        return interaction.reply({ content: '❌ No active RPS lobby in this channel.', ephemeral: true });
+        return interaction.reply({ content: 'No active RPS lobby in this channel.', ephemeral: true });
 
       const [msgId, lobby] = entry;
       lobby.ended = true;
@@ -175,19 +175,19 @@ module.exports = {
       const msg = await interaction.channel.messages.fetch(msgId).catch(() => null);
       if (msg) await msg.delete().catch(() => {});
 
-      return interaction.reply({ content: '🗑️ RPS lobby deleted.', ephemeral: true });
+      return interaction.reply({ content: 'RPS lobby deleted.', ephemeral: true });
     }
 
-    // ── /rps duel ─────────────────────────────────────────────────────────────
+    // /rps duel 
     if (sub === 'duel') {
       const user1 = interaction.options.getUser('user1');
       const user2 = interaction.options.getUser('user2');
       const prize = interaction.options.getString('prize') ?? null;
 
       if (user1.id === user2.id)
-        return interaction.reply({ content: '❌ You cannot duel the same user twice!', ephemeral: true });
+        return interaction.reply({ content: 'You cannot duel the same user twice!', ephemeral: true });
       if (user1.bot || user2.bot)
-        return interaction.reply({ content: '❌ Bots cannot participate in duels.', ephemeral: true });
+        return interaction.reply({ content: 'Bots cannot participate in duels.', ephemeral: true });
 
       const gameId = `duel_${interaction.id}`;
       duels.set(gameId, {
@@ -201,9 +201,9 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('✂️ Rock Paper Scissors — FIGHT!')
+        .setTitle('Rock Paper Scissors — FIGHT!')
         .setDescription(
-          (prize ? `🏆 Prize: **${prize}**\n\n` : '') +
+          (prize ? `Prize: **${prize}**\n\n` : '') +
           `<@${user1.id}> vs <@${user2.id}>\n\n` +
           `Both players: pick your move below!\n` +
           `**Paper** beats Rock · **Rock** beats Scissors · **Scissors** beats Paper`
@@ -219,18 +219,18 @@ module.exports = {
     }
   },
 
-  // ── Button handlers (called from interactionCreate) ───────────────────────
+  // Button handlers (called from interactionCreate) 
   async handleJoin(interaction) {
     const messageId = interaction.customId.split(':')[1];
     const lobby     = lobbies.get(messageId);
     if (!lobby || lobby.ended)
-      return interaction.reply({ content: '❌ This lobby is no longer active.', ephemeral: true });
+      return interaction.reply({ content: 'This lobby is no longer active.', ephemeral: true });
 
     if (lobby.participants.includes(interaction.user.id))
-      return interaction.reply({ content: '✅ You are already in this lobby!', ephemeral: true });
+      return interaction.reply({ content: 'You are already in this lobby!', ephemeral: true });
 
     lobby.participants.push(interaction.user.id);
-    return interaction.reply({ content: `✅ You joined the RPS lobby! (**${lobby.participants.length}** players so far)`, ephemeral: true });
+    return interaction.reply({ content: `You joined the RPS lobby! (**${lobby.participants.length}** players so far)`, ephemeral: true });
   },
 
   async handlePick(interaction) {
@@ -238,22 +238,22 @@ module.exports = {
     const duel = duels.get(gameId);
 
     if (!duel)
-      return interaction.reply({ content: '❌ This game is no longer active.', ephemeral: true });
+      return interaction.reply({ content: 'This game is no longer active.', ephemeral: true });
 
     const userId = interaction.user.id;
     if (userId !== duel.player1 && userId !== duel.player2)
-      return interaction.reply({ content: '❌ You are not a participant in this duel.', ephemeral: true });
+      return interaction.reply({ content: 'You are not a participant in this duel.', ephemeral: true });
 
     const isP1 = userId === duel.player1;
 
     if (isP1 && duel.pick1)
-      return interaction.reply({ content: `✅ You already picked **${EMOJI[duel.pick1]} ${duel.pick1}**!`, ephemeral: true });
+      return interaction.reply({ content: `You already picked **${EMOJI[duel.pick1]} ${duel.pick1}**!`, ephemeral: true });
     if (!isP1 && duel.pick2)
-      return interaction.reply({ content: `✅ You already picked **${EMOJI[duel.pick2]} ${duel.pick2}**!`, ephemeral: true });
+      return interaction.reply({ content: `You already picked **${EMOJI[duel.pick2]} ${duel.pick2}**!`, ephemeral: true });
 
     if (isP1) duel.pick1 = pick; else duel.pick2 = pick;
 
-    await interaction.reply({ content: `✅ You picked **${EMOJI[pick]} ${pick}**! Waiting for your opponent...`, ephemeral: true });
+    await interaction.reply({ content: `You picked **${EMOJI[pick]} ${pick}**! Waiting for your opponent...`, ephemeral: true });
 
     // Both picked → resolve
     if (duel.pick1 && duel.pick2) {
@@ -267,7 +267,7 @@ module.exports = {
         desc =
           `<@${duel.player1}> picked **${EMOJI[duel.pick1]} ${duel.pick1}**\n` +
           `<@${duel.player2}> picked **${EMOJI[duel.pick2]} ${duel.pick2}**\n\n` +
-          `🤝 It's a **tie**! No winner this time.`;
+          `It's a **tie**! No winner this time.`;
       } else {
         const winnerId = result === 'player1' ? duel.player1 : duel.player2;
         const loserId  = result === 'player1' ? duel.player2 : duel.player1;
@@ -276,21 +276,21 @@ module.exports = {
         desc =
           `<@${duel.player1}> picked **${EMOJI[duel.pick1]} ${duel.pick1}**\n` +
           `<@${duel.player2}> picked **${EMOJI[duel.pick2]} ${duel.pick2}**\n\n` +
-          `🏆 <@${winnerId}> wins with **${EMOJI[winPick]} ${winPick}** over **${EMOJI[losPick]} ${losPick}**!\n` +
-          `🎉 Prize: **${duel.prize}**`;
+          `<@${winnerId}> wins with **${EMOJI[winPick]} ${winPick}** over **${EMOJI[losPick]} ${losPick}**!\n` +
+          `Prize: **${duel.prize}**`;
       }
 
       const embed = new EmbedBuilder()
         .setColor(result === 'tie' ? '#FEE75C' : '#57F287')
-        .setTitle(result === 'tie' ? '🤝 It\'s a Tie!' : '🏆 We have a winner!')
+        .setTitle(result === 'tie' ? 'It\'s a Tie!' : 'We have a winner!')
         .setDescription(desc)
         .setTimestamp();
 
       // Disable buttons on original message
       const disabledRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('rps_rock_d').setLabel('🪨 Rock').setStyle(ButtonStyle.Secondary).setDisabled(true),
-        new ButtonBuilder().setCustomId('rps_paper_d').setLabel('📄 Paper').setStyle(ButtonStyle.Secondary).setDisabled(true),
-        new ButtonBuilder().setCustomId('rps_scissors_d').setLabel('✂️ Scissors').setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('rps_rock_d').setLabel('Rock').setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('rps_paper_d').setLabel('Paper').setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('rps_scissors_d').setLabel('Scissors').setStyle(ButtonStyle.Secondary).setDisabled(true),
       );
       interaction.message.edit({ components: [disabledRow] }).catch(() => {});
 

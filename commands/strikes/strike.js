@@ -25,7 +25,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has('Administrator'))
-      return message.reply('❌ Only **Admins** can use this command.');
+      return message.reply('Only **Admins** can use this command.');
 
     // ?strike remove @user {reason}  OR  ?strike @user {reason}
     let action = 'add';
@@ -47,13 +47,13 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const action = interaction.options.getSubcommand();
     const user = interaction.options.getUser('user');
     const reason = interaction.options.getString('reason');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-    if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
 
     await interaction.deferReply();
     await handleStrike(action, member, reason, interaction.user, interaction.guild, null, interaction);
@@ -78,7 +78,7 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
     const count = strikes[userId].count;
     const embed = new EmbedBuilder()
       .setColor('#FF0000')
-      .setTitle('⚠️ Staff Member Striked')
+      .setTitle('Staff Member Striked')
       .addFields(
         { name: 'Staff Member', value: `${targetMember.user.tag}`, inline: true },
         { name: 'Striked by', value: executor.tag, inline: true },
@@ -108,8 +108,8 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
     // remove
     if (strikes[userId].count <= 0)
       return channel
-        ? channel.send('❌ This user has no strikes to remove.')
-        : interaction.editReply('❌ This user has no strikes to remove.');
+        ? channel.send('This user has no strikes to remove.')
+        : interaction.editReply('This user has no strikes to remove.');
 
     strikes[userId].count -= 1;
     strikes[userId].entries.pop();
@@ -117,7 +117,7 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
 
     const embed = new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('✅ Strike Removed')
+      .setTitle('Strike Removed')
       .addFields(
         { name: 'Staff Member', value: `${targetMember.user.tag}`, inline: true },
         { name: 'Removed by', value: executor.tag, inline: true },
@@ -150,7 +150,7 @@ async function autoDemote(member, guild, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#FF0000')
-    .setTitle('📉 Auto-Demoted — 3 Strikes Reached')
+    .setTitle('Auto-Demoted — 3 Strikes Reached')
     .setDescription(`${member.user.tag} has been automatically demoted after reaching **3 strikes**.`)
     .addFields({ name: 'New Role', value: newRoleKey })
     .setTimestamp();

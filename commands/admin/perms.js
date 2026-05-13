@@ -20,18 +20,18 @@ const COMMAND_DESCRIPTIONS = {
 };
 
 const COMMAND_GROUPS = [
-  { name: '🔇 Moderation', cmds: ['mute', 'unmute', 'clear'] },
-  { name: '⚠️ Strikes',    cmds: ['strike', 'strikes'] },
-  { name: '🎉 Giveaways',  cmds: ['gstart', 'gend', 'greroll'] },
-  { name: '💬 General',    cmds: ['afk', 'help'] },
+  { name: 'Moderation', cmds: ['mute', 'unmute', 'clear'] },
+  { name: 'Strikes',    cmds: ['strike', 'strikes'] },
+  { name: 'Giveaways',  cmds: ['gstart', 'gend', 'greroll'] },
+  { name: 'General',    cmds: ['afk', 'help'] },
 ];
 
 const LEVEL_CHOICES = [
-  { label: '🌍 Everyone',    value: 'everyone'  },
-  { label: '🟢 JrHelper+',  value: 'jrHelper'  },
-  { label: '🟠 SrMod+',     value: 'srMod'     },
-  { label: '🔵 Staff Team', value: 'staffTeam' },
-  { label: '🔴 Admin Only', value: 'admin'     },
+  { label: 'Everyone',    value: 'everyone'  },
+  { label: 'JrHelper+',  value: 'jrHelper'  },
+  { label: 'SrMod+',     value: 'srMod'     },
+  { label: 'Staff Team', value: 'staffTeam' },
+  { label: 'Admin Only', value: 'admin'     },
 ];
 
 const ALL_CMDS = Object.keys(COMMAND_DEFAULTS);
@@ -45,13 +45,13 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has('Administrator'))
-      return message.reply('❌ Only **Administrators** can use this command.');
+      return message.reply('Only **Administrators** can use this command.');
     message.channel.send({ embeds: [buildListEmbed()] });
   },
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Administrators** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Administrators** can use this command.', ephemeral: true });
 
     const menu = new StringSelectMenuBuilder()
       .setCustomId('perms_select_command_a')
@@ -80,7 +80,7 @@ function setPerm(cmd, level) {
 function buildSetEmbed(cmd, level) {
   return new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('✅ Permission Updated')
+    .setTitle('Permission Updated')
     .addFields(
       { name: 'Command',        value: `\`${cmd}\``,                   inline: true },
       { name: 'New Permission', value: COMMAND_LABELS[level] ?? level,  inline: true },
@@ -101,7 +101,7 @@ function buildListEmbed() {
 
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('🔐 Command Permissions')
+    .setTitle('Command Permissions')
     .setDescription('Select a command below to change its permission level.\n\u200b')
     .addFields(fields)
     .setTimestamp();

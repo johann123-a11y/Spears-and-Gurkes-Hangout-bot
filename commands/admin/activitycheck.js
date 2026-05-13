@@ -18,7 +18,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const role = interaction.options.getRole('role');
 

@@ -16,7 +16,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!checkPerm(message.member, 'greroll'))
-      return message.reply('❌ Only **Staff Team** members can use this command.');
+      return message.reply('Only **Staff Team** members can use this command.');
 
     const msgId = args[0];
     const count = parseInt(args[1]) || 1;
@@ -27,7 +27,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'greroll'))
-      return interaction.reply({ content: '❌ Only **Staff Team** members can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Staff Team** members can use this command.', ephemeral: true });
 
     await interaction.deferReply();
     const msgId = interaction.options.getString('message_id');
@@ -41,7 +41,7 @@ async function rerollGiveaway(msgId, count, guild, replyChannel, interaction) {
   const gw = giveaways[msgId];
 
   if (!gw) {
-    const msg = '❌ Giveaway not found.';
+    const msg = 'Giveaway not found.';
     return interaction ? interaction.editReply(msg) : replyChannel.send(msg);
   }
 
@@ -49,13 +49,13 @@ async function rerollGiveaway(msgId, count, guild, replyChannel, interaction) {
   const gwMsg = channel ? await channel.messages.fetch(msgId).catch(() => null) : null;
 
   if (!gwMsg) {
-    const msg = '❌ Could not fetch the giveaway message.';
+    const msg = 'Could not fetch the giveaway message.';
     return interaction ? interaction.editReply(msg) : replyChannel.send(msg);
   }
 
   const participantIds = gw.participants || [];
   if (participantIds.length === 0) {
-    const msg = '❌ No participants in this giveaway.';
+    const msg = 'No participants in this giveaway.';
     return interaction ? interaction.editReply(msg) : replyChannel.send(msg);
   }
 
@@ -71,7 +71,7 @@ async function rerollGiveaway(msgId, count, guild, replyChannel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')
-    .setTitle(`🎉 Giveaway Rerolled — ${gw.prize}`)
+    .setTitle(`Giveaway Rerolled — ${gw.prize}`)
     .setDescription(`**New Winner(s):** ${winnerMentions}`)
     .setTimestamp();
 

@@ -9,9 +9,9 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'hereping'))
-      return interaction.reply({ content: '❌ Only **Staff Team** members can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Staff Team** members can use this command.', ephemeral: true });
 
-    await interaction.reply({ content: '✅ Sent!', ephemeral: true });
+    await interaction.reply({ content: 'Sent!', ephemeral: true });
     await interaction.channel.send({ content: '@here', allowedMentions: { parse: ['everyone'] } });
   },
 };

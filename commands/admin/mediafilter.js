@@ -22,7 +22,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
-      return interaction.reply({ content: '❌ Only **Administrators** can use this.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Administrators** can use this.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
 
@@ -37,7 +37,7 @@ module.exports = {
       data.enabled = true;
       writeData('mediaFilter.json', data);
       return interaction.reply({
-        embeds: [new EmbedBuilder().setColor('#57F287').setTitle('✅ Link Filter Enabled')
+        embeds: [new EmbedBuilder().setColor('#57F287').setTitle('Link Filter Enabled')
           .setDescription('Links are now **blocked** everywhere except in allowed channels.').setTimestamp()],
         ephemeral: true,
       });
@@ -47,7 +47,7 @@ module.exports = {
       data.enabled = false;
       writeData('mediaFilter.json', data);
       return interaction.reply({
-        embeds: [new EmbedBuilder().setColor('#ED4245').setTitle('🔴 Link Filter Disabled')
+        embeds: [new EmbedBuilder().setColor('#ED4245').setTitle('Link Filter Disabled')
           .setDescription('Links are now allowed everywhere.').setTimestamp()],
         ephemeral: true,
       });
@@ -56,11 +56,11 @@ module.exports = {
     if (sub === 'add') {
       const ch = interaction.options.getChannel('channel');
       if (data.allowedChannels.includes(ch.id))
-        return interaction.reply({ content: `❌ <#${ch.id}> is already in the list.`, ephemeral: true });
+        return interaction.reply({ content: `<#${ch.id}> is already in the list.`, ephemeral: true });
       data.allowedChannels.push(ch.id);
       writeData('mediaFilter.json', data);
       return interaction.reply({
-        embeds: [new EmbedBuilder().setColor('#57F287').setTitle('✅ Channel Added')
+        embeds: [new EmbedBuilder().setColor('#57F287').setTitle('Channel Added')
           .setDescription(`Links are now allowed in <#${ch.id}>.`).setTimestamp()],
         ephemeral: true,
       });
@@ -69,11 +69,11 @@ module.exports = {
     if (sub === 'remove') {
       const ch = interaction.options.getChannel('channel');
       if (!data.allowedChannels.includes(ch.id))
-        return interaction.reply({ content: `❌ <#${ch.id}> is not in the list.`, ephemeral: true });
+        return interaction.reply({ content: `<#${ch.id}> is not in the list.`, ephemeral: true });
       data.allowedChannels = data.allowedChannels.filter(id => id !== ch.id);
       writeData('mediaFilter.json', data);
       return interaction.reply({
-        embeds: [new EmbedBuilder().setColor('#FEE75C').setTitle('🗑️ Channel Removed')
+        embeds: [new EmbedBuilder().setColor('#FEE75C').setTitle('Channel Removed')
           .setDescription(`Links are no longer allowed in <#${ch.id}>.`).setTimestamp()],
         ephemeral: true,
       });
@@ -84,9 +84,9 @@ module.exports = {
         ? data.allowedChannels.map(id => `<#${id}>`).join('\n')
         : '*(none set)*';
       return interaction.reply({
-        embeds: [new EmbedBuilder().setColor('#5865F2').setTitle('🔗 Link Filter Info')
+        embeds: [new EmbedBuilder().setColor('#5865F2').setTitle('Link Filter Info')
           .addFields(
-            { name: 'Status',           value: data.enabled ? '✅ Enabled' : '🔴 Disabled', inline: true },
+            { name: 'Status',           value: data.enabled ? 'Enabled' : 'Disabled', inline: true },
             { name: 'Allowed Channels', value: channels },
           ).setFooter({ text: 'Staff with ManageMessages are always exempt' }).setTimestamp()],
         ephemeral: true,

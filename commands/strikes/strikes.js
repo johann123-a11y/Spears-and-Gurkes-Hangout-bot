@@ -18,7 +18,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const user    = interaction.options.getUser('user');
     const strikes = readData('strikes.json');
@@ -34,7 +34,7 @@ function buildEmbed(user, strikes) {
 
   const embed = new EmbedBuilder()
     .setColor(count >= 3 ? '#FF0000' : count > 0 ? '#FEE75C' : '#57F287')
-    .setTitle(`⚠️ Strikes — ${user.tag}`)
+    .setTitle(`Strikes — ${user.tag}`)
     .addFields({ name: 'Total Strikes', value: `${count}/3`, inline: true })
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();

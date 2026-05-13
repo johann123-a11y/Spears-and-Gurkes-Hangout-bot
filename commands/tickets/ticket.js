@@ -52,7 +52,7 @@ module.exports = {
     .setName('ticket')
     .setDescription('Ticket system')
 
-    // ── /ticket perms ─────────────────────────────────────────────────────────
+    // /ticket perms 
     .addSubcommandGroup(group =>
       group.setName('perms')
         .setDescription('Manage which roles get pinged/can view tickets')
@@ -74,7 +74,7 @@ module.exports = {
         )
     )
 
-    // ── /ticket logs ──────────────────────────────────────────────────────────
+    // /ticket logs 
     .addSubcommandGroup(group =>
       group.setName('logs')
         .setDescription('Manage the ticket log channel')
@@ -91,73 +91,73 @@ module.exports = {
         )
     )
 
-    // ── /ticket setup ─────────────────────────────────────────────────────────
+    // /ticket setup 
     .addSubcommand(sub =>
       sub.setName('setup')
         .setDescription('Create a new ticket panel (opens a form) [Admin]')
     )
 
-    // ── /ticket description ───────────────────────────────────────────────────
+    // /ticket description 
     .addSubcommand(sub =>
       sub.setName('description')
         .setDescription('Set title, text & rules shown above the buttons [Admin]')
     )
 
-    // ── /ticket group ─────────────────────────────────────────────────────────
+    // /ticket group 
     .addSubcommand(sub =>
       sub.setName('group')
         .setDescription('Send combined panels as an embed in this channel [Admin]')
     )
 
-    // ── /ticket send ──────────────────────────────────────────────────────────
+    // /ticket send 
     .addSubcommand(sub =>
       sub.setName('send')
         .setDescription('Send a single panel to this channel [Admin]')
         .addStringOption(o => o.setName('panel').setDescription('Panel name').setRequired(true))
     )
 
-    // ── /ticket info ──────────────────────────────────────────────────────────
+    // /ticket info 
     .addSubcommand(sub =>
       sub.setName('info')
         .setDescription('Overview of all panels — edit/delete [Admin] or view current ticket [Staff]')
     )
 
-    // ── /ticket add ───────────────────────────────────────────────────────────
+    // /ticket add 
     .addSubcommand(sub =>
       sub.setName('add')
         .setDescription('Add a user to the current ticket [Staff]')
         .addUserOption(o => o.setName('user').setDescription('User to add').setRequired(true))
     )
 
-    // ── /ticket remove ────────────────────────────────────────────────────────
+    // /ticket remove 
     .addSubcommand(sub =>
       sub.setName('remove')
         .setDescription('Remove a user from the current ticket [Staff]')
         .addUserOption(o => o.setName('user').setDescription('User to remove').setRequired(true))
     )
 
-    // ── /ticket rename ────────────────────────────────────────────────────────
+    // /ticket rename 
     .addSubcommand(sub =>
       sub.setName('rename')
         .setDescription('Rename the current ticket channel [Staff]')
         .addStringOption(o => o.setName('name').setDescription('New channel name').setRequired(true))
     )
 
-    // ── /ticket move ──────────────────────────────────────────────────────────
+    // /ticket move 
     .addSubcommand(sub =>
       sub.setName('move')
         .setDescription('Move this ticket to another category [Staff]')
         .addChannelOption(o => o.setName('category').setDescription('Target category').setRequired(true))
     )
 
-    // ── /ticket close ─────────────────────────────────────────────────────────
+    // /ticket close 
     .addSubcommand(sub =>
       sub.setName('close')
         .setDescription('Close this ticket in 5s [Staff]')
         .addStringOption(o => o.setName('reason').setDescription('Reason for closing').setRequired(true))
     )
 
-    // ── /ticket requestclose ──────────────────────────────────────────────────
+    // /ticket requestclose 
     .addSubcommand(sub =>
       sub.setName('requestclose')
         .setDescription('Ask staff to close the ticket')
@@ -165,41 +165,41 @@ module.exports = {
     ),
 
   async execute(message) {
-    message.reply('❌ Please use `/ticket` slash commands for the ticket system.');
+    message.reply('Please use `/ticket` slash commands for the ticket system.');
   },
 
   async executeSlash(interaction) {
     const group = interaction.options.getSubcommandGroup(false);
     const sub   = interaction.options.getSubcommand();
 
-    // ── perms group ───────────────────────────────────────────────────────────
+    // perms group 
     if (group === 'perms') {
       if (!interaction.member.permissions.has('Administrator'))
-        return interaction.reply({ content: '❌ Only **Administrators** can manage permissions.', ephemeral: true });
+        return interaction.reply({ content: 'Only **Administrators** can manage permissions.', ephemeral: true });
       if (sub === 'ping')  return handlePermsPing(interaction);
       if (sub === 'view')  return handlePermsView(interaction);
       if (sub === 'info')  return handlePermsInfo(interaction);
       if (sub === 'clear') return handlePermsClear(interaction);
     }
 
-    // ── logs group ────────────────────────────────────────────────────────────
+    // logs group 
     if (group === 'logs') {
       if (!interaction.member.permissions.has('Administrator'))
-        return interaction.reply({ content: '❌ Only **Administrators** can manage logs.', ephemeral: true });
+        return interaction.reply({ content: 'Only **Administrators** can manage logs.', ephemeral: true });
       if (sub === 'set')    return handleLogsSet(interaction);
       if (sub === 'info')   return handleLogsInfo(interaction);
       if (sub === 'remove') return handleLogsRemove(interaction);
     }
 
-    // ── admin subcommands ─────────────────────────────────────────────────────
+    // admin subcommands 
     const adminOnly = ['setup', 'description', 'group', 'send'];
     if (adminOnly.includes(sub) && !interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Administrators** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Administrators** can use this command.', ephemeral: true });
 
-    // ── staff subcommands ─────────────────────────────────────────────────────
+    // staff subcommands 
     const staffOnly = ['add', 'remove', 'rename', 'move', 'close'];
     if (staffOnly.includes(sub) && !isStaff(interaction.member))
-      return interaction.reply({ content: '❌ Only **Staff** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Staff** can use this command.', ephemeral: true });
 
     if (sub === 'setup')          return handleSetup(interaction);
     if (sub === 'description')    return handleDescription(interaction);
@@ -215,11 +215,11 @@ module.exports = {
   },
 };
 
-// ── /ticket setup ─────────────────────────────────────────────────────────────
+// /ticket setup 
 async function handleSetup(interaction) {
   const modal = new ModalBuilder()
     .setCustomId('ticket_setup_modal')
-    .setTitle('🎫 Ticket Panel Setup')
+    .setTitle('Ticket Panel Setup')
     .addComponents(
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
@@ -232,9 +232,9 @@ async function handleSetup(interaction) {
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
           .setCustomId('setup_label')
-          .setLabel('Button Text (e.g. 🔧 Support)')
+          .setLabel('Button Text (e.g. Support)')
           .setStyle(TextInputStyle.Short)
-          .setPlaceholder('🔧 Support')
+          .setPlaceholder('Support')
           .setRequired(true)
       ),
       new ActionRowBuilder().addComponents(
@@ -266,7 +266,7 @@ async function handleSetup(interaction) {
   await interaction.showModal(modal);
 }
 
-// ── /ticket description ───────────────────────────────────────────────────────
+// /ticket description 
 async function handleDescription(interaction) {
   const tickets = readData('tickets.json');
   const current = tickets.description || {};
@@ -314,12 +314,12 @@ async function handleDescription(interaction) {
   await interaction.showModal(modal);
 }
 
-// ── /ticket group ─────────────────────────────────────────────────────────────
+// /ticket group 
 async function handleGroup(interaction) {
   const tickets = readData('tickets.json');
   const panels  = Object.values(tickets.panels || {});
   if (panels.length === 0)
-    return interaction.reply({ content: '❌ No panels configured. Use `/ticket setup` first.', ephemeral: true });
+    return interaction.reply({ content: 'No panels configured. Use `/ticket setup` first.', ephemeral: true });
 
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId('ticket_group_select')
@@ -340,23 +340,23 @@ async function handleGroup(interaction) {
   });
 }
 
-// ── /ticket send ──────────────────────────────────────────────────────────────
+// /ticket send 
 async function handleSend(interaction) {
   const panelName = interaction.options.getString('panel');
   const tickets   = readData('tickets.json');
   const panel     = tickets.panels?.[getPanelId(panelName)];
-  if (!panel) return interaction.reply({ content: `❌ Panel \`${panelName}\` not found.`, ephemeral: true });
+  if (!panel) return interaction.reply({ content: `Panel \`${panelName}\` not found.`, ephemeral: true });
 
   const button = new ButtonBuilder()
     .setCustomId(`ticket_open:${panel.id}`)
     .setLabel(panel.buttonLabel)
     .setStyle(STYLES[panel.buttonStyle] || ButtonStyle.Primary);
 
-  await interaction.reply({ content: '✅ Panel sent!', ephemeral: true });
+  await interaction.reply({ content: 'Panel sent!', ephemeral: true });
   await interaction.channel.send({ embeds: [buildDescEmbed(tickets.description)], components: [new ActionRowBuilder().addComponents(button)] });
 }
 
-// ── /ticket info ──────────────────────────────────────────────────────────────
+// /ticket info 
 async function handleInfo(interaction) {
   const tickets     = readData('tickets.json');
   const openTickets = readData('openTickets.json');
@@ -366,7 +366,7 @@ async function handleInfo(interaction) {
   const ticket = openTickets[interaction.channelId];
   if (ticket && !interaction.member.permissions.has('Administrator')) {
     const embed = new EmbedBuilder()
-      .setColor('#5865F2').setTitle('🎫 Ticket Info')
+      .setColor('#5865F2').setTitle('Ticket Info')
       .addFields(
         { name: 'Panel',     value: ticket.panelName,                                        inline: true },
         { name: 'Opened by', value: `<@${ticket.userId}>`,                                   inline: true },
@@ -381,7 +381,7 @@ async function handleInfo(interaction) {
   return sendTicketOverview(interaction, 'reply');
 }
 
-// ── Shared: build & send the full ticket overview ─────────────────────────────
+// Shared: build & send the full ticket overview 
 async function sendTicketOverview(interaction, method = 'reply') {
   const tickets = readData('tickets.json');
   const panels  = Object.values(tickets.panels || {});
@@ -405,13 +405,13 @@ async function sendTicketOverview(interaction, method = 'reply') {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('🎫 Ticket System Overview')
+    .setTitle('Ticket System Overview')
     .addFields(
-      { name: `🎫 Panels (${panels.length})`,   value: panelsValue },
-      { name: '📝 Description',                  value: descValue },
-      { name: '🔔 Ping Roles',                   value: perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
-      { name: '👁️ View Roles',                   value: perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
-      { name: '📋 Log Channel',                  value: tickets.logChannelId ? `<#${tickets.logChannelId}>` : 'Not set', inline: true },
+      { name: `Panels (${panels.length})`,   value: panelsValue },
+      { name: 'Description',                  value: descValue },
+      { name: 'Ping Roles',                   value: perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
+      { name: 'View Roles',                   value: perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
+      { name: 'Log Channel',                  value: tickets.logChannelId ? `<#${tickets.logChannelId}>` : 'Not set', inline: true },
     )
     .setFooter({ text: 'Select a panel below • Use buttons to manage settings' })
     .setTimestamp();
@@ -422,7 +422,7 @@ async function sendTicketOverview(interaction, method = 'reply') {
     components.push(new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId('ticket_info_panel_picker')
-        .setPlaceholder('🎫 Select a panel to edit or delete...')
+        .setPlaceholder('Select a panel to edit or delete...')
         .addOptions(panels.map(p =>
           new StringSelectMenuOptionBuilder()
             .setLabel(p.name)
@@ -433,9 +433,9 @@ async function sendTicketOverview(interaction, method = 'reply') {
   }
 
   components.push(new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('ticket_info_nav_desc').setLabel('📝 Description').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('ticket_info_nav_perms').setLabel('🔐 Permissions').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('ticket_info_nav_logs').setLabel('📋 Log Channel').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('ticket_info_nav_desc').setLabel('Description').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('ticket_info_nav_perms').setLabel('Permissions').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('ticket_info_nav_logs').setLabel('Log Channel').setStyle(ButtonStyle.Secondary),
   ));
 
   const payload = { embeds: [embed], components, ephemeral: true };
@@ -443,10 +443,10 @@ async function sendTicketOverview(interaction, method = 'reply') {
   return interaction.reply(payload);
 }
 
-// ── /ticket add ───────────────────────────────────────────────────────────────
+// /ticket add 
 async function handleAdd(interaction) {
   const ticket = readData('openTickets.json')[interaction.channelId];
-  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  if (!ticket) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
 
   const user = interaction.options.getUser('user');
   try {
@@ -455,7 +455,7 @@ async function handleAdd(interaction) {
       [PermissionFlagsBits.SendMessages]:       true,
       [PermissionFlagsBits.ReadMessageHistory]: true,
     });
-    interaction.reply({ content: `✅ **${user.tag}** has been added to this ticket.` });
+    interaction.reply({ content: `**${user.tag}** has been added to this ticket.` });
     sendLog(interaction.client, {
       action: 'Ticket Member Added',
       executor: interaction.user.tag,
@@ -464,19 +464,19 @@ async function handleAdd(interaction) {
       color: '#57F287',
     });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
+    interaction.reply({ content: `Failed: ${err.message}`, ephemeral: true });
   }
 }
 
-// ── /ticket remove ────────────────────────────────────────────────────────────
+// /ticket remove 
 async function handleRemove(interaction) {
   const ticket = readData('openTickets.json')[interaction.channelId];
-  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  if (!ticket) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
 
   const user = interaction.options.getUser('user');
   try {
     await interaction.channel.permissionOverwrites.delete(user.id);
-    interaction.reply({ content: `✅ **${user.tag}** has been removed from this ticket.` });
+    interaction.reply({ content: `**${user.tag}** has been removed from this ticket.` });
     sendLog(interaction.client, {
       action: 'Ticket Member Removed',
       executor: interaction.user.tag,
@@ -485,14 +485,14 @@ async function handleRemove(interaction) {
       color: '#FEE75C',
     });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
+    interaction.reply({ content: `Failed: ${err.message}`, ephemeral: true });
   }
 }
 
-// ── /ticket rename ────────────────────────────────────────────────────────────
+// /ticket rename 
 async function handleRename(interaction) {
   const ticket = readData('openTickets.json')[interaction.channelId];
-  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  if (!ticket) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
 
   const oldName = interaction.channel.name;
   const newName = interaction.options.getString('name')
@@ -502,12 +502,12 @@ async function handleRename(interaction) {
     .replace(/-+/g, '-')       // multiple dashes → single dash
     .replace(/^-|-$/g, '');    // trim leading/trailing dashes
 
-  if (!newName) return interaction.reply({ content: '❌ Invalid name.', ephemeral: true });
+  if (!newName) return interaction.reply({ content: 'Invalid name.', ephemeral: true });
 
   await interaction.deferReply();
   try {
     await interaction.channel.setName(newName);
-    interaction.editReply({ content: `✅ Ticket renamed to **${newName}**.` });
+    interaction.editReply({ content: `Ticket renamed to **${newName}**.` });
     sendLog(interaction.client, {
       action: 'Ticket Renamed',
       executor: interaction.user.tag,
@@ -516,23 +516,23 @@ async function handleRename(interaction) {
       color: '#5865F2',
     });
   } catch (err) {
-    interaction.editReply({ content: `❌ Failed: ${err.message}` });
+    interaction.editReply({ content: `Failed: ${err.message}` });
   }
 }
 
-// ── /ticket move ──────────────────────────────────────────────────────────────
+// /ticket move 
 async function handleMove(interaction) {
   const ticket = readData('openTickets.json')[interaction.channelId];
-  if (!ticket) return interaction.reply({ content: '❌ This is not a ticket channel.', ephemeral: true });
+  if (!ticket) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
 
   const category = interaction.options.getChannel('category');
   if (category.type !== ChannelType.GuildCategory)
-    return interaction.reply({ content: '❌ Please select a **Category**.', ephemeral: true });
+    return interaction.reply({ content: 'Please select a **Category**.', ephemeral: true });
 
   const oldCategory = interaction.channel.parent?.name || '—';
   try {
     await interaction.channel.setParent(category.id, { lockPermissions: false });
-    interaction.reply({ content: `✅ Ticket moved to **${category.name}**.` });
+    interaction.reply({ content: `Ticket moved to **${category.name}**.` });
     sendLog(interaction.client, {
       action: 'Ticket Moved',
       executor: interaction.user.tag,
@@ -541,44 +541,44 @@ async function handleMove(interaction) {
       color: '#5865F2',
     });
   } catch (err) {
-    interaction.reply({ content: `❌ Failed: ${err.message}`, ephemeral: true });
+    interaction.reply({ content: `Failed: ${err.message}`, ephemeral: true });
   }
 }
 
-// ── /ticket close ─────────────────────────────────────────────────────────────
+// /ticket close 
 async function handleClose(interaction, forcedReason, forcedBy) {
   const reason     = forcedReason || interaction.options?.getString('reason') || 'No reason provided.';
   const by         = forcedBy || interaction.user;
   const openTickets = readData('openTickets.json');
 
   if (!openTickets[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
+    return interaction.reply({ content: 'This is not an active ticket channel.', ephemeral: true });
 
-  await interaction.reply({ content: '🔒 Closing ticket in **5 seconds**...' });
+  await interaction.reply({ content: 'Closing ticket in **5 seconds**...' });
   await closeTicket(interaction.channel, reason, by, interaction.client);
 }
 
-// ── /ticket requestclose ──────────────────────────────────────────────────────
+// /ticket requestclose 
 async function handleRequestClose(interaction) {
   if (!readData('openTickets.json')[interaction.channelId])
-    return interaction.reply({ content: '❌ This is not an active ticket channel.', ephemeral: true });
+    return interaction.reply({ content: 'This is not an active ticket channel.', ephemeral: true });
 
   const reason = interaction.options.getString('reason') || 'No reason provided.';
 
-  await interaction.reply({ content: '✅ Close request sent.', ephemeral: true });
+  await interaction.reply({ content: 'Close request sent.', ephemeral: true });
   await interaction.channel.send({
     embeds: [new EmbedBuilder()
-      .setColor('#FEE75C').setTitle('📩 Close Request')
+      .setColor('#FEE75C').setTitle('Close Request')
       .setDescription(`<@${interaction.user.id}> has requested this ticket to be closed.`)
       .addFields({ name: 'Reason', value: reason })
       .setTimestamp()],
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
+      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('Close Ticket').setStyle(ButtonStyle.Danger)
     )],
   });
 }
 
-// ── /ticket logs ──────────────────────────────────────────────────────────────
+// /ticket logs 
 async function handleLogsSet(interaction) {
   const channel = interaction.options.getChannel('channel');
   const tickets = readData('tickets.json');
@@ -586,7 +586,7 @@ async function handleLogsSet(interaction) {
   writeData('tickets.json', tickets);
   interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('✅ Ticket Log Channel Set')
+      .setColor('#57F287').setTitle('Ticket Log Channel Set')
       .setDescription(`All ticket events will be logged to <#${channel.id}>.`)
       .setTimestamp()],
     ephemeral: true,
@@ -598,7 +598,7 @@ async function handleLogsInfo(interaction) {
 
   const removeBtn = new ButtonBuilder()
     .setCustomId('ticket_logs_remove_btn')
-    .setLabel('🗑️ Remove Log Channel')
+    .setLabel('Remove Log Channel')
     .setStyle(ButtonStyle.Danger)
     .setDisabled(!tickets.logChannelId);
 
@@ -609,8 +609,8 @@ async function handleLogsInfo(interaction) {
 
   interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#5865F2').setTitle('📋 Ticket Log Channel')
-      .setDescription(tickets.logChannelId ? `Logs are sent to <#${tickets.logChannelId}>.` : '❌ No log channel configured.')
+      .setColor('#5865F2').setTitle('Ticket Log Channel')
+      .setDescription(tickets.logChannelId ? `Logs are sent to <#${tickets.logChannelId}>.` : 'No log channel configured.')
       .setFooter({ text: 'Use the menu below to set a new channel, or remove the current one.' })
       .setTimestamp()],
     components: [
@@ -624,13 +624,13 @@ async function handleLogsInfo(interaction) {
 async function handleLogsRemove(interaction) {
   const tickets = readData('tickets.json');
   if (!tickets.logChannelId)
-    return interaction.reply({ content: '❌ No log channel is currently set.', ephemeral: true });
+    return interaction.reply({ content: 'No log channel is currently set.', ephemeral: true });
   tickets.logChannelId = null;
   writeData('tickets.json', tickets);
-  interaction.reply({ content: '✅ Ticket log channel removed.', ephemeral: true });
+  interaction.reply({ content: 'Ticket log channel removed.', ephemeral: true });
 }
 
-// ── /ticket perms ─────────────────────────────────────────────────────────────
+// /ticket perms 
 async function handlePermsPing(interaction) {
   const role    = interaction.options.getRole('role');
   const tickets = readData('tickets.json');
@@ -638,9 +638,9 @@ async function handlePermsPing(interaction) {
   if (!tickets.perms.pingRoles.includes(role.id)) {
     tickets.perms.pingRoles.push(role.id);
     writeData('tickets.json', tickets);
-    interaction.reply({ content: `✅ **${role.name}** will be pinged when a ticket opens.`, ephemeral: true });
+    interaction.reply({ content: `**${role.name}** will be pinged when a ticket opens.`, ephemeral: true });
   } else {
-    interaction.reply({ content: `ℹ️ **${role.name}** is already a ping role.`, ephemeral: true });
+    interaction.reply({ content: `ℹ**${role.name}** is already a ping role.`, ephemeral: true });
   }
 }
 
@@ -651,9 +651,9 @@ async function handlePermsView(interaction) {
   if (!tickets.perms.viewRoles.includes(role.id)) {
     tickets.perms.viewRoles.push(role.id);
     writeData('tickets.json', tickets);
-    interaction.reply({ content: `✅ **${role.name}** can now see all ticket channels.`, ephemeral: true });
+    interaction.reply({ content: `**${role.name}** can now see all ticket channels.`, ephemeral: true });
   } else {
-    interaction.reply({ content: `ℹ️ **${role.name}** already has view access.`, ephemeral: true });
+    interaction.reply({ content: `ℹ**${role.name}** already has view access.`, ephemeral: true });
   }
 }
 
@@ -664,21 +664,21 @@ async function handlePermsInfo(interaction) {
   const viewList = perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None';
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('ticket_perms_addping').setLabel('➕ Ping').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId('ticket_perms_removeping').setLabel('➖ Ping').setStyle(ButtonStyle.Secondary).setDisabled(perms.pingRoles.length === 0),
-    new ButtonBuilder().setCustomId('ticket_perms_addview').setLabel('➕ View').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('ticket_perms_removeview').setLabel('➖ View').setStyle(ButtonStyle.Secondary).setDisabled(perms.viewRoles.length === 0),
-    new ButtonBuilder().setCustomId('ticket_perms_clear').setLabel('🗑️ Clear All').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId('ticket_perms_addping').setLabel('Ping').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId('ticket_perms_removeping').setLabel('Ping').setStyle(ButtonStyle.Secondary).setDisabled(perms.pingRoles.length === 0),
+    new ButtonBuilder().setCustomId('ticket_perms_addview').setLabel('View').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('ticket_perms_removeview').setLabel('View').setStyle(ButtonStyle.Secondary).setDisabled(perms.viewRoles.length === 0),
+    new ButtonBuilder().setCustomId('ticket_perms_clear').setLabel('Clear All').setStyle(ButtonStyle.Danger),
   );
 
   interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#5865F2').setTitle('🔐 Ticket Permission Settings')
+      .setColor('#5865F2').setTitle('Ticket Permission Settings')
       .addFields(
-        { name: '🔔 Ping Roles (notified on open)', value: pingList },
-        { name: '👁️ View Roles (can see all tickets)', value: viewList },
+        { name: 'Ping Roles (notified on open)', value: pingList },
+        { name: 'View Roles (can see all tickets)', value: viewList },
       )
-      .setFooter({ text: '➕ Ping / ➕ View to add  •  ➖ to remove  •  🗑️ to clear all' })
+      .setFooter({ text: 'Ping / View to add  •  to remove  •  to clear all' })
       .setTimestamp()],
     components: [row],
     ephemeral: true,
@@ -689,7 +689,7 @@ async function handlePermsClear(interaction) {
   const tickets = readData('tickets.json');
   tickets.perms = { pingRoles: [], viewRoles: [] };
   writeData('tickets.json', tickets);
-  interaction.reply({ content: '✅ All ticket ping and view role settings cleared.', ephemeral: true });
+  interaction.reply({ content: 'All ticket ping and view role settings cleared.', ephemeral: true });
 }
 
 module.exports.handleClose        = handleClose;

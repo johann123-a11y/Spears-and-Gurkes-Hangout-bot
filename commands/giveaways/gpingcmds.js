@@ -14,11 +14,11 @@ function makeCmd(name, description) {
 }
 
 async function send(interaction, content) {
-  await interaction.reply({ content: '✅ Sent!', ephemeral: true });
+  await interaction.reply({ content: 'Sent!', ephemeral: true });
   await interaction.channel.send({ content, allowedMentions: { parse: ['roles'] } });
 }
 
-// ── /gping ────────────────────────────────────────────────────────────────────
+// /gping 
 const gpingCmd = {
   name: 'gping',
   data: makeCmd('gping', 'Send a giveaway ping'),
@@ -29,7 +29,7 @@ const gpingCmd = {
   },
 };
 
-// ── /qping ────────────────────────────────────────────────────────────────────
+// /qping 
 const qpingCmd = {
   name: 'qping',
   data: makeCmd('qping', 'Send a quickdrop ping'),
@@ -40,7 +40,7 @@ const qpingCmd = {
   },
 };
 
-// ── /gpingdaily ───────────────────────────────────────────────────────────────
+// /gpingdaily 
 const gpingdailyCmd = {
   name: 'gpingdaily',
   data: makeCmd('gpingdaily', 'Send a daily giveaway ping'),
@@ -51,7 +51,7 @@ const gpingdailyCmd = {
   },
 };
 
-// ── /gpingweekly ──────────────────────────────────────────────────────────────
+// /gpingweekly 
 const gpingweeklyCmd = {
   name: 'gpingweekly',
   data: makeCmd('gpingweekly', 'Send a weekly giveaway ping'),
@@ -62,7 +62,7 @@ const gpingweeklyCmd = {
   },
 };
 
-// ── /partnerping ──────────────────────────────────────────────────────────────
+// /partnerping 
 const partnerpingCmd = {
   name: 'partnerping',
   data: makeCmd('partnerping', 'Send a partner ping'),

@@ -53,7 +53,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has('Administrator'))
-      return message.reply('❌ Only **Administrators** can use this command.');
+      return message.reply('Only **Administrators** can use this command.');
 
     const sub = args[0]?.toLowerCase();
 
@@ -70,7 +70,7 @@ module.exports = {
 
       const matched = ROLE_KEYS.find(k => k.toLowerCase() === slot);
       if (!matched)
-        return message.reply(`❌ Unknown slot. Available: \`${ROLE_KEYS.join('`, `')}\``);
+        return message.reply(`Unknown slot. Available: \`${ROLE_KEYS.join('`, `')}\``);
 
       setRole(matched, role.id);
       return message.channel.send({ embeds: [buildSetEmbed(matched, role)] });
@@ -81,7 +81,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Administrators** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Administrators** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
 
@@ -121,7 +121,7 @@ function setRole(slot, roleId) {
 function buildSetEmbed(slot, role) {
   return new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('✅ Role Set')
+    .setTitle('Role Set')
     .addFields(
       { name: 'Slot',    value: slot,      inline: true },
       { name: 'Role',    value: `${role}`, inline: true },
@@ -135,12 +135,12 @@ function buildListEmbed() {
   const fields = ROLE_KEYS.map(key => {
     const id  = config.roles[key];
     const set = id && !id.endsWith('_ROLE_ID');
-    return { name: key, value: set ? `<@&${id}>` : '❌ Not set', inline: true };
+    return { name: key, value: set ? `<@&${id}>` : 'Not set', inline: true };
   });
 
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('⚙️ Role Configuration')
+    .setTitle('Role Configuration')
     .setDescription('Select a slot below to change its role assignment.\n\u200b')
     .addFields(fields)
     .setTimestamp();

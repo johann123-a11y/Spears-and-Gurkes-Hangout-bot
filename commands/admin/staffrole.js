@@ -22,7 +22,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
-      return interaction.reply({ content: '❌ Only **Administrators** can use this.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Administrators** can use this.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
     const data = readData('staffConfig.json');
@@ -34,7 +34,7 @@ module.exports = {
       return interaction.reply({
         embeds: [new EmbedBuilder()
           .setColor('#57F287')
-          .setTitle('✅ Staff Role Set')
+          .setTitle('Staff Role Set')
           .setDescription(`<@&${role.id}> can now use all staff commands.`)
           .setTimestamp()],
         ephemeral: true,
@@ -46,7 +46,7 @@ module.exports = {
       return interaction.reply({
         embeds: [new EmbedBuilder()
           .setColor('#5865F2')
-          .setTitle('👥 Staff Role')
+          .setTitle('Staff Role')
           .addFields({ name: 'Current Staff Role', value: roleId ? `<@&${roleId}>` : '*(not set)*' })
           .setTimestamp()],
         ephemeral: true,

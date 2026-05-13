@@ -15,14 +15,14 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const user    = interaction.options.getUser('user');
     const oldRole = interaction.options.getRole('oldrole');
     const newRole = interaction.options.getRole('newrole');
     const reason  = interaction.options.getString('reason');
     const member  = await interaction.guild.members.fetch(user.id).catch(() => null);
-    if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
 
     await interaction.deferReply();
 
@@ -30,12 +30,12 @@ module.exports = {
       await member.roles.remove(oldRole.id);
       await member.roles.add(newRole.id);
     } catch (err) {
-      return interaction.editReply({ content: `❌ Could not change roles: ${err.message}` });
+      return interaction.editReply({ content: `Could not change roles: ${err.message}` });
     }
 
     const embed = new EmbedBuilder()
       .setColor('#ED4245')
-      .setTitle('📉 Staff Member Demoted')
+      .setTitle('Staff Member Demoted')
       .addFields(
         { name: 'Staff Member', value: `<@${member.user.id}>`, inline: true },
         { name: 'Demoted by',   value: `<@${interaction.user.id}>`, inline: true },

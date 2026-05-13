@@ -12,7 +12,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!checkPerm(message.member, 'unmute'))
-      return message.reply('❌ You do not have permission to use this command.');
+      return message.reply('You do not have permission to use this command.');
 
     const target = message.mentions.members.first();
     if (!target) return message.reply('Usage: `?unmute @user`');
@@ -23,17 +23,17 @@ module.exports = {
       message.channel.send({ embeds: [buildEmbed(target.user, message.author.tag)] });
       sendLog(message.client, { action: 'User Unmuted', executor: message.author.tag, target: target.user.tag, color: '#57F287' });
     } catch {
-      message.reply('❌ Could not unmute that user.');
+      message.reply('Could not unmute that user.');
     }
   },
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'unmute'))
-      return interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
+      return interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
 
     const user = interaction.options.getUser('user');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-    if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
 
     try {
       await member.timeout(null);
@@ -41,7 +41,7 @@ module.exports = {
       interaction.reply({ embeds: [buildEmbed(user, interaction.user.tag)] });
       sendLog(interaction.client, { action: 'User Unmuted', executor: interaction.user.tag, target: user.tag, color: '#57F287' });
     } catch {
-      interaction.reply({ content: '❌ Could not unmute that user.', ephemeral: true });
+      interaction.reply({ content: 'Could not unmute that user.', ephemeral: true });
     }
   },
 };
@@ -54,7 +54,7 @@ function removePermMute(userId) {
 function buildEmbed(user, by) {
   return new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('🔊 User Unmuted')
+    .setTitle('User Unmuted')
     .addFields(
       { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
       { name: 'Unmuted by', value: by, inline: true }

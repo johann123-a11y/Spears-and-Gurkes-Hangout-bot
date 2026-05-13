@@ -37,7 +37,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has("Administrator"))
-      return message.reply('❌ Only **Admins** can use this command.');
+      return message.reply('Only **Admins** can use this command.');
 
     // ?pingperm add {ping} {role}
     const sub = args[0]?.toLowerCase();
@@ -58,7 +58,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has("Administrator"))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
     const pingTarget = interaction.options.getString('ping');
@@ -84,7 +84,7 @@ async function performPingPermRemove(guild, pingTarget, targetRole, channel, int
 
       const embed = new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('✅ Ping Permission Removed')
+        .setTitle('Ping Permission Removed')
         .setDescription(`The role **${targetRole.name}** can no longer use \`@everyone\` / \`@here\`.`)
         .setTimestamp();
 
@@ -95,7 +95,7 @@ async function performPingPermRemove(guild, pingTarget, targetRole, channel, int
     const mentionableRole = guild.roles.cache.get(mentionableRoleId);
 
     if (!mentionableRole) {
-      const msg = '❌ Could not find the role to make non-mentionable.';
+      const msg = 'Could not find the role to make non-mentionable.';
       return channel ? channel.send(msg) : interaction.editReply(msg);
     }
 
@@ -103,14 +103,14 @@ async function performPingPermRemove(guild, pingTarget, targetRole, channel, int
 
     const embed = new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('✅ Ping Permission Removed')
+      .setTitle('Ping Permission Removed')
       .setDescription(`The role **${mentionableRole.name}** is no longer mentionable by **${targetRole.name}**.`)
       .setTimestamp();
 
     if (channel) channel.send({ embeds: [embed] });
     else if (interaction) interaction.editReply({ embeds: [embed] });
   } catch (err) {
-    const msg = `❌ Failed: ${err.message}`;
+    const msg = `Failed: ${err.message}`;
     if (channel) channel.send(msg);
     else if (interaction) interaction.editReply(msg);
   }
@@ -128,7 +128,7 @@ async function performPingPerm(guild, pingTarget, targetRole, channel, interacti
 
       const embed = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('✅ Ping Permission Granted')
+        .setTitle('Ping Permission Granted')
         .setDescription(`The role **${targetRole.name}** can now use \`@everyone\` / \`@here\`.`)
         .setTimestamp();
 
@@ -140,7 +140,7 @@ async function performPingPerm(guild, pingTarget, targetRole, channel, interacti
     const mentionableRole = guild.roles.cache.get(mentionableRoleId);
 
     if (!mentionableRole) {
-      const msg = '❌ Could not find the role to make mentionable.';
+      const msg = 'Could not find the role to make mentionable.';
       return channel ? channel.send(msg) : interaction.editReply(msg);
     }
 
@@ -148,14 +148,14 @@ async function performPingPerm(guild, pingTarget, targetRole, channel, interacti
 
     const embed = new EmbedBuilder()
       .setColor('#5865F2')
-      .setTitle('✅ Ping Permission Granted')
+      .setTitle('Ping Permission Granted')
       .setDescription(`The role **${mentionableRole.name}** is now mentionable by **${targetRole.name}**.`)
       .setTimestamp();
 
     if (channel) channel.send({ embeds: [embed] });
     else if (interaction) interaction.editReply({ embeds: [embed] });
   } catch (err) {
-    const msg = `❌ Failed: ${err.message}`;
+    const msg = `Failed: ${err.message}`;
     if (channel) channel.send(msg);
     else if (interaction) interaction.editReply(msg);
   }

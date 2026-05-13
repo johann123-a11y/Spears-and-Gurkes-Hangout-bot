@@ -18,11 +18,11 @@ module.exports = {
 
   async execute(message, args) {
     if (!checkPerm(message.member, 'clear'))
-      return message.reply('❌ You do not have permission to use this command.');
+      return message.reply('You do not have permission to use this command.');
 
     const amount = parseInt(args[0]);
     if (isNaN(amount) || amount < 1 || amount > 100)
-      return message.reply('❌ Please provide a number between **1** and **100**.\nUsage: `?clear {amount}`');
+      return message.reply('Please provide a number between **1** and **100**.\nUsage: `?clear {amount}`');
 
     await message.delete().catch(() => {});
 
@@ -34,7 +34,7 @@ module.exports = {
     const reply = await message.channel.send({
       embeds: [new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('🗑️ Messages Cleared')
+        .setTitle('Messages Cleared')
         .addFields(
           { name: 'Deleted', value: `${count} message(s)`, inline: true },
           { name: 'By',      value: message.author.tag,    inline: true },
@@ -55,7 +55,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'clear'))
-      return interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
+      return interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
 
     const amount = interaction.options.getInteger('amount');
     await interaction.deferReply({ ephemeral: true });
@@ -68,7 +68,7 @@ module.exports = {
     await interaction.editReply({
       embeds: [new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('🗑️ Messages Cleared')
+        .setTitle('Messages Cleared')
         .addFields(
           { name: 'Deleted', value: `${count} message(s)`, inline: true },
           { name: 'By',      value: interaction.user.tag,  inline: true },

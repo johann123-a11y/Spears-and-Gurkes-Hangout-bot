@@ -123,7 +123,7 @@ function renderHTML(transcript) {
         if (a.contentType && a.contentType.startsWith('image/')) {
           return `<div class="att-img"><a href="${esc(a.url)}" target="_blank"><img src="${esc(a.url)}" alt="${esc(a.name)}" loading="lazy"></a></div>`;
         }
-        return `<div class="att-file"><a href="${esc(a.url)}" target="_blank" rel="noopener">📎 ${esc(a.name || 'Attachment')}</a></div>`;
+        return `<div class="att-file"><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.name || 'Attachment')}</a></div>`;
       }).join('');
 
       const timeEl = i === 0
@@ -171,7 +171,7 @@ function renderHTML(transcript) {
   a { color: #00a8fc; text-decoration: none; }
   a:hover { text-decoration: underline; }
 
-  /* ── Header bar ── */
+  /* Header bar */
   .header {
     background: #2b2d31;
     border-bottom: 1px solid #1e1f22;
@@ -227,7 +227,7 @@ function renderHTML(transcript) {
   .label { color: #b5bac1; text-transform: uppercase; font-size: 10px; font-weight: 700; letter-spacing: .5px; margin-bottom: 2px; }
   .value { color: #f2f3f5; font-size: 13px; }
 
-  /* ── Messages ── */
+  /* Messages */
   .messages {
     padding: 16px 0 60px;
   }
@@ -315,7 +315,7 @@ function renderHTML(transcript) {
   .att-file { margin-top: 4px; font-size: 13px; }
   .att-file a { color: #00a8fc; }
 
-  /* ── Date separator ── */
+  /* Date separator */
   .date-sep {
     display: flex;
     align-items: center;
@@ -332,7 +332,7 @@ function renderHTML(transcript) {
     background: #3f4147;
   }
 
-  /* ── Empty ── */
+  /* Empty */
   .empty { color: #87898c; padding: 40px; text-align: center; font-size: 14px; }
 
   @media (max-width: 600px) {
@@ -345,7 +345,7 @@ function renderHTML(transcript) {
 <body>
 <div class="header">
   <div class="header-title">
-    🎫 Ticket #${transcript.ticketId} — ${esc(transcript.panelName)}
+    Ticket #${transcript.ticketId} — ${esc(transcript.panelName)}
     ${transcript.saved ? '<span class="badge-saved">SAVED</span>' : ''}
   </div>
   <div class="meta-grid">

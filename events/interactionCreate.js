@@ -26,7 +26,7 @@ module.exports = {
   name: 'interactionCreate',
   async execute(interaction, client) {
 
-    // ── Slash commands ────────────────────────────────────────────────────────
+    // Slash commands 
     if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
       if (!command?.executeSlash) return;
@@ -34,14 +34,14 @@ module.exports = {
         await command.executeSlash(interaction, client);
       } catch (err) {
         console.error(`Error in slash command ${interaction.commandName}:`, err);
-        const msg = { content: '❌ An error occurred.', ephemeral: true };
+        const msg = { content: 'An error occurred.', ephemeral: true };
         if (interaction.replied || interaction.deferred) interaction.followUp(msg).catch(() => {});
         else interaction.reply(msg).catch(() => {});
       }
       return;
     }
 
-    // ── Buttons ───────────────────────────────────────────────────────────────
+    // Buttons 
     if (interaction.isButton()) {
       // Ticket panel open button
       if (interaction.customId.startsWith('ticket_open:'))
@@ -61,15 +61,15 @@ module.exports = {
         const ticketId = parseInt(interaction.customId.split(':')[1]);
         const ok = await markSaved(ticketId);
         return interaction.reply({
-          content: ok ? '✅ Transcript saved permanently — it will never be auto-deleted.' : '❌ Transcript not found.',
+          content: ok ? 'Transcript saved permanently — it will never be auto-deleted.' : 'Transcript not found.',
           ephemeral: true,
         });
       }
 
-      // ── Strikes buttons ────────────────────────────────────────────────────
+      // Strikes buttons 
       if (interaction.customId.startsWith('strikes_add:')) {
         if (!interaction.member.permissions.has('Administrator'))
-          return interaction.reply({ content: '❌ Only **Admins** can add strikes.', ephemeral: true });
+          return interaction.reply({ content: 'Only **Admins** can add strikes.', ephemeral: true });
         const userId = interaction.customId.split(':')[1];
         const modal  = new ModalBuilder()
           .setCustomId(`strikes_add_modal:${userId}`)
@@ -82,7 +82,7 @@ module.exports = {
 
       if (interaction.customId.startsWith('strikes_remove:')) {
         if (!interaction.member.permissions.has('Administrator'))
-          return interaction.reply({ content: '❌ Only **Admins** can remove strikes.', ephemeral: true });
+          return interaction.reply({ content: 'Only **Admins** can remove strikes.', ephemeral: true });
         const userId = interaction.customId.split(':')[1];
         const modal  = new ModalBuilder()
           .setCustomId(`strikes_remove_modal:${userId}`)
@@ -93,22 +93,22 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      // ── CheckLOA buttons ───────────────────────────────────────────────────
+      // CheckLOA buttons 
       if (interaction.customId.startsWith('checkloa_clear:')) {
         if (!checkPerm(interaction.member, 'checkloa'))
-          return interaction.reply({ content: '❌ Only **Admins** can manage LOA.', ephemeral: true });
+          return interaction.reply({ content: 'Only **Admins** can manage LOA.', ephemeral: true });
         const userId = interaction.customId.split(':')[1];
         const loa    = readData('loa.json');
         if (!loa[userId])
-          return interaction.update({ content: '❌ This user is not on LOA.', embeds: [], components: [] });
+          return interaction.update({ content: 'This user is not on LOA.', embeds: [], components: [] });
         delete loa[userId];
         writeData('loa.json', loa);
-        return interaction.update({ content: '✅ LOA cleared.', embeds: [], components: [] });
+        return interaction.update({ content: 'LOA cleared.', embeds: [], components: [] });
       }
 
       if (interaction.customId.startsWith('checkloa_set:')) {
         if (!checkPerm(interaction.member, 'checkloa'))
-          return interaction.reply({ content: '❌ Only **Admins** can manage LOA.', ephemeral: true });
+          return interaction.reply({ content: 'Only **Admins** can manage LOA.', ephemeral: true });
         const userId = interaction.customId.split(':')[1];
         const modal  = new ModalBuilder()
           .setCustomId(`checkloa_set_modal:${userId}`)
@@ -124,7 +124,7 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      // ── Ticket perms buttons ───────────────────────────────────────────────
+      // Ticket perms buttons 
       if (interaction.customId === 'ticket_perms_addping') {
         const roleSelect = new RoleSelectMenuBuilder()
           .setCustomId('ticket_perms_addping_select')
@@ -149,7 +149,7 @@ module.exports = {
         const tickets   = readData('tickets.json');
         const pingRoles = tickets.perms?.pingRoles || [];
         if (pingRoles.length === 0)
-          return interaction.update({ content: '❌ No ping roles configured.', embeds: [], components: [] });
+          return interaction.update({ content: 'No ping roles configured.', embeds: [], components: [] });
         const menu = new StringSelectMenuBuilder()
           .setCustomId('ticket_perms_removeping_select')
           .setPlaceholder('Select a ping role to remove...')
@@ -164,7 +164,7 @@ module.exports = {
         const tickets   = readData('tickets.json');
         const viewRoles = tickets.perms?.viewRoles || [];
         if (viewRoles.length === 0)
-          return interaction.update({ content: '❌ No view roles configured.', embeds: [], components: [] });
+          return interaction.update({ content: 'No view roles configured.', embeds: [], components: [] });
         const menu = new StringSelectMenuBuilder()
           .setCustomId('ticket_perms_removeview_select')
           .setPlaceholder('Select a view role to remove...')
@@ -179,16 +179,16 @@ module.exports = {
         const tickets = readData('tickets.json');
         tickets.perms = { pingRoles: [], viewRoles: [] };
         writeData('tickets.json', tickets);
-        return interaction.update({ content: '✅ All ticket ping and view role settings cleared.', embeds: [], components: [] });
+        return interaction.update({ content: 'All ticket ping and view role settings cleared.', embeds: [], components: [] });
       }
 
-      // ── Application: yes/no DM buttons ────────────────────────────────────
+      // Application: yes/no DM buttons 
       if (interaction.customId.startsWith('app_answer_yes:'))
         return handleDMButton(interaction, 'Yes');
       if (interaction.customId.startsWith('app_answer_no:'))
         return handleDMButton(interaction, 'No');
 
-      // ── Application: question builder buttons ──────────────────────────────
+      // Application: question builder buttons 
       if (interaction.customId.startsWith('app_addq_yesno:')) {
         const panelId = interaction.customId.split(':')[1];
         const modal   = new ModalBuilder()
@@ -212,17 +212,17 @@ module.exports = {
       }
 
       if (interaction.customId.startsWith('app_addq_done:')) {
-        return interaction.update({ content: '✅ Questions saved! Use `/application group` and `/application open` to publish.', embeds: [], components: [] });
+        return interaction.update({ content: 'Questions saved! Use `/application group` and `/application open` to publish.', embeds: [], components: [] });
       }
 
-      // ── Application: delete last question button ──────────────────────────
+      // Application: delete last question button 
       if (interaction.customId.startsWith('app_addq_delete:')) {
         const panelId = interaction.customId.split(':')[1];
         const apps    = readData('applications.json');
         const panel   = apps.panels?.[panelId];
-        if (!panel) return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
+        if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: true });
         if (!panel.questions.length)
-          return interaction.reply({ content: '❌ There are no questions to delete.', ephemeral: true });
+          return interaction.reply({ content: 'There are no questions to delete.', ephemeral: true });
 
         const removed = panel.questions.pop();
         writeData('applications.json', apps);
@@ -232,16 +232,16 @@ module.exports = {
           : 'None yet — add them below!';
 
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('Yes/No Question').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('Text Question').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('Done').setStyle(ButtonStyle.Success),
         );
         if (panel.questions.length > 0)
-          row.addComponents(new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('🗑️ Delete Last').setStyle(ButtonStyle.Danger));
+          row.addComponents(new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('Delete Last').setStyle(ButtonStyle.Danger));
 
         return interaction.update({
           embeds: [new EmbedBuilder()
-            .setColor('#FEE75C').setTitle(`📋 ${panel.name} — Questions`)
+            .setColor('#FEE75C').setTitle(`${panel.name} — Questions`)
             .addFields({ name: `${panel.questions.length} Question(s)`, value: qList })
             .setFooter({ text: `Deleted: "${removed.text}"` })
             .setTimestamp()],
@@ -249,7 +249,7 @@ module.exports = {
         });
       }
 
-      // ── Application: action buttons on result ──────────────────────────────
+      // Application: action buttons on result 
       if (interaction.customId.startsWith('app_accept:')) {
         const resultId = interaction.customId.split(':')[1];
         const modal    = new ModalBuilder()
@@ -287,21 +287,21 @@ module.exports = {
           const kickLogs     = kicks?.entries.filter(e => e.target?.id === userId) || [];
 
           const fields = [];
-          if (banEntry) fields.push({ name: '🔨 Banned', value: banEntry.reason || 'No reason', inline: false });
-          timeoutLogs.forEach(e => fields.push({ name: `🔇 Timeout by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
-          kickLogs.forEach(e => fields.push({ name: `👢 Kicked by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
+          if (banEntry) fields.push({ name: 'Banned', value: banEntry.reason || 'No reason', inline: false });
+          timeoutLogs.forEach(e => fields.push({ name: `Timeout by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
+          kickLogs.forEach(e => fields.push({ name: `Kicked by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
 
           const embed = new EmbedBuilder()
             .setColor(fields.length > 0 ? '#FF6B35' : '#57F287')
-            .setTitle(`⚠️ Warn/Punishment History — <@${userId}>`)
-            .setDescription(fields.length === 0 ? '✅ No recorded punishments found.' : null)
+            .setTitle(`Warn/Punishment History — <@${userId}>`)
+            .setDescription(fields.length === 0 ? 'No recorded punishments found.' : null)
             .addFields(fields)
             .setFooter({ text: 'Based on Discord audit logs (last 10 entries each)' })
             .setTimestamp();
 
           return interaction.editReply({ embeds: [embed] });
         } catch (err) {
-          return interaction.editReply({ content: `❌ Failed to fetch history: ${err.message}` });
+          return interaction.editReply({ content: `Failed to fetch history: ${err.message}` });
         }
       }
 
@@ -310,7 +310,7 @@ module.exports = {
         const tickets = readData('tickets.json');
         const panels  = Object.values(tickets.panels || {});
         if (panels.length === 0)
-          return interaction.reply({ content: '❌ No ticket panels configured. Use `/ticket setup` first.', ephemeral: true });
+          return interaction.reply({ content: 'No ticket panels configured. Use `/ticket setup` first.', ephemeral: true });
 
         // Open a ticket for the applicant using the first ticket panel
         const panel = panels[0];
@@ -319,7 +319,7 @@ module.exports = {
         // Fetch the applicant as a guild member
         const member = await interaction.guild.members.fetch(userId).catch(() => null);
         if (!member)
-          return interaction.reply({ content: '❌ Could not find this user in the server.', ephemeral: true });
+          return interaction.reply({ content: 'Could not find this user in the server.', ephemeral: true });
 
         // Create a fake interaction-like object so we can reuse createTicketChannel
         const fakeInteraction = {
@@ -336,25 +336,25 @@ module.exports = {
         return;
       }
 
-      // ── Ticket logs buttons ────────────────────────────────────────────────
+      // Ticket logs buttons 
       if (interaction.customId === 'ticket_logs_remove_btn') {
         const tickets = readData('tickets.json');
         if (!tickets.logChannelId)
-          return interaction.update({ content: '❌ No log channel is currently set.', embeds: [], components: [] });
+          return interaction.update({ content: 'No log channel is currently set.', embeds: [], components: [] });
         tickets.logChannelId = null;
         writeData('tickets.json', tickets);
-        return interaction.update({ content: '✅ Ticket log channel removed.', embeds: [], components: [] });
+        return interaction.update({ content: 'Ticket log channel removed.', embeds: [], components: [] });
       }
 
-      // ── /ticket info navigation buttons ───────────────────────────────────
+      // /ticket info navigation buttons 
       if (interaction.customId === 'ticket_info_nav_desc') {
         const tickets = readData('tickets.json');
         const current = tickets.description || {};
         const previewEmbed = buildDescEmbed(current);
-        previewEmbed.setTitle('📝 Ticket Description — Preview');
+        previewEmbed.setTitle('Ticket Description — Preview');
         const editBtn = new ButtonBuilder()
           .setCustomId('ticket_desc_edit_btn')
-          .setLabel('✏️ Edit Description')
+          .setLabel('Edit Description')
           .setStyle(ButtonStyle.Primary);
         const backBtn = new ButtonBuilder()
           .setCustomId('ticket_info_nav_back')
@@ -369,33 +369,33 @@ module.exports = {
         const pingList = perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None';
         const viewList = perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None';
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId('ticket_perms_addping').setLabel('➕ Ping').setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId('ticket_perms_removeping').setLabel('➖ Ping').setStyle(ButtonStyle.Secondary).setDisabled(perms.pingRoles.length === 0),
-          new ButtonBuilder().setCustomId('ticket_perms_addview').setLabel('➕ View').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('ticket_perms_removeview').setLabel('➖ View').setStyle(ButtonStyle.Secondary).setDisabled(perms.viewRoles.length === 0),
-          new ButtonBuilder().setCustomId('ticket_perms_clear').setLabel('🗑️ Clear All').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId('ticket_perms_addping').setLabel('Ping').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId('ticket_perms_removeping').setLabel('Ping').setStyle(ButtonStyle.Secondary).setDisabled(perms.pingRoles.length === 0),
+          new ButtonBuilder().setCustomId('ticket_perms_addview').setLabel('View').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('ticket_perms_removeview').setLabel('View').setStyle(ButtonStyle.Secondary).setDisabled(perms.viewRoles.length === 0),
+          new ButtonBuilder().setCustomId('ticket_perms_clear').setLabel('Clear All').setStyle(ButtonStyle.Danger),
         );
         const backBtn = new ButtonBuilder().setCustomId('ticket_info_nav_back').setLabel('← Back').setStyle(ButtonStyle.Secondary);
         return interaction.update({
           embeds: [new EmbedBuilder()
-            .setColor('#5865F2').setTitle('🔐 Ticket Permissions')
+            .setColor('#5865F2').setTitle('Ticket Permissions')
             .addFields(
-              { name: '🔔 Ping Roles (notified on open)', value: pingList },
-              { name: '👁️ View Roles (can see all tickets)', value: viewList },
-            ).setFooter({ text: '➕ to add  •  ➖ to remove  •  🗑️ to clear all' }).setTimestamp()],
+              { name: 'Ping Roles (notified on open)', value: pingList },
+              { name: 'View Roles (can see all tickets)', value: viewList },
+            ).setFooter({ text: 'to add  •  to remove  •  to clear all' }).setTimestamp()],
           components: [row, new ActionRowBuilder().addComponents(backBtn)],
         });
       }
 
       if (interaction.customId === 'ticket_info_nav_logs') {
         const tickets     = readData('tickets.json');
-        const removeBtn   = new ButtonBuilder().setCustomId('ticket_logs_remove_btn').setLabel('🗑️ Remove Log Channel').setStyle(ButtonStyle.Danger).setDisabled(!tickets.logChannelId);
+        const removeBtn   = new ButtonBuilder().setCustomId('ticket_logs_remove_btn').setLabel('Remove Log Channel').setStyle(ButtonStyle.Danger).setDisabled(!tickets.logChannelId);
         const backBtn     = new ButtonBuilder().setCustomId('ticket_info_nav_back').setLabel('← Back').setStyle(ButtonStyle.Secondary);
         const channelSel  = new ChannelSelectMenuBuilder().setCustomId('ticket_logs_channel_select').setPlaceholder('Select a new log channel...').setChannelTypes(ChannelType.GuildText);
         return interaction.update({
           embeds: [new EmbedBuilder()
-            .setColor('#5865F2').setTitle('📋 Ticket Log Channel')
-            .setDescription(tickets.logChannelId ? `Currently logging to <#${tickets.logChannelId}>.` : '❌ No log channel configured.')
+            .setColor('#5865F2').setTitle('Ticket Log Channel')
+            .setDescription(tickets.logChannelId ? `Currently logging to <#${tickets.logChannelId}>.` : 'No log channel configured.')
             .setTimestamp()],
           components: [
             new ActionRowBuilder().addComponents(removeBtn, backBtn),
@@ -408,10 +408,10 @@ module.exports = {
         return sendTicketOverview(interaction, 'update');
       }
 
-      // ── Review: submit button → show star buttons ─────────────────────────
+      // Review: submit button → show star buttons 
       if (interaction.customId === 'review_submit_btn') {
         const starBtns = [1,2,3,4,5].map(n =>
-          new ButtonBuilder().setCustomId(`review_star:${n}`).setLabel('⭐'.repeat(n)).setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder().setCustomId(`review_star:${n}`).setLabel(''.repeat(n)).setStyle(ButtonStyle.Secondary)
         );
         return interaction.reply({
           content: '**How would you rate our server?**\nClick on a star rating:',
@@ -420,12 +420,12 @@ module.exports = {
         });
       }
 
-      // ── Review: star clicked → show improvement modal ─────────────────────
+      // Review: star clicked → show improvement modal 
       if (interaction.customId.startsWith('review_star:')) {
         const stars = interaction.customId.split(':')[1];
         const modal = new ModalBuilder()
           .setCustomId(`review_improve_modal:${stars}`)
-          .setTitle(`${'⭐'.repeat(parseInt(stars))} Rating`)
+          .setTitle(`${''.repeat(parseInt(stars))} Rating`)
           .addComponents(
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
@@ -440,7 +440,7 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      // ── Split or Steal buttons ────────────────────────────────────────────
+      // Split or Steal buttons 
       if (interaction.customId.startsWith('ss_join:')) {
         const { handleJoin } = require('../commands/general/sos');
         return handleJoin(interaction);
@@ -450,7 +450,7 @@ module.exports = {
         return handlePick(interaction);
       }
 
-      // ── RPS buttons ───────────────────────────────────────────────────────
+      // RPS buttons 
       if (interaction.customId.startsWith('rps_join:')) {
         const { handleJoin } = require('../commands/general/rps');
         return handleJoin(interaction);
@@ -460,13 +460,13 @@ module.exports = {
         return handlePick(interaction);
       }
 
-      // ── Giveaway join button ───────────────────────────────────────────────
+      // Giveaway join button 
       if (interaction.customId.startsWith('giveaway_join:')) {
         const msgId = interaction.customId.split(':')[1];
         const giveaways = readData('giveaways.json');
         const gw = giveaways[msgId];
         if (!gw || gw.ended)
-          return interaction.reply({ content: '❌ This giveaway has already ended.', ephemeral: true });
+          return interaction.reply({ content: 'This giveaway has already ended.', ephemeral: true });
 
         if (!gw.participants) gw.participants = [];
 
@@ -481,27 +481,27 @@ module.exports = {
             const updatedEmbed = EmbedBuilder.from(oldEmbed).setDescription(newDesc);
             gwMsg.edit({ embeds: [updatedEmbed] }).catch(() => {});
           }
-          return interaction.reply({ content: '🎉 You joined the giveaway! Good luck!', ephemeral: true });
+          return interaction.reply({ content: 'You joined the giveaway! Good luck!', ephemeral: true });
         } else {
           const leaveBtn = new ButtonBuilder()
             .setCustomId(`giveaway_leave:${msgId}`)
             .setLabel('Leave Giveaway')
             .setStyle(ButtonStyle.Danger);
           return interaction.reply({
-            content: '⚠️ You already joined this giveaway!',
+            content: 'You already joined this giveaway!',
             components: [new ActionRowBuilder().addComponents(leaveBtn)],
             ephemeral: true,
           });
         }
       }
 
-      // ── Giveaway leave button ──────────────────────────────────────────────
+      // Giveaway leave button 
       if (interaction.customId.startsWith('giveaway_leave:')) {
         const msgId = interaction.customId.split(':')[1];
         const giveaways = readData('giveaways.json');
         const gw = giveaways[msgId];
         if (!gw || gw.ended)
-          return interaction.update({ content: '❌ This giveaway has already ended.', components: [] });
+          return interaction.update({ content: 'This giveaway has already ended.', components: [] });
 
         if (!gw.participants) gw.participants = [];
         const idx = gw.participants.indexOf(interaction.user.id);
@@ -520,22 +520,22 @@ module.exports = {
             }).catch(() => {});
           }
         }
-        return interaction.update({ content: '👋 You left the giveaway.', components: [] });
+        return interaction.update({ content: 'You left the giveaway.', components: [] });
       }
 
-      // ── Activity check confirm button ──────────────────────────────────────
+      // Activity check confirm button 
       if (interaction.customId === 'activitycheck_confirm') {
         const msgId = interaction.message.id;
         const checks = readData('activitychecks.json');
         const check = checks[msgId];
         if (!check || check.processed)
-          return interaction.reply({ content: '❌ This activity check is no longer active.', ephemeral: true });
+          return interaction.reply({ content: 'This activity check is no longer active.', ephemeral: true });
         if (!check.respondedUserIds) check.respondedUserIds = [];
         if (check.respondedUserIds.includes(interaction.user.id))
-          return interaction.reply({ content: '✅ You already confirmed your activity!', ephemeral: true });
+          return interaction.reply({ content: 'You already confirmed your activity!', ephemeral: true });
         check.respondedUserIds.push(interaction.user.id);
         writeData('activitychecks.json', checks);
-        return interaction.reply({ content: '✅ Activity confirmed! You are marked as active.', ephemeral: true });
+        return interaction.reply({ content: 'Activity confirmed! You are marked as active.', ephemeral: true });
       }
 
       if (interaction.customId === 'ticket_desc_edit_btn') {
@@ -562,7 +562,7 @@ module.exports = {
       }
     }
 
-    // ── Modal submits ─────────────────────────────────────────────────────────
+    // Modal submits 
     if (interaction.isModalSubmit()) {
       // Giveaway modal
       if (interaction.customId === 'giveaway_modal') {
@@ -572,40 +572,40 @@ module.exports = {
         const description = interaction.fields.getTextInputValue('gw_description') || 'No description provided.';
         const ms          = parseTime(time);
         const winners     = parseInt(winnersRaw);
-        if (!ms)                             return interaction.reply({ content: '❌ Invalid time format.', ephemeral: true });
-        if (isNaN(winners) || winners < 1)   return interaction.reply({ content: '❌ Winners must be a positive number.', ephemeral: true });
-        await interaction.reply({ content: '✅ Giveaway started!', ephemeral: true });
+        if (!ms)                             return interaction.reply({ content: 'Invalid time format.', ephemeral: true });
+        if (isNaN(winners) || winners < 1)   return interaction.reply({ content: 'Winners must be a positive number.', ephemeral: true });
+        await interaction.reply({ content: 'Giveaway started!', ephemeral: true });
         await createGiveaway(interaction.channel, ms, winners, prize, description, interaction.user.id);
         return;
       }
 
-      // ── Activity check modal ──────────────────────────────────────────────
+      // Activity check modal 
       if (interaction.customId.startsWith('activitycheck_modal')) {
         const roleId = interaction.customId.split(':')[1] || null;
         const message = interaction.fields.getTextInputValue('message');
         const durationStr = interaction.fields.getTextInputValue('duration');
         const ms = parseTime(durationStr);
-        if (!ms) return interaction.reply({ content: '❌ Invalid duration format.', ephemeral: true });
+        if (!ms) return interaction.reply({ content: 'Invalid duration format.', ephemeral: true });
 
         const deadline = Date.now() + ms;
 
         const embed = new EmbedBuilder()
           .setColor('#5865F2')
-          .setTitle('📋 Activity Check')
+          .setTitle('Activity Check')
           .setDescription(message)
           .addFields(
-            { name: '⏰ Deadline', value: `<t:${Math.floor(deadline / 1000)}:R> (<t:${Math.floor(deadline / 1000)}:f>)` },
-            ...(roleId ? [{ name: '👥 Role', value: `<@&${roleId}>` }] : []),
+            { name: 'Deadline', value: `<t:${Math.floor(deadline / 1000)}:R> (<t:${Math.floor(deadline / 1000)}:f>)` },
+            ...(roleId ? [{ name: 'Role', value: `<@&${roleId}>` }] : []),
           )
           .setTimestamp();
 
         const btn = new ButtonBuilder()
           .setCustomId('activitycheck_confirm')
-          .setLabel('✅ I\'m active!')
+          .setLabel('I\'m active!')
           .setStyle(ButtonStyle.Success);
 
         const pingContent = roleId ? `<@&${roleId}>` : '';
-        await interaction.reply({ content: '✅ Activity check posted!', ephemeral: true });
+        await interaction.reply({ content: 'Activity check posted!', ephemeral: true });
         const msg = await interaction.channel.send({
           content: pingContent || undefined,
           embeds: [embed],
@@ -626,7 +626,7 @@ module.exports = {
         return;
       }
 
-      // ── /send DM modal ────────────────────────────────────────────────────
+      // /send DM modal 
       if (interaction.customId === 'send_dm_modal' || interaction.customId === 'send_dm_modal_test') {
         const isTest   = interaction.customId === 'send_dm_modal_test';
         const title    = interaction.fields.getTextInputValue('title');
@@ -646,13 +646,13 @@ module.exports = {
         if (isTest) {
           try {
             await interaction.user.send({ content: messageText });
-            return interaction.reply({ content: '✅ Test-DM wurde dir geschickt!', ephemeral: true });
+            return interaction.reply({ content: 'Test-DM wurde dir geschickt!', ephemeral: true });
           } catch {
-            return interaction.reply({ content: '❌ Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
+            return interaction.reply({ content: 'Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
           }
         }
 
-        await interaction.reply({ content: `⏳ Sending DMs to all members...`, ephemeral: true });
+        await interaction.reply({ content: `Sending DMs to all members...`, ephemeral: true });
 
         const guild = interaction.guild;
         const members = await guild.members.fetch();
@@ -665,12 +665,12 @@ module.exports = {
         }
 
         return interaction.followUp({
-          content: `✅ DM sent to **${sent}** members. (${failed} failed — DMs closed)`,
+          content: `DM sent to **${sent}** members. (${failed} failed — DMs closed)`,
           ephemeral: true,
         });
       }
 
-      // ── Review panel modal (send / test) ─────────────────────────────────
+      // Review panel modal (send / test) 
       if (interaction.customId === 'review_panel_modal' || interaction.customId === 'review_panel_modal_test') {
         const isTest      = interaction.customId === 'review_panel_modal_test';
         const title       = interaction.fields.getTextInputValue('title');
@@ -686,30 +686,30 @@ module.exports = {
           .setTimestamp();
 
         const row = new AR2().addComponents(
-          new BB2().setCustomId('review_submit_btn').setLabel('Submit Review').setStyle(BS2.Primary).setEmoji('⭐'),
+          new BB2().setCustomId('review_submit_btn').setLabel('Submit Review').setStyle(BS2.Primary).setEmoji(''),
         );
 
         if (isTest) {
           try {
             await interaction.user.send({ embeds: [embed], components: [row] });
-            return interaction.reply({ content: '✅ Test-DM wurde dir geschickt!', ephemeral: true });
+            return interaction.reply({ content: 'Test-DM wurde dir geschickt!', ephemeral: true });
           } catch {
-            return interaction.reply({ content: '❌ Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
+            return interaction.reply({ content: 'Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
           }
         } else {
           await interaction.channel.send({ embeds: [embed], components: [row] });
-          return interaction.reply({ content: '✅ Review panel posted!', ephemeral: true });
+          return interaction.reply({ content: 'Review panel posted!', ephemeral: true });
         }
       }
 
-      // ── Review: direkt in Review-Channel senden ──────────────────────────
+      // Review: direkt in Review-Channel senden 
       if (interaction.customId === 'review_send_modal') {
         const title   = interaction.fields.getTextInputValue('title');
         const content = interaction.fields.getTextInputValue('content');
         const data    = readData('review.json');
-        if (!data.channel) return interaction.reply({ content: '❌ No review channel set. Use `/review channel`.', ephemeral: true });
+        if (!data.channel) return interaction.reply({ content: 'No review channel set. Use `/review channel`.', ephemeral: true });
         const ch = interaction.guild.channels.cache.get(data.channel);
-        if (!ch) return interaction.reply({ content: '❌ Review channel not found.', ephemeral: true });
+        if (!ch) return interaction.reply({ content: 'Review channel not found.', ephemeral: true });
         const embed = new EmbedBuilder()
           .setColor('#5865F2')
           .setTitle(title)
@@ -717,36 +717,36 @@ module.exports = {
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp();
         await ch.send({ embeds: [embed] });
-        return interaction.reply({ content: `✅ Message posted in <#${data.channel}>!`, ephemeral: true });
+        return interaction.reply({ content: `Message posted in <#${data.channel}>!`, ephemeral: true });
       }
 
-      // ── Review: improvement modal submitted ──────────────────────────────
+      // Review: improvement modal submitted 
       if (interaction.customId.startsWith('review_improve_modal:')) {
         const stars   = parseInt(interaction.customId.split(':')[1]);
         const improve = interaction.fields.getTextInputValue('improve') || null;
 
         const data = readData('review.json');
         if (!data.channel)
-          return interaction.reply({ content: '❌ No review channel configured. Ask an admin to use `/review channel`.', ephemeral: true });
+          return interaction.reply({ content: 'No review channel configured. Ask an admin to use `/review channel`.', ephemeral: true });
 
         const channel = interaction.guild?.channels.cache.get(data.channel)
           ?? interaction.client.guilds.cache.get(data.guildId)?.channels.cache.get(data.channel);
         if (!channel)
-          return interaction.reply({ content: '❌ Review channel not found. Ask an admin to re-set it with `/review channel`.', ephemeral: true });
+          return interaction.reply({ content: 'Review channel not found. Ask an admin to re-set it with `/review channel`.', ephemeral: true });
 
-        const starStr = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
+        const starStr = ''.repeat(stars) + ''.repeat(5 - stars);
         const embed = new EmbedBuilder()
           .setColor('#FFD700')
           .setTitle(starStr)
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp();
-        if (improve) embed.addFields({ name: '💡 What can we improve?', value: improve });
+        if (improve) embed.addFields({ name: 'What can we improve?', value: improve });
 
         await channel.send({ embeds: [embed] });
-        return interaction.reply({ content: '✅ Thanks for your review!', ephemeral: true });
+        return interaction.reply({ content: 'Thanks for your review!', ephemeral: true });
       }
 
-      // ── Application: setup modal ───────────────────────────────────────────
+      // Application: setup modal 
       if (interaction.customId === 'app_setup_modal') {
         const name    = interaction.fields.getTextInputValue('app_name').trim();
         const forWhat = interaction.fields.getTextInputValue('app_for').trim();
@@ -759,28 +759,28 @@ module.exports = {
 
         return interaction.reply({
           embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('✅ Application Created')
+            .setColor('#57F287').setTitle('Application Created')
             .addFields(
               { name: 'Name',     value: name,    inline: true },
               { name: 'For',      value: forWhat, inline: true },
               { name: 'Questions', value: 'None yet — add them below!' },
             ).setTimestamp()],
           components: [new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('Yes/No Question').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('Text Question').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('Done').setStyle(ButtonStyle.Success),
           )],
           ephemeral: true,
         });
       }
 
-      // ── Application: add question modal ───────────────────────────────────
+      // Application: add question modal 
       if (interaction.customId.startsWith('app_addq_modal:')) {
         const [, panelId, type] = interaction.customId.split(':');
         const questionText      = interaction.fields.getTextInputValue('question').trim();
         const apps              = readData('applications.json');
         const panel             = apps.panels?.[panelId];
-        if (!panel) return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
+        if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: true });
 
         panel.questions.push({ text: questionText, type });
         writeData('applications.json', apps);
@@ -788,15 +788,15 @@ module.exports = {
         const qList = panel.questions.map((q, i) => `${i + 1}. [${q.type === 'yesno' ? 'Yes/No' : 'Text'}] ${q.text}`).join('\n');
 
         const addQRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('🗑️ Delete Last').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('Yes/No Question').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('Text Question').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('Done').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('Delete Last').setStyle(ButtonStyle.Danger),
         );
 
         return interaction.reply({
           embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle(`📋 ${panel.name} — Questions`)
+            .setColor('#57F287').setTitle(`${panel.name} — Questions`)
             .addFields({ name: `${panel.questions.length} Question(s)`, value: qList })
             .setFooter({ text: 'Keep adding or click Done when finished' })
             .setTimestamp()],
@@ -805,7 +805,7 @@ module.exports = {
         });
       }
 
-      // ── Application: description modal ────────────────────────────────────
+      // Application: description modal 
       if (interaction.customId === 'app_description_modal') {
         const title  = interaction.fields.getTextInputValue('app_desc_title');
         const text   = interaction.fields.getTextInputValue('app_desc_text')   || null;
@@ -813,16 +813,16 @@ module.exports = {
         const apps   = readData('applications.json');
         apps.description = { title, text, footer };
         writeData('applications.json', apps);
-        return interaction.reply({ content: '✅ Description saved! Use `/application open` to send the panel.', ephemeral: true });
+        return interaction.reply({ content: 'Description saved! Use `/application open` to send the panel.', ephemeral: true });
       }
 
-      // ── Application: accept modal ─────────────────────────────────────────
+      // Application: accept modal 
       if (interaction.customId.startsWith('app_accept_modal:')) {
         const resultId = interaction.customId.split(':')[1];
         const reason   = interaction.fields.getTextInputValue('reason').trim() || 'No reason provided.';
         const results  = readData('applicationResults.json');
         const result   = results[resultId];
-        if (!result) return interaction.reply({ content: '❌ Application not found.', ephemeral: true });
+        if (!result) return interaction.reply({ content: 'Application not found.', ephemeral: true });
 
         result.status       = 'accepted';
         result.reviewedBy   = interaction.user.tag;
@@ -830,12 +830,12 @@ module.exports = {
         writeData('applicationResults.json', results);
 
         const resultEmbed = new EmbedBuilder()
-          .setColor('#57F287').setTitle('✅ Application Accepted')
+          .setColor('#57F287').setTitle('Application Accepted')
           .addFields(
-            { name: '👤 Applicant',   value: `<@${result.userId}> (${result.username})`, inline: true },
-            { name: '📋 For',         value: result.forWhat,                              inline: true },
-            { name: '✅ Accepted by', value: `<@${interaction.user.id}>`,                inline: true },
-            { name: '📝 Reason',      value: reason },
+            { name: 'Applicant',   value: `<@${result.userId}> (${result.username})`, inline: true },
+            { name: 'For',         value: result.forWhat,                              inline: true },
+            { name: 'Accepted by', value: `<@${interaction.user.id}>`,                inline: true },
+            { name: 'Reason',      value: reason },
             ...result.answers.map(a => ({ name: a.question, value: a.answer || '—' })),
           ).setTimestamp();
 
@@ -844,7 +844,7 @@ module.exports = {
           const user = await interaction.client.users.fetch(result.userId);
           await user.send({
             embeds: [new EmbedBuilder()
-              .setColor('#57F287').setTitle('✅ Application Accepted!')
+              .setColor('#57F287').setTitle('Application Accepted!')
               .setDescription(
                 `You got **accepted** as **${result.forWhat}** by <@${interaction.user.id}>!\n\n**Reason:** ${reason}`
               ).setTimestamp()],
@@ -863,13 +863,13 @@ module.exports = {
         await interaction.message.delete().catch(() => {});
       }
 
-      // ── Application: deny modal ───────────────────────────────────────────
+      // Application: deny modal 
       if (interaction.customId.startsWith('app_deny_modal:')) {
         const resultId = interaction.customId.split(':')[1];
         const reason   = interaction.fields.getTextInputValue('reason').trim() || 'No reason provided.';
         const results  = readData('applicationResults.json');
         const result   = results[resultId];
-        if (!result) return interaction.reply({ content: '❌ Application not found.', ephemeral: true });
+        if (!result) return interaction.reply({ content: 'Application not found.', ephemeral: true });
 
         result.status       = 'denied';
         result.reviewedBy   = interaction.user.tag;
@@ -877,12 +877,12 @@ module.exports = {
         writeData('applicationResults.json', results);
 
         const resultEmbed = new EmbedBuilder()
-          .setColor('#ED4245').setTitle('❌ Application Denied')
+          .setColor('#ED4245').setTitle('Application Denied')
           .addFields(
-            { name: '👤 Applicant', value: `<@${result.userId}> (${result.username})`, inline: true },
-            { name: '📋 For',       value: result.forWhat,                              inline: true },
-            { name: '❌ Denied by', value: `<@${interaction.user.id}>`,                inline: true },
-            { name: '📝 Reason',    value: reason },
+            { name: 'Applicant', value: `<@${result.userId}> (${result.username})`, inline: true },
+            { name: 'For',       value: result.forWhat,                              inline: true },
+            { name: 'Denied by', value: `<@${interaction.user.id}>`,                inline: true },
+            { name: 'Reason',    value: reason },
             ...result.answers.map(a => ({ name: a.question, value: a.answer || '—' })),
           ).setTimestamp();
 
@@ -891,7 +891,7 @@ module.exports = {
           const user = await interaction.client.users.fetch(result.userId);
           await user.send({
             embeds: [new EmbedBuilder()
-              .setColor('#ED4245').setTitle('❌ Application Denied')
+              .setColor('#ED4245').setTitle('Application Denied')
               .setDescription(
                 `You got **denied** as **${result.forWhat}** by <@${interaction.user.id}>.\n\n**Reason:** ${reason}`
               ).setTimestamp()],
@@ -922,7 +922,7 @@ module.exports = {
         const colorMap = { blue: 'blue', green: 'green', red: 'red', gray: 'grey', grey: 'grey' };
         const color    = colorMap[colorRaw];
         if (!color)
-          return interaction.reply({ content: '❌ Invalid color. Use: **Blue**, **Green**, **Red**, or **Gray**.', ephemeral: true });
+          return interaction.reply({ content: 'Invalid color. Use: **Blue**, **Green**, **Red**, or **Gray**.', ephemeral: true });
 
         // Parse questions (one per line, max 5)
         const questions = questionsRaw
@@ -945,7 +945,7 @@ module.exports = {
 
         return interaction.reply({
           embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('✅ Ticket Panel Created')
+            .setColor('#57F287').setTitle('Ticket Panel Created')
             .addFields(
               { name: 'Panel ID',     value: panelId,                                        inline: true },
               { name: 'Button',       value: `${label} (${color})`,                          inline: true },
@@ -969,7 +969,7 @@ module.exports = {
 
         const previewEmbed = buildDescEmbed(tickets.description);
         const infoEmbed    = new EmbedBuilder()
-          .setColor('#57F287').setTitle('✅ Description Updated')
+          .setColor('#57F287').setTitle('Description Updated')
           .setDescription('**Preview:**')
           .setFooter({ text: 'Use /ticket group or /ticket send to post the panel' })
           .setTimestamp();
@@ -991,42 +991,42 @@ module.exports = {
         const value   = interaction.fields.getTextInputValue('value');
         const tickets = readData('tickets.json');
         const panel   = tickets.panels?.[panelId];
-        if (!panel) return interaction.reply({ content: '❌ Panel not found.', ephemeral: true });
+        if (!panel) return interaction.reply({ content: 'Panel not found.', ephemeral: true });
 
         if (field === 'label') {
           panel.buttonLabel = value;
           writeData('tickets.json', tickets);
-          return interaction.reply({ content: `✅ Button label updated to **${value}**.`, ephemeral: true });
+          return interaction.reply({ content: `Button label updated to **${value}**.`, ephemeral: true });
         }
         if (field === 'category') {
           panel.categoryId = value.replace(/[<#>]/g, '');
           writeData('tickets.json', tickets);
-          return interaction.reply({ content: `✅ Category updated.`, ephemeral: true });
+          return interaction.reply({ content: `Category updated.`, ephemeral: true });
         }
         if (field === 'addq') {
           if (panel.questions.length >= 5)
-            return interaction.reply({ content: '❌ Maximum 5 questions per panel.', ephemeral: true });
+            return interaction.reply({ content: 'Maximum 5 questions per panel.', ephemeral: true });
           panel.questions.push(value);
           writeData('tickets.json', tickets);
-          return interaction.reply({ content: `✅ Question **#${panel.questions.length}** added:\n> ${value}`, ephemeral: true });
+          return interaction.reply({ content: `Question **#${panel.questions.length}** added:\n> ${value}`, ephemeral: true });
         }
         if (field === 'removeq') {
           const num = parseInt(value);
           if (isNaN(num) || num < 1 || num > panel.questions.length)
-            return interaction.reply({ content: `❌ Invalid number. Panel has **${panel.questions.length}** question(s).`, ephemeral: true });
+            return interaction.reply({ content: `Invalid number. Panel has **${panel.questions.length}** question(s).`, ephemeral: true });
           const removed = panel.questions.splice(num - 1, 1)[0];
           writeData('tickets.json', tickets);
-          return interaction.reply({ content: `✅ Removed question #${num}:\n> ${removed}`, ephemeral: true });
+          return interaction.reply({ content: `Removed question #${num}:\n> ${removed}`, ephemeral: true });
         }
         return;
       }
 
-      // ── Strikes add/remove modals ──────────────────────────────────────────
+      // Strikes add/remove modals 
       if (interaction.customId.startsWith('strikes_add_modal:')) {
         const userId = interaction.customId.split(':')[1];
         const reason = interaction.fields.getTextInputValue('reason');
         const member = await interaction.guild.members.fetch(userId).catch(() => null);
-        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+        if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
         await interaction.deferReply();
         await handleStrike('add', member, reason, interaction.user, interaction.guild, null, interaction);
         return;
@@ -1036,33 +1036,33 @@ module.exports = {
         const userId = interaction.customId.split(':')[1];
         const reason = interaction.fields.getTextInputValue('reason');
         const member = await interaction.guild.members.fetch(userId).catch(() => null);
-        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+        if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
         await interaction.deferReply();
         await handleStrike('remove', member, reason, interaction.user, interaction.guild, null, interaction);
         return;
       }
 
-      // ── Guess the Number modal ────────────────────────────────────────────
+      // Guess the Number modal 
       if (interaction.customId === 'guessthenumber_modal') {
         const { handleModal } = require('../commands/general/guessthenumber');
         return handleModal(interaction);
       }
 
-      // ── CheckLOA set modal ─────────────────────────────────────────────────
+      // CheckLOA set modal 
       if (interaction.customId.startsWith('checkloa_set_modal:')) {
         const userId      = interaction.customId.split(':')[1];
         const durationStr = interaction.fields.getTextInputValue('duration');
         const reason      = interaction.fields.getTextInputValue('reason');
         const ms          = parseTime(durationStr);
-        if (!ms) return interaction.reply({ content: '❌ Invalid duration. Use e.g. `3d`, `1w`, `12h`.', ephemeral: true });
+        if (!ms) return interaction.reply({ content: 'Invalid duration. Use e.g. `3d`, `1w`, `12h`.', ephemeral: true });
         const member = await interaction.guild.members.fetch(userId).catch(() => null);
-        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+        if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
         const loa = readData('loa.json');
         loa[userId] = { endTime: Date.now() + ms, reason, by: interaction.user.tag, username: member.user.tag };
         writeData('loa.json', loa);
         return interaction.reply({
           embeds: [new EmbedBuilder()
-            .setColor('#5865F2').setTitle('🏖️ LOA Set')
+            .setColor('#5865F2').setTitle('LOA Set')
             .addFields(
               { name: 'Staff Member', value: member.user.tag,      inline: true },
               { name: 'Duration',     value: formatTime(ms),       inline: true },
@@ -1074,19 +1074,19 @@ module.exports = {
       }
     }
 
-    // ── Role Select Menus ─────────────────────────────────────────────────────
+    // Role Select Menus 
     if (interaction.isRoleSelectMenu()) {
       // setrole: pick role for a slot
       if (interaction.customId.startsWith('setrole_pick_role:')) {
         if (!interaction.member.permissions.has('Administrator'))
-          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+          return interaction.reply({ content: 'No permission.', ephemeral: true });
         const slot   = interaction.customId.split(':')[1];
         const roleId = interaction.values[0];
         setRole(slot, roleId);
         return interaction.update({
           content: null,
           embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('✅ Role Set')
+            .setColor('#57F287').setTitle('Role Set')
             .addFields(
               { name: 'Slot', value: slot,            inline: true },
               { name: 'Role', value: `<@&${roleId}>`, inline: true },
@@ -1103,9 +1103,9 @@ module.exports = {
         if (!tickets.perms.pingRoles.includes(roleId)) {
           tickets.perms.pingRoles.push(roleId);
           writeData('tickets.json', tickets);
-          return interaction.update({ content: `✅ <@&${roleId}> added as ping role.`, embeds: [], components: [] });
+          return interaction.update({ content: `<@&${roleId}> added as ping role.`, embeds: [], components: [] });
         }
-        return interaction.update({ content: `ℹ️ <@&${roleId}> is already a ping role.`, embeds: [], components: [] });
+        return interaction.update({ content: `ℹ<@&${roleId}> is already a ping role.`, embeds: [], components: [] });
       }
 
       // ticket perms: add view role
@@ -1116,13 +1116,13 @@ module.exports = {
         if (!tickets.perms.viewRoles.includes(roleId)) {
           tickets.perms.viewRoles.push(roleId);
           writeData('tickets.json', tickets);
-          return interaction.update({ content: `✅ <@&${roleId}> added as view role.`, embeds: [], components: [] });
+          return interaction.update({ content: `<@&${roleId}> added as view role.`, embeds: [], components: [] });
         }
-        return interaction.update({ content: `ℹ️ <@&${roleId}> already has view access.`, embeds: [], components: [] });
+        return interaction.update({ content: `ℹ<@&${roleId}> already has view access.`, embeds: [], components: [] });
       }
     }
 
-    // ── Channel Select Menus ──────────────────────────────────────────────────
+    // Channel Select Menus 
     if (interaction.isChannelSelectMenu()) {
       // ticket logs: set log channel
       if (interaction.customId === 'ticket_logs_channel_select') {
@@ -1130,7 +1130,7 @@ module.exports = {
         const tickets   = readData('tickets.json');
         tickets.logChannelId = channelId;
         writeData('tickets.json', tickets);
-        return interaction.update({ content: `✅ Ticket log channel set to <#${channelId}>.`, embeds: [], components: [] });
+        return interaction.update({ content: `Ticket log channel set to <#${channelId}>.`, embeds: [], components: [] });
       }
 
       // review: set channel
@@ -1140,41 +1140,41 @@ module.exports = {
         data.channel    = channelId;
         data.guildId    = interaction.guildId;
         writeData('review.json', data);
-        return interaction.update({ content: `✅ Reviews will be posted in <#${channelId}>.`, embeds: [], components: [] });
+        return interaction.update({ content: `Reviews will be posted in <#${channelId}>.`, embeds: [], components: [] });
       }
     }
 
-    // ── String Select Menus ───────────────────────────────────────────────────
+    // String Select Menus 
     if (interaction.isStringSelectMenu()) {
 
-      // ── Application: user selects which app to apply for ──────────────────
+      // Application: user selects which app to apply for 
       if (interaction.customId === 'app_apply_select') {
         const panelId = interaction.values[0];
         return startApplication(interaction, panelId);
       }
 
-      // ── Application: info edit — select panel to edit questions ──────────────
+      // Application: info edit — select panel to edit questions 
       if (interaction.customId === 'app_info_edit_select') {
         const panelId = interaction.values[0];
         const apps    = readData('applications.json');
         const panel   = apps.panels?.[panelId];
-        if (!panel) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
+        if (!panel) return interaction.update({ content: 'Panel not found.', embeds: [], components: [] });
 
         const qList = panel.questions?.length
           ? panel.questions.map((q, i) => `${i + 1}. [${q.type === 'yesno' ? 'Yes/No' : 'Text'}] ${q.text}`).join('\n')
           : 'None yet — add them below!';
 
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('➕ Yes/No Question').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('➕ Text Question').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('Yes/No Question').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('Text Question').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('Done').setStyle(ButtonStyle.Success),
         );
         if (panel.questions?.length > 0)
-          row.addComponents(new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('🗑️ Delete Last').setStyle(ButtonStyle.Danger));
+          row.addComponents(new ButtonBuilder().setCustomId(`app_addq_delete:${panelId}`).setLabel('Delete Last').setStyle(ButtonStyle.Danger));
 
         return interaction.update({
           embeds: [new EmbedBuilder()
-            .setColor('#5865F2').setTitle(`✏️ Editing: ${panel.name}`)
+            .setColor('#5865F2').setTitle(`Editing: ${panel.name}`)
             .addFields({ name: `${panel.questions?.length || 0} Question(s)`, value: qList })
             .setFooter({ text: 'Add or remove questions, then click Done' })
             .setTimestamp()],
@@ -1182,7 +1182,7 @@ module.exports = {
         });
       }
 
-      // ── Application: group select ──────────────────────────────────────────
+      // Application: group select 
       if (interaction.customId === 'app_group_select') {
         const panelIds = interaction.values;
         const apps     = readData('applications.json');
@@ -1191,23 +1191,23 @@ module.exports = {
         apps.group.panelIds = panelIds;
         writeData('applications.json', apps);
         const names = panelIds.map(id => apps.panels?.[id]?.name || id).join(', ');
-        return interaction.update({ content: `✅ Grouped **${panelIds.length}** application(s): ${names}\nNow use \`/application description\` and \`/application open\`.`, components: [] });
+        return interaction.update({ content: `Grouped **${panelIds.length}** application(s): ${names}\nNow use \`/application description\` and \`/application open\`.`, components: [] });
       }
 
-      // ── Application: result picker ─────────────────────────────────────────
+      // Application: result picker 
       if (interaction.customId === 'app_result_picker') {
         const resultId = interaction.values[0];
         const results  = readData('applicationResults.json');
         const result   = results[resultId];
-        if (!result) return interaction.update({ content: '❌ Application not found.', embeds: [], components: [] });
+        if (!result) return interaction.update({ content: 'Application not found.', embeds: [], components: [] });
 
         const embed = new EmbedBuilder()
           .setColor('#5865F2')
-          .setTitle(`📋 Application — ${result.username}`)
+          .setTitle(`Application — ${result.username}`)
           .addFields(
-            { name: '👤 Applicant', value: `<@${result.userId}>`,                              inline: true },
-            { name: '📋 Applied for', value: result.forWhat,                                   inline: true },
-            { name: '🕐 Submitted',   value: `<t:${Math.floor(new Date(result.submittedAt) / 1000)}:F>`, inline: true },
+            { name: 'Applicant', value: `<@${result.userId}>`,                              inline: true },
+            { name: 'Applied for', value: result.forWhat,                                   inline: true },
+            { name: 'Submitted',   value: `<t:${Math.floor(new Date(result.submittedAt) / 1000)}:F>`, inline: true },
             ...result.answers.map(a => ({ name: a.question, value: a.answer })),
           )
           .setThumbnail(`https://cdn.discordapp.com/embed/avatars/0.png`)
@@ -1219,10 +1219,10 @@ module.exports = {
         } catch {}
 
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('✅ Accept with Reason').setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('❌ Deny with Reason').setStyle(ButtonStyle.Danger),
-          new ButtonBuilder().setCustomId(`app_warnhistory:${result.userId}`).setLabel('⚠️ Warn History').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`app_openticket:${result.userId}`).setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('Accept with Reason').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('Deny with Reason').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId(`app_warnhistory:${result.userId}`).setLabel('Warn History').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_openticket:${result.userId}`).setLabel('Open Ticket').setStyle(ButtonStyle.Primary),
         );
 
         return interaction.update({ embeds: [embed], components: [row] });
@@ -1233,10 +1233,10 @@ module.exports = {
         const panelId = interaction.values[0];
         const tickets = readData('tickets.json');
         const panel   = tickets.panels?.[panelId];
-        if (!panel) return interaction.update({ content: '❌ Panel no longer exists.', embeds: [], components: [] });
+        if (!panel) return interaction.update({ content: 'Panel no longer exists.', embeds: [], components: [] });
 
         const embed = new EmbedBuilder()
-          .setColor('#5865F2').setTitle(`🎫 Panel: ${panel.name}`)
+          .setColor('#5865F2').setTitle(`Panel: ${panel.name}`)
           .addFields(
             { name: 'Button Label', value: panel.buttonLabel,        inline: true },
             { name: 'Color',        value: panel.buttonStyle,        inline: true },
@@ -1247,14 +1247,14 @@ module.exports = {
 
         const editMenu = new StringSelectMenuBuilder()
           .setCustomId(`ticket_info_edit:${panel.id}`)
-          .setPlaceholder('✏️ Edit this panel...')
+          .setPlaceholder('Edit this panel...')
           .addOptions(
-            new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji('🏷️'),
-            new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji('🎨'),
-            new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji('📁'),
-            new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji('➕'),
-            new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji('➖'),
-            new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji('🗑️'),
+            new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji(''),
+            new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji(''),
+            new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji(''),
+            new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji(''),
+            new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji(''),
+            new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji(''),
           );
 
         return interaction.update({
@@ -1270,7 +1270,7 @@ module.exports = {
         const selected    = selectedIds.map(id => tickets.panels?.[id]).filter(Boolean);
 
         if (selected.length === 0)
-          return interaction.update({ content: '❌ No valid panels selected.', components: [] });
+          return interaction.update({ content: 'No valid panels selected.', components: [] });
 
         const embed = buildDescEmbed(tickets.description);
         const rows  = [];
@@ -1293,7 +1293,7 @@ module.exports = {
         tickets.group = { enabled: true, channelId: interaction.channelId, messageId: sent.id };
         writeData('tickets.json', tickets);
 
-        return interaction.update({ content: `✅ Grouped panel with **${selected.length}** panel(s) sent!`, components: [] });
+        return interaction.update({ content: `Grouped panel with **${selected.length}** panel(s) sent!`, components: [] });
       }
 
       // ticket info edit picker
@@ -1302,12 +1302,12 @@ module.exports = {
         const choice  = interaction.values[0];
         const tickets = readData('tickets.json');
         const panel   = tickets.panels?.[panelId];
-        if (!panel) return interaction.reply({ content: '❌ Panel no longer exists.', ephemeral: true });
+        if (!panel) return interaction.reply({ content: 'Panel no longer exists.', ephemeral: true });
 
         if (choice === 'delete') {
           delete tickets.panels[panelId];
           writeData('tickets.json', tickets);
-          return interaction.update({ content: `✅ Panel **${panel.name}** deleted.`, embeds: [], components: [] });
+          return interaction.update({ content: `Panel **${panel.name}** deleted.`, embeds: [], components: [] });
         }
 
         if (choice === 'color') {
@@ -1315,10 +1315,10 @@ module.exports = {
             .setCustomId(`ticket_edit_color:${panelId}`)
             .setPlaceholder('Select new button color...')
             .addOptions(
-              new StringSelectMenuOptionBuilder().setLabel('🔵 Blue').setValue('blue'),
-              new StringSelectMenuOptionBuilder().setLabel('⚫ Grey').setValue('grey'),
-              new StringSelectMenuOptionBuilder().setLabel('🟢 Green').setValue('green'),
-              new StringSelectMenuOptionBuilder().setLabel('🔴 Red').setValue('red'),
+              new StringSelectMenuOptionBuilder().setLabel('Blue').setValue('blue'),
+              new StringSelectMenuOptionBuilder().setLabel('Grey').setValue('grey'),
+              new StringSelectMenuOptionBuilder().setLabel('Green').setValue('green'),
+              new StringSelectMenuOptionBuilder().setLabel('Red').setValue('red'),
             );
           return interaction.update({ content: 'Select the new button color:', embeds: [], components: [new ActionRowBuilder().addComponents(colorMenu)] });
         }
@@ -1326,7 +1326,7 @@ module.exports = {
         // Remove question → show select menu with actual questions
         if (choice === 'removeq') {
           if (panel.questions.length === 0)
-            return interaction.reply({ content: '❌ This panel has no questions.', ephemeral: true });
+            return interaction.reply({ content: 'This panel has no questions.', ephemeral: true });
           const menu = new StringSelectMenuBuilder()
             .setCustomId(`ticket_removeq_select:${panelId}`)
             .setPlaceholder('Select a question to delete...')
@@ -1361,16 +1361,16 @@ module.exports = {
         const panelId = interaction.customId.split(':')[1];
         const color   = interaction.values[0];
         const tickets = readData('tickets.json');
-        if (!tickets.panels?.[panelId]) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
+        if (!tickets.panels?.[panelId]) return interaction.update({ content: 'Panel not found.', embeds: [], components: [] });
         tickets.panels[panelId].buttonStyle = color;
         writeData('tickets.json', tickets);
-        return interaction.update({ content: `✅ Button color updated to **${color}**.`, embeds: [], components: [] });
+        return interaction.update({ content: `Button color updated to **${color}**.`, embeds: [], components: [] });
       }
 
       // perms command picker
       if (interaction.customId === 'perms_select_command_a' || interaction.customId === 'perms_select_command_b') {
         if (!interaction.member.permissions.has('Administrator'))
-          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+          return interaction.reply({ content: 'No permission.', ephemeral: true });
 
         const selectedCmd = interaction.values[0];
         const levelMenu   = new StringSelectMenuBuilder()
@@ -1390,7 +1390,7 @@ module.exports = {
       // perms level picker
       if (interaction.customId.startsWith('perms_select_level:')) {
         if (!interaction.member.permissions.has('Administrator'))
-          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+          return interaction.reply({ content: 'No permission.', ephemeral: true });
 
         const cmd   = interaction.customId.split(':')[1];
         const level = interaction.values[0];
@@ -1401,7 +1401,7 @@ module.exports = {
       // setrole slot picker
       if (interaction.customId === 'setrole_pick_slot') {
         if (!interaction.member.permissions.has('Administrator'))
-          return interaction.reply({ content: '❌ No permission.', ephemeral: true });
+          return interaction.reply({ content: 'No permission.', ephemeral: true });
 
         const slot       = interaction.values[0];
         const roleSelect = new RoleSelectMenuBuilder()
@@ -1421,10 +1421,10 @@ module.exports = {
         const index   = parseInt(interaction.values[0]);
         const tickets = readData('tickets.json');
         const panel   = tickets.panels?.[panelId];
-        if (!panel) return interaction.update({ content: '❌ Panel not found.', embeds: [], components: [] });
+        if (!panel) return interaction.update({ content: 'Panel not found.', embeds: [], components: [] });
         const removed = panel.questions.splice(index, 1)[0];
         writeData('tickets.json', tickets);
-        return interaction.update({ content: `✅ Question removed:\n> ${removed}`, embeds: [], components: [] });
+        return interaction.update({ content: `Question removed:\n> ${removed}`, embeds: [], components: [] });
       }
 
       // ticket perms remove ping role
@@ -1433,7 +1433,7 @@ module.exports = {
         const tickets = readData('tickets.json');
         tickets.perms.pingRoles = (tickets.perms?.pingRoles || []).filter(id => id !== roleId);
         writeData('tickets.json', tickets);
-        return interaction.update({ content: `✅ <@&${roleId}> removed from ping roles.`, embeds: [], components: [] });
+        return interaction.update({ content: `<@&${roleId}> removed from ping roles.`, embeds: [], components: [] });
       }
 
       // ticket perms remove view role
@@ -1442,7 +1442,7 @@ module.exports = {
         const tickets = readData('tickets.json');
         tickets.perms.viewRoles = (tickets.perms?.viewRoles || []).filter(id => id !== roleId);
         writeData('tickets.json', tickets);
-        return interaction.update({ content: `✅ <@&${roleId}> removed from view roles.`, embeds: [], components: [] });
+        return interaction.update({ content: `<@&${roleId}> removed from view roles.`, embeds: [], components: [] });
       }
     }
   },

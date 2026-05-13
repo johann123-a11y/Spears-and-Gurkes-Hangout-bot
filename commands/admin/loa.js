@@ -23,7 +23,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has("Administrator"))
-      return message.reply('❌ Only **Admins** can use this command.');
+      return message.reply('Only **Admins** can use this command.');
 
     const sub = args[0]?.toLowerCase();
 
@@ -42,14 +42,14 @@ module.exports = {
       return message.reply('Usage: `?loa @user {time} {reason}` or `?loa clear @user`');
 
     const ms = parseTime(time);
-    if (!ms) return message.reply('❌ Invalid time format.');
+    if (!ms) return message.reply('Invalid time format.');
 
     setLOA(target, ms, reason, message.author.tag, message.channel);
   },
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has("Administrator"))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
 
@@ -63,10 +63,10 @@ module.exports = {
     const time = interaction.options.getString('time');
     const reason = interaction.options.getString('reason');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-    if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
 
     const ms = parseTime(time);
-    if (!ms) return interaction.reply({ content: '❌ Invalid time format.', ephemeral: true });
+    if (!ms) return interaction.reply({ content: 'Invalid time format.', ephemeral: true });
 
     await interaction.deferReply();
     setLOA(member, ms, reason, interaction.user.tag, null, interaction);
@@ -85,7 +85,7 @@ function setLOA(member, ms, reason, by, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('🏖️ Staff Member on LOA')
+    .setTitle('Staff Member on LOA')
     .addFields(
       { name: 'Staff Member', value: `${member.user.tag}`, inline: true },
       { name: 'Duration', value: formatTime(ms), inline: true },
@@ -103,7 +103,7 @@ function clearLOA(user, by, channel, interaction) {
   const loa = readData('loa.json');
 
   if (!loa[user.id]) {
-    const msg = `❌ ${user.tag} is not on LOA.`;
+    const msg = `${user.tag} is not on LOA.`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
   }
 
@@ -112,7 +112,7 @@ function clearLOA(user, by, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('✅ LOA Ended')
+    .setTitle('LOA Ended')
     .addFields(
       { name: 'Staff Member', value: user.tag, inline: true },
       { name: 'Ended by', value: by, inline: true }

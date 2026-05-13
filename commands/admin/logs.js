@@ -19,7 +19,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has("Administrator"))
-      return message.reply('❌ Only **Admins** can use this command.');
+      return message.reply('Only **Admins** can use this command.');
 
     const sub = args[0]?.toLowerCase();
     if (sub === 'disable') return disableLogs(message.channel);
@@ -31,7 +31,7 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has("Administrator"))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const sub = interaction.options.getSubcommand();
     if (sub === 'disable') return disableLogs(null, interaction);
@@ -48,7 +48,7 @@ function setLogChannel(channelId, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('✅ Log Channel Set')
+    .setTitle('Log Channel Set')
     .setDescription(`All logs will now be sent to <#${channelId}>.`)
     .setTimestamp();
 
@@ -61,7 +61,7 @@ function disableLogs(channel, interaction) {
   data.channelId = null;
   writeData('logs.json', data);
 
-  const msg = '✅ Logging disabled.';
+  const msg = 'Logging disabled.';
   if (channel) channel.send(msg);
   else if (interaction) interaction.reply({ content: msg, ephemeral: true });
 }

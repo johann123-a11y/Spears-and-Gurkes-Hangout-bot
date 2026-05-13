@@ -13,7 +13,7 @@ module.exports = {
 
   async execute(message, args) {
     if (!message.member.permissions.has('Administrator'))
-      return message.reply('❌ Only **Admins** can use this command.');
+      return message.reply('Only **Admins** can use this command.');
 
     const target = message.mentions.members.first();
     const reason = args.slice(1).join(' ');
@@ -24,12 +24,12 @@ module.exports = {
 
   async executeSlash(interaction) {
     if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: '❌ Only **Admins** can use this command.', ephemeral: true });
+      return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
     const user   = interaction.options.getUser('user');
     const reason = interaction.options.getString('reason');
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-    if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'User not found.', ephemeral: true });
 
     await interaction.deferReply();
     await performStaffKick(member, reason, interaction.user, null, interaction);
@@ -47,13 +47,13 @@ async function performStaffKick(member, reason, executor, channel, interaction) 
       await member.roles.remove(roleId);
     }
   } catch (err) {
-    const msg = `❌ Failed to remove roles: ${err.message}`;
+    const msg = `Failed to remove roles: ${err.message}`;
     return channel ? channel.send(msg) : interaction.editReply(msg);
   }
 
   const embed = new EmbedBuilder()
     .setColor('#ED4245')
-    .setTitle('🚪 Staff Member Removed')
+    .setTitle('Staff Member Removed')
     .addFields(
       { name: 'User',          value: `${member.user.tag}`,                                     inline: true },
       { name: 'Removed by',    value: executor.tag,                                              inline: true },
