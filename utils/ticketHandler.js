@@ -20,18 +20,6 @@ async function handleTicketOpen(interaction) {
   if (!panel)
     return interaction.reply({ content: 'This ticket panel no longer exists.', ephemeral: true });
 
-  // Prevent duplicate tickets for same panel
-  const openTickets = readData('openTickets.json');
-  const existing    = Object.entries(openTickets).find(
-    ([, t]) => t.userId === interaction.user.id && t.panelId === panelId
-  );
-  if (existing) {
-    return interaction.reply({
-      content: `You already have an open ticket for **${panel.name}**: <#${existing[0]}>`,
-      ephemeral: true,
-    });
-  }
-
   if (panel.questions.length > 0) {
     // Show modal with pre-open questions (Discord max: 5 inputs)
     const modal = new ModalBuilder()
