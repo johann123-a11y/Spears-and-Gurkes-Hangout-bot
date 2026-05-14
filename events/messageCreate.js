@@ -9,19 +9,84 @@ const { handleGuess } = require('../commands/general/guessthenumber');
 // Per-channel lock to prevent double-posting sticky on rapid messages
 const stickyLocks = new Set();
 
+// ── Cross-channel spam detection ──────────────────────────────────────────────
+// userId → [{ key, channelId, messageId, timestamp }]
+const spamTracker = new Map();
+const SPAM_WINDOW     = 60_000; // 1 minute
+const SPAM_THRESHOLD  = 3;      // more than 3 distinct channels
+
+function getSpamKey(message) {
+  const content = message.content.trim().toLowerCase();
+  if (content) return content;
+  if (message.attachments.size > 0) return `__att__:${message.attachments.first().name}`;
+  return null;
+}
+
+async function checkCrossChannelSpam(message, client) {
+  if (message.member?.permissions.has(PermissionFlagsBits.ManageMessages)) return;
+
+  const userId = message.author.id;
+  const now    = Date.now();
+  const key    = getSpamKey(message);
+  if (!key) return;
+
+  if (!spamTracker.has(userId)) spamTracker.set(userId, []);
+  const history = spamTracker.get(userId);
+
+  // Add current message & prune old ones
+  history.push({ key, channelId: message.channel.id, messageId: message.id, timestamp: now });
+  const recent = history.filter(e => now - e.timestamp < SPAM_WINDOW);
+  spamTracker.set(userId, recent);
+
+  // Count distinct channels this exact key was sent in
+  const channelsForKey = new Set(recent.filter(e => e.key === key).map(e => e.channelId));
+  if (channelsForKey.size <= SPAM_THRESHOLD) return;
+
+  // ── SPAM DETECTED ──
+  spamTracker.delete(userId);
+
+  // Delete ALL messages from this user in the last minute
+  for (const entry of recent) {
+    const ch = message.guild.channels.cache.get(entry.channelId);
+    if (ch) ch.messages.fetch(entry.messageId).then(m => m.delete().catch(() => {})).catch(() => {});
+  }
+
+  // Permanent mute (Discord max = 28 days)
+  const member = message.guild.members.cache.get(userId)
+    ?? await message.guild.members.fetch(userId).catch(() => null);
+  if (member) {
+    await member.timeout(28 * 24 * 60 * 60 * 1000, 'AutoMod: cross-channel spam').catch(() => {});
+  }
+
+  // Log
+  sendLog(client, {
+    action: '🚨 AutoMod — Cross-Channel Spam',
+    executor: 'AutoMod',
+    target: `<@${userId}> (${message.author.tag})`,
+    fields: {
+      'Message':  key.substring(0, 300),
+      'Channels': [...channelsForKey].map(id => `<#${id}>`).join(', '),
+      'Action':   'All messages deleted + muted 28 days',
+    },
+    color: '#ED4245',
+  });
+}
+
 module.exports = {
   name: 'messageCreate',
   async execute(message, client) {
     if (message.author.bot) return;
 
-    // DM: handle application answers 
+    // DM: handle application answers
     if (!message.guild) {
       await handleDMAnswer(message);
       return;
     }
 
+    // AutoMod: cross-channel spam detection
+    await checkCrossChannelSpam(message, client);
 
-    // Log @everyone / @here pings 
+    // Log @everyone / @here pings
     if (message.mentions.everyone) {
       sendLog(client, {
         action: message.content.includes('@everyone') ? '@everyone Ping' : '@here Ping',
