@@ -116,6 +116,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('rps')
     .setDescription('Rock Paper Scissors event [Staff Team]')
+    .setDefaultMemberPermissions(0)
     .addSubcommand(sub =>
       sub.setName('start')
         .setDescription('Start an RPS event')

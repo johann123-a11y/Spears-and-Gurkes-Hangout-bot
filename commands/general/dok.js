@@ -185,7 +185,8 @@ module.exports = {
   name: 'dok',
   data: new SlashCommandBuilder()
     .setName('dok')
-    .setDescription('Start a Double or Keep event [Staff Team]'),
+    .setDescription('Start a Double or Keep event [Staff Team]')
+    .setDefaultMemberPermissions(0),
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'dok'))
