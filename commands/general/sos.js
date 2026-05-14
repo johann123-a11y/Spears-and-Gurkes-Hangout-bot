@@ -70,7 +70,7 @@ async function endLobby(messageId, client) {
   const lobbyMsg = await channel.messages.fetch(messageId).catch(() => null);
   if (lobbyMsg) {
     const disabled = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ss_join_disabled').setLabel('🎟️ Join').setStyle(ButtonStyle.Primary).setDisabled(true),
+      new ButtonBuilder().setCustomId('ss_join_disabled').setLabel('🎮 Join').setStyle(ButtonStyle.Primary).setDisabled(true),
     );
     lobbyMsg.edit({ components: [disabled] }).catch(() => {});
   }
@@ -124,9 +124,9 @@ module.exports = {
       const endsTs = Math.floor((Date.now() + ms) / 1000);
       const embed  = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('🎮 Split or Steal Event!')
+        .setTitle('🤝 Split or Steal Event!')
         .setDescription(
-          `🎁 **Prize:** ${prize}\n` +
+          `🏆 **Prize:** ${prize}\n` +
           `⏰ **Ends:** <t:${endsTs}:R>\n\n` +
           `Click **Join** to enter! 2 players will be picked to face off.\n\n` +
           `🤝 Split — divide equally · 😈 Steal — winner takes all · Both steal — nobody wins!`
@@ -135,14 +135,14 @@ module.exports = {
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`ss_join:placeholder`).setLabel('🎟️ Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`ss_join:placeholder`).setLabel('🎮 Join').setStyle(ButtonStyle.Primary),
       );
 
       await interaction.reply({ embeds: [embed], components: [row] });
       const msg = await interaction.fetchReply();
 
       const realRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`ss_join:${msg.id}`).setLabel('🎟️ Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`ss_join:${msg.id}`).setLabel('🎮 Join').setStyle(ButtonStyle.Primary),
       );
       await msg.edit({ components: [realRow] }).catch(() => {});
 
