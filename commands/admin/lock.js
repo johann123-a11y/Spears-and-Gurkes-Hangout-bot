@@ -1,73 +1,39 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const { readData, writeData, isStaffMember } = require('../../utils');
+const { readData, writeData } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 const config = require('../../config.json');
 
 function getExemptRoleIds(guild) {
-  // Staff role(s)
   const staffConfig = readData('staffConfig.json');
   const exempt = new Set();
   if (staffConfig?.staffRoleId) exempt.add(staffConfig.staffRoleId);
   const fallbackId = config.roles?.staffTeam;
   if (fallbackId && !fallbackId.endsWith('_ROLE_ID')) exempt.add(fallbackId);
-
-  // lockperm roles
   const lp = readData('lockperms.json');
   for (const id of (lp.roles || [])) exempt.add(id);
-
   return [...exempt];
 }
 
-module.exports = {
-  name: 'lock',
-  data: new SlashCommandBuilder()
-    .setName('lock')
-    .setDescription('Lock or unlock a channel, or manage lock-exempt roles')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
-    .addSubcommand(sub =>
-      sub.setName('lock')
-        .setDescription('Lock this channel — only staff and exempt roles can write')
-        .addChannelOption(o => o.setName('channel').setDescription('Channel to lock (default: current)').setRequired(false))
-    )
-    .addSubcommand(sub =>
-      sub.setName('unlock')
-        .setDescription('Unlock this channel for everyone')
-        .addChannelOption(o => o.setName('channel').setDescription('Channel to unlock (default: current)').setRequired(false))
-    )
-    .addSubcommand(sub =>
-      sub.setName('lockperm')
-        .setDescription('Add or remove a role that can still write when a channel is locked')
-        .addStringOption(o =>
-          o.setName('action').setDescription('Add or remove').setRequired(true)
-            .addChoices({ name: 'Add', value: 'add' }, { name: 'Remove', value: 'remove' })
-        )
-        .addRoleOption(o => o.setName('role').setDescription('Role to add/remove').setRequired(true))
-    ),
+module.exports = [
+  // ── ?lock prefix command ────────────────────────────────────────────────────
+  {
+    name: 'lock',
+    description: 'Locks the current channel. [Staff]',
 
-  async executeSlash(interaction) {
-    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels))
-      return interaction.reply({ content: 'You need **Manage Channels** permission to use this.', ephemeral: true });
+    async execute(message) {
+      if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
+        return message.reply('You need **Manage Channels** permission to use this.');
 
-    const sub = interaction.options.getSubcommand();
+      const channel = message.channel;
 
-    // ── /lock lock ────────────────────────────────────────────────────────────
-    if (sub === 'lock') {
-      const channel = interaction.options.getChannel('channel') ?? interaction.channel;
+      await channel.permissionOverwrites.edit(message.guild.id, { SendMessages: false }).catch(() => {});
 
-      // Deny @everyone send
-      await channel.permissionOverwrites.edit(interaction.guild.id, {
-        SendMessages: false,
-      }).catch(() => {});
-
-      // Allow exempt roles
-      for (const roleId of getExemptRoleIds(interaction.guild)) {
-        const role = interaction.guild.roles.cache.get(roleId);
-        if (role) {
-          await channel.permissionOverwrites.edit(role, { SendMessages: true }).catch(() => {});
-        }
+      for (const roleId of getExemptRoleIds(message.guild)) {
+        const role = message.guild.roles.cache.get(roleId);
+        if (role) await channel.permissionOverwrites.edit(role, { SendMessages: true }).catch(() => {});
       }
 
-      await interaction.reply({
+      message.channel.send({
         embeds: [new EmbedBuilder()
           .setColor('#ED4245')
           .setTitle('Channel Locked')
@@ -75,24 +41,29 @@ module.exports = {
           .setTimestamp()],
       });
 
-      sendLog(interaction.client, {
+      sendLog(message.client, {
         action: 'Channel Locked',
-        executor: interaction.user.tag,
+        executor: message.author.tag,
         target: `<#${channel.id}>`,
         color: '#ED4245',
       });
-    }
+    },
+  },
 
-    // ── /lock unlock ──────────────────────────────────────────────────────────
-    if (sub === 'unlock') {
-      const channel = interaction.options.getChannel('channel') ?? interaction.channel;
+  // ── ?unlock prefix command ──────────────────────────────────────────────────
+  {
+    name: 'unlock',
+    description: 'Unlocks the current channel. [Staff]',
 
-      // Restore @everyone send
-      await channel.permissionOverwrites.edit(interaction.guild.id, {
-        SendMessages: null,
-      }).catch(() => {});
+    async execute(message) {
+      if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
+        return message.reply('You need **Manage Channels** permission to use this.');
 
-      await interaction.reply({
+      const channel = message.channel;
+
+      await channel.permissionOverwrites.edit(message.guild.id, { SendMessages: null }).catch(() => {});
+
+      message.channel.send({
         embeds: [new EmbedBuilder()
           .setColor('#57F287')
           .setTitle('Channel Unlocked')
@@ -100,24 +71,46 @@ module.exports = {
           .setTimestamp()],
       });
 
-      sendLog(interaction.client, {
+      sendLog(message.client, {
         action: 'Channel Unlocked',
-        executor: interaction.user.tag,
+        executor: message.author.tag,
         target: `<#${channel.id}>`,
         color: '#57F287',
       });
-    }
+    },
+  },
 
-    // ── /lock lockperm ────────────────────────────────────────────────────────
-    if (sub === 'lockperm') {
-      const action = interaction.options.getString('action');
-      const role   = interaction.options.getRole('role');
-      const lp     = readData('lockperms.json');
+  // ── /lockperm slash command ─────────────────────────────────────────────────
+  {
+    name: 'lockperm',
+    data: new SlashCommandBuilder()
+      .setName('lockperm')
+      .setDescription('Manage roles that can still write in a locked channel [Admin]')
+      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+      .addSubcommand(sub =>
+        sub.setName('add')
+          .setDescription('Add a role that can write in locked channels')
+          .addRoleOption(o => o.setName('role').setDescription('Role to add').setRequired(true))
+      )
+      .addSubcommand(sub =>
+        sub.setName('remove')
+          .setDescription('Remove a role from the lock-exempt list')
+          .addRoleOption(o => o.setName('role').setDescription('Role to remove').setRequired(true))
+      )
+      .addSubcommand(sub =>
+        sub.setName('list')
+          .setDescription('Show all lock-exempt roles')
+      ),
+
+    async executeSlash(interaction) {
+      const sub  = interaction.options.getSubcommand();
+      const lp   = readData('lockperms.json');
       if (!Array.isArray(lp.roles)) lp.roles = [];
 
-      if (action === 'add') {
+      if (sub === 'add') {
+        const role = interaction.options.getRole('role');
         if (lp.roles.includes(role.id))
-          return interaction.reply({ content: `**${role.name}** is already in the lock-exempt list.`, ephemeral: true });
+          return interaction.reply({ content: `**${role.name}** is already exempt.`, ephemeral: true });
         lp.roles.push(role.id);
         writeData('lockperms.json', lp);
         return interaction.reply({
@@ -130,9 +123,10 @@ module.exports = {
         });
       }
 
-      if (action === 'remove') {
+      if (sub === 'remove') {
+        const role = interaction.options.getRole('role');
         if (!lp.roles.includes(role.id))
-          return interaction.reply({ content: `**${role.name}** is not in the lock-exempt list.`, ephemeral: true });
+          return interaction.reply({ content: `**${role.name}** is not in the exempt list.`, ephemeral: true });
         lp.roles = lp.roles.filter(id => id !== role.id);
         writeData('lockperms.json', lp);
         return interaction.reply({
@@ -144,6 +138,18 @@ module.exports = {
           ephemeral: true,
         });
       }
-    }
+
+      if (sub === 'list') {
+        const roles = lp.roles.map(id => `<@&${id}>`).join('\n') || 'No exempt roles configured.';
+        return interaction.reply({
+          embeds: [new EmbedBuilder()
+            .setColor('#5865F2')
+            .setTitle('Lock-Exempt Roles')
+            .setDescription(roles)
+            .setTimestamp()],
+          ephemeral: true,
+        });
+      }
+    },
   },
-};
+];
