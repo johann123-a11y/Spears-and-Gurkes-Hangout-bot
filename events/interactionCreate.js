@@ -440,7 +440,17 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      // Split or Steal buttons 
+      // Double or Keep buttons
+      if (interaction.customId.startsWith('dok_join:')) {
+        const { handleJoin } = require('../commands/general/dok');
+        return handleJoin(interaction);
+      }
+      if (interaction.customId.startsWith('dok_pick:')) {
+        const { handlePick } = require('../commands/general/dok');
+        return handlePick(interaction);
+      }
+
+      // Split or Steal buttons
       if (interaction.customId.startsWith('ss_join:')) {
         const { handleJoin } = require('../commands/general/sos');
         return handleJoin(interaction);
