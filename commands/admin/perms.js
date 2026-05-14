@@ -80,11 +80,11 @@ function setPerm(cmd, level) {
 function buildSetEmbed(cmd, level) {
   return new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('Permission Updated')
+    .setTitle('✅ Permission Updated')
     .addFields(
-      { name: 'Command',        value: `\`${cmd}\``,                   inline: true },
-      { name: 'New Permission', value: COMMAND_LABELS[level] ?? level,  inline: true },
-      { name: 'Description',    value: COMMAND_DESCRIPTIONS[cmd] ?? '—' },
+      { name: '💬 Command',        value: `\`${cmd}\``,                   inline: true },
+      { name: '🔒 New Permission', value: COMMAND_LABELS[level] ?? level,  inline: true },
+      { name: '📋 Description',    value: COMMAND_DESCRIPTIONS[cmd] ?? '—' },
     )
     .setTimestamp();
 }
@@ -101,7 +101,7 @@ function buildListEmbed() {
 
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Command Permissions')
+    .setTitle('⚙️ Command Permissions')
     .setDescription('Select a command below to change its permission level.\n\u200b')
     .addFields(fields)
     .setTimestamp();

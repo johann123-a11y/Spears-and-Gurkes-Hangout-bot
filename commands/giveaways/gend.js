@@ -73,14 +73,14 @@ async function endGiveaway(msgId, guild, replyChannel, interaction) {
   // Keep original info, just swap in winner + ended state
   const embed = new EmbedBuilder()
     .setColor('#ED4245')
-    .setTitle(`GIVEAWAY ENDED — ${gw.prize}`)
+    .setTitle(`🎉 GIVEAWAY ENDED — ${gw.prize}`)
     .setDescription(
       `${gw.description || ''}\n\n` +
-      `**Winner(s):** ${winnerMentions}\n\n` +
-      `**Winners:** ${gw.winners}\n` +
-      `**Entries:** ${participantIds.length}\n` +
-      `**Hosted by:** <@${gw.hostId}>\n` +
-      `**Ended:** <t:${endedAt}:R>`
+      `🏆 **Winner(s):** ${winnerMentions}\n\n` +
+      `🏆 **Winners:** ${gw.winners}\n` +
+      `👥 **Entries:** ${participantIds.length}\n` +
+      `👤 **Hosted by:** <@${gw.hostId}>\n` +
+      `⏰ **Ended:** <t:${endedAt}:R>`
     )
     .setTimestamp();
 

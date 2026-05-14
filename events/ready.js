@@ -30,7 +30,7 @@ async function checkTimers(client) {
         if (loaChannel) {
           const embed = new EmbedBuilder()
             .setColor('#57F287')
-            .setTitle('LOA Ended — Staff Member Returned')
+            .setTitle('🏖️ LOA Ended — Staff Member Returned')
             .setDescription(`<@${userId}> (**${data.username}**) is back from their Leave of Absence!`)
             .setTimestamp();
           loaChannel.send({ embeds: [embed] });
@@ -121,11 +121,11 @@ async function checkTimers(client) {
           // Post results
           const embed = new EmbedBuilder()
             .setColor(notResponded.size > 0 ? '#ED4245' : '#57F287')
-            .setTitle('Activity Check Results')
+            .setTitle('📋 Activity Check Results')
             .addFields(
-              { name: 'Responded', value: `${responded.length}`, inline: true },
-              { name: 'Striked', value: `${notResponded.size}`, inline: true },
-              { name: 'Striked Members', value: notResponded.size > 0 ? [...notResponded.values()].map(m => `<@${m.id}>`).join(', ') : 'None' }
+              { name: '✅ Responded', value: `${responded.length}`, inline: true },
+              { name: '⚠️ Striked', value: `${notResponded.size}`, inline: true },
+              { name: '👤 Striked Members', value: notResponded.size > 0 ? [...notResponded.values()].map(m => `<@${m.id}>`).join(', ') : 'None' }
             )
             .setTimestamp();
           channel.send({ embeds: [embed] });

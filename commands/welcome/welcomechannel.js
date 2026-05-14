@@ -35,7 +35,7 @@ function respond(channelId, channelName, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('Welcome Channel Set')
+    .setTitle('✅ Welcome Channel Set')
     .setDescription(`Welcome messages will be sent to <#${channelId}>.`)
     .setTimestamp();
 

@@ -42,10 +42,10 @@ function setAfk(userId, reason, ms, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('AFK Set')
+    .setTitle('💤 AFK Set')
     .addFields(
-      { name: 'Reason', value: reason },
-      { name: 'Duration', value: ms ? formatTime(ms) : 'Indefinite' }
+      { name: '📋 Reason', value: reason },
+      { name: '⏳ Duration', value: ms ? formatTime(ms) : 'Indefinite' }
     )
     .setTimestamp();
 

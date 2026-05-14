@@ -52,12 +52,12 @@ module.exports = {
 function buildEmbed(user, time, reason, by) {
   return new EmbedBuilder()
     .setColor('#FEE75C')
-    .setTitle('User Kicked')
+    .setTitle('👢 User Kicked')
     .addFields(
-      { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-      { name: 'Kicked by', value: by, inline: true },
-      { name: 'Away for', value: time, inline: true },
-      { name: 'Reason', value: reason }
+      { name: '👤 User', value: `${user.tag} (${user.id})`, inline: true },
+      { name: '🛡️ Kicked by', value: by, inline: true },
+      { name: '⏳ Away for', value: time, inline: true },
+      { name: '📋 Reason', value: reason }
     )
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();

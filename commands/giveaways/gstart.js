@@ -88,15 +88,15 @@ async function createGiveaway(channel, ms, winners, prize, description, hostId) 
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')
-    .setTitle(`GIVEAWAY — ${prize}`)
+    .setTitle(`🎉 GIVEAWAY — ${prize}`)
     .setDescription(
-      `${description}\n\nClick the button below to enter!\n\n**Winners:** ${winners}\n**Entries:** 0\n**Hosted by:** <@${hostId}>\n**Ends:** <t:${Math.floor(endTime / 1000)}:R>`
+      `${description}\n\nClick the button below to enter!\n\n🏆 **Winners:** ${winners}\n👥 **Entries:** 0\n👤 **Hosted by:** <@${hostId}>\n⏰ **Ends:** <t:${Math.floor(endTime / 1000)}:R>`
     )
     .setTimestamp(endTime);
 
   const btn = new ButtonBuilder()
     .setCustomId('giveaway_join:PLACEHOLDER')
-    .setLabel('Join Giveaway')
+    .setLabel('🎟️ Join Giveaway')
     .setStyle(ButtonStyle.Primary);
 
   const msg = await channel.send({ embeds: [embed], components: [new ActionRowBuilder().addComponents(btn)] });

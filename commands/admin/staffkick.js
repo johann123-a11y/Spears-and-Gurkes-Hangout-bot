@@ -53,12 +53,12 @@ async function performStaffKick(member, reason, executor, channel, interaction) 
 
   const embed = new EmbedBuilder()
     .setColor('#ED4245')
-    .setTitle('Staff Member Removed')
+    .setTitle('👢 Staff Member Removed')
     .addFields(
-      { name: 'User',          value: `${member.user.tag}`,                                     inline: true },
-      { name: 'Removed by',    value: executor.tag,                                              inline: true },
-      { name: 'Roles Removed', value: staffRoleIds.length > 0 ? `${staffRoleIds.length} role(s)` : 'None found', inline: true },
-      { name: 'Reason',        value: reason },
+      { name: '👤 User',          value: `${member.user.tag}`,                                     inline: true },
+      { name: '🛡️ Removed by',    value: executor.tag,                                              inline: true },
+      { name: '🎖️ Roles Removed', value: staffRoleIds.length > 0 ? `${staffRoleIds.length} role(s)` : 'None found', inline: true },
+      { name: '📋 Reason',        value: reason },
     )
     .setThumbnail(member.user.displayAvatarURL())
     .setTimestamp();

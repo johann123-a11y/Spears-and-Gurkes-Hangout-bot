@@ -48,7 +48,7 @@ function setLogChannel(channelId, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('Log Channel Set')
+    .setTitle('📋 Log Channel Set')
     .setDescription(`All logs will now be sent to <#${channelId}>.`)
     .setTimestamp();
 

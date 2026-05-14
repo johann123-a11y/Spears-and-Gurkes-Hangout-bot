@@ -34,8 +34,8 @@ function buildEmbed(user, strikes) {
 
   const embed = new EmbedBuilder()
     .setColor(count >= 3 ? '#FF0000' : count > 0 ? '#FEE75C' : '#57F287')
-    .setTitle(`Strikes — ${user.tag}`)
-    .addFields({ name: 'Total Strikes', value: `${count}/3`, inline: true })
+    .setTitle(`⚠️ Strikes — ${user.tag}`)
+    .addFields({ name: '📊 Total Strikes', value: `${count}/3`, inline: true })
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();
 
@@ -43,7 +43,7 @@ function buildEmbed(user, strikes) {
     embed.setDescription('No strikes on record.');
   } else {
     entries.forEach((e, i) => {
-      embed.addFields({ name: `Strike #${i + 1} — by ${e.by}`, value: e.reason });
+      embed.addFields({ name: `⚠️ Strike #${i + 1} — by ${e.by}`, value: e.reason });
     });
   }
 

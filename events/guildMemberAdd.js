@@ -15,12 +15,12 @@ module.exports = {
 
     // Always log join regardless of welcome settings
     sendLog(client, {
-      action: 'Member Joined',
+      action: '👋 Member Joined',
       executor: member.user.tag,
       target: `<@${member.id}>`,
       fields: {
-        'Account Created': `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
-        'Members': `${member.guild.memberCount}`,
+        '📅 Account Created': `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+        '👥 Members': `${member.guild.memberCount}`,
       },
       color: '#57F287',
     });

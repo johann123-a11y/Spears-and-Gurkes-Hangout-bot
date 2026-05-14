@@ -60,7 +60,7 @@ async function setStick(channel, text, message) {
   // Send new sticky first so it appears instantly
   const embed = new EmbedBuilder()
     .setColor('#FEE75C')
-    .setDescription(`${text}`);
+    .setDescription(`📌 ${text}`);
 
   const sent = await channel.send({ embeds: [embed] });
 

@@ -49,11 +49,11 @@ module.exports = {
 function buildEmbed(user, reason, by) {
   return new EmbedBuilder()
     .setColor('#ED4245')
-    .setTitle('User Banned')
+    .setTitle('🔨 User Banned')
     .addFields(
-      { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-      { name: 'Banned by', value: by, inline: true },
-      { name: 'Reason', value: reason }
+      { name: '👤 User', value: `${user.tag} (${user.id})`, inline: true },
+      { name: '🛡️ Banned by', value: by, inline: true },
+      { name: '📋 Reason', value: reason }
     )
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();

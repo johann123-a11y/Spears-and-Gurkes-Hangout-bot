@@ -7,12 +7,12 @@ module.exports = {
     if (channel.name.startsWith('ticket-')) return;
 
     sendLog(client, {
-      action: 'Channel Deleted',
+      action: '🗑️ Channel Deleted',
       executor: 'Discord / Manual',
       fields: {
-        'Channel Name': channel.name,
-        'Channel ID': channel.id,
-        'Type': channel.type.toString(),
+        '💬 Channel Name': channel.name,
+        '🆔 Channel ID': channel.id,
+        '📁 Type': channel.type.toString(),
       },
       color: '#ED4245',
     });

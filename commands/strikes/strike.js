@@ -78,12 +78,12 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
     const count = strikes[userId].count;
     const embed = new EmbedBuilder()
       .setColor('#FF0000')
-      .setTitle('Staff Member Striked')
+      .setTitle('⚠️ Staff Member Striked')
       .addFields(
-        { name: 'Staff Member', value: `${targetMember.user.tag}`, inline: true },
-        { name: 'Striked by', value: executor.tag, inline: true },
-        { name: 'Total Strikes', value: `${count}/3`, inline: true },
-        { name: 'Reason', value: reason }
+        { name: '👤 Staff Member', value: `${targetMember.user.tag}`, inline: true },
+        { name: '🛡️ Striked by', value: executor.tag, inline: true },
+        { name: '📊 Total Strikes', value: `${count}/3`, inline: true },
+        { name: '📋 Reason', value: reason }
       )
       .setThumbnail(targetMember.user.displayAvatarURL())
       .setTimestamp();
@@ -117,12 +117,12 @@ async function handleStrike(action, targetMember, reason, executor, guild, chann
 
     const embed = new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('Strike Removed')
+      .setTitle('✅ Strike Removed')
       .addFields(
-        { name: 'Staff Member', value: `${targetMember.user.tag}`, inline: true },
-        { name: 'Removed by', value: executor.tag, inline: true },
-        { name: 'Remaining Strikes', value: `${strikes[userId].count}/3`, inline: true },
-        { name: 'Reason', value: reason }
+        { name: '👤 Staff Member', value: `${targetMember.user.tag}`, inline: true },
+        { name: '🛡️ Removed by', value: executor.tag, inline: true },
+        { name: '📊 Remaining Strikes', value: `${strikes[userId].count}/3`, inline: true },
+        { name: '📋 Reason', value: reason }
       )
       .setThumbnail(targetMember.user.displayAvatarURL())
       .setTimestamp();
@@ -150,9 +150,9 @@ async function autoDemote(member, guild, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#FF0000')
-    .setTitle('Auto-Demoted — 3 Strikes Reached')
+    .setTitle('⬇️ Auto-Demoted — 3 Strikes Reached')
     .setDescription(`${member.user.tag} has been automatically demoted after reaching **3 strikes**.`)
-    .addFields({ name: 'New Role', value: newRoleKey })
+    .addFields({ name: '🎖️ New Role', value: newRoleKey })
     .setTimestamp();
 
   if (channel) channel.send({ embeds: [embed] });

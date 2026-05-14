@@ -22,8 +22,8 @@ function halfPrize(prize) {
 
 function splitStealButtons(gameId) {
   return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`ss_pick:${gameId}:split`).setLabel('Split').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId(`ss_pick:${gameId}:steal`).setLabel('Steal').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId(`ss_pick:${gameId}:split`).setLabel('🤝 Split').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId(`ss_pick:${gameId}:steal`).setLabel('😈 Steal').setStyle(ButtonStyle.Danger),
   );
 }
 
@@ -33,13 +33,13 @@ async function startGame(p1, p2, prize, channelId, client, replyFn) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Split or Steal?')
+    .setTitle('⚔️ Split or Steal?')
     .setDescription(
-      `**Prize:** ${prize}\n\n` +
+      `🎁 **Prize:** ${prize}\n\n` +
       `<@${p1}> vs <@${p2}>\n\n` +
       `Both players must make their choice:\n\n` +
-      `**Split** — divide the prize equally\n` +
-      `**Steal** — take everything (but if both steal, nobody gets anything!)`
+      `🤝 **Split** — divide the prize equally\n` +
+      `😈 **Steal** — take everything (but if both steal, nobody gets anything!)`
     )
     .setTimestamp();
 
@@ -70,7 +70,7 @@ async function endLobby(messageId, client) {
   const lobbyMsg = await channel.messages.fetch(messageId).catch(() => null);
   if (lobbyMsg) {
     const disabled = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ss_join_disabled').setLabel('Join').setStyle(ButtonStyle.Primary).setDisabled(true),
+      new ButtonBuilder().setCustomId('ss_join_disabled').setLabel('🎟️ Join').setStyle(ButtonStyle.Primary).setDisabled(true),
     );
     lobbyMsg.edit({ components: [disabled] }).catch(() => {});
   }
@@ -124,25 +124,25 @@ module.exports = {
       const endsTs = Math.floor((Date.now() + ms) / 1000);
       const embed  = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('Split or Steal Event!')
+        .setTitle('🎮 Split or Steal Event!')
         .setDescription(
-          `**Prize:** ${prize}\n` +
-          `**Ends:** <t:${endsTs}:R>\n\n` +
+          `🎁 **Prize:** ${prize}\n` +
+          `⏰ **Ends:** <t:${endsTs}:R>\n\n` +
           `Click **Join** to enter! 2 players will be picked to face off.\n\n` +
-          `Split — divide equally · Steal — winner takes all · Both steal — nobody wins!`
+          `🤝 Split — divide equally · 😈 Steal — winner takes all · Both steal — nobody wins!`
         )
         .setFooter({ text: `Hosted by ${interaction.user.tag}` })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`ss_join:placeholder`).setLabel('Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`ss_join:placeholder`).setLabel('🎟️ Join').setStyle(ButtonStyle.Primary),
       );
 
       await interaction.reply({ embeds: [embed], components: [row] });
       const msg = await interaction.fetchReply();
 
       const realRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`ss_join:${msg.id}`).setLabel('Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`ss_join:${msg.id}`).setLabel('🎟️ Join').setStyle(ButtonStyle.Primary),
       );
       await msg.edit({ components: [realRow] }).catch(() => {});
 
@@ -232,17 +232,17 @@ module.exports = {
       color = '#57F287';
       title = 'Both Split!';
       desc  =
-        `<@${game.player1}> chose **Split**\n` +
-        `<@${game.player2}> chose **Split**\n\n` +
+        `<@${game.player1}> chose 🤝 **Split**\n` +
+        `<@${game.player2}> chose 🤝 **Split**\n\n` +
         `Both players win! Each receives ${halfStr}!`;
 
     } else if (p1Pick === 'steal' && p2Pick === 'steal') {
       color = '#ED4245';
       title = 'Both Stole — Nobody Wins!';
       desc  =
-        `<@${game.player1}> chose **Steal**\n` +
-        `<@${game.player2}> chose **Steal**\n\n` +
-        `Both players chose to steal — **nobody receives anything!**`;
+        `<@${game.player1}> chose 😈 **Steal**\n` +
+        `<@${game.player2}> chose 😈 **Steal**\n\n` +
+        `Both players chose to steal — nobody receives anything!`;
 
     } else {
       const stealerId  = p1Pick === 'steal' ? game.player1 : game.player2;
@@ -250,8 +250,8 @@ module.exports = {
       color = '#FEE75C';
       title = 'Stolen!';
       desc  =
-        `<@${game.player1}> chose **${p1Pick === 'split' ? 'Split' : 'Steal'}**\n` +
-        `<@${game.player2}> chose **${p2Pick === 'split' ? 'Split' : 'Steal'}**\n\n` +
+        `<@${game.player1}> chose ${p1Pick === 'split' ? '🤝' : '😈'} **${p1Pick === 'split' ? 'Split' : 'Steal'}**\n` +
+        `<@${game.player2}> chose ${p2Pick === 'split' ? '🤝' : '😈'} **${p2Pick === 'split' ? 'Split' : 'Steal'}**\n\n` +
         `<@${stealerId}> stole the prize and wins **${game.prize}**!\n` +
         `<@${splitterId}> trusted and gets nothing.`;
     }
@@ -263,8 +263,8 @@ module.exports = {
       .setTimestamp();
 
     const disabledRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ss_split_d').setLabel('Split').setStyle(ButtonStyle.Success).setDisabled(true),
-      new ButtonBuilder().setCustomId('ss_steal_d').setLabel('Steal').setStyle(ButtonStyle.Danger).setDisabled(true),
+      new ButtonBuilder().setCustomId('ss_split_d').setLabel('🤝 Split').setStyle(ButtonStyle.Success).setDisabled(true),
+      new ButtonBuilder().setCustomId('ss_steal_d').setLabel('😈 Steal').setStyle(ButtonStyle.Danger).setDisabled(true),
     );
     interaction.message.edit({ components: [disabledRow] }).catch(() => {});
 

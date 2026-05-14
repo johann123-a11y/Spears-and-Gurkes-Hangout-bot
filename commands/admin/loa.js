@@ -85,12 +85,12 @@ function setLOA(member, ms, reason, by, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Staff Member on LOA')
+    .setTitle('🏖️ Staff Member on LOA')
     .addFields(
-      { name: 'Staff Member', value: `${member.user.tag}`, inline: true },
-      { name: 'Duration', value: formatTime(ms), inline: true },
-      { name: 'Set by', value: by, inline: true },
-      { name: 'Reason', value: reason }
+      { name: '👤 Staff Member', value: `${member.user.tag}`, inline: true },
+      { name: '⏳ Duration', value: formatTime(ms), inline: true },
+      { name: '🛡️ Set by', value: by, inline: true },
+      { name: '📋 Reason', value: reason }
     )
     .setThumbnail(member.user.displayAvatarURL())
     .setTimestamp();
@@ -112,10 +112,10 @@ function clearLOA(user, by, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('LOA Ended')
+    .setTitle('✅ LOA Ended')
     .addFields(
-      { name: 'Staff Member', value: user.tag, inline: true },
-      { name: 'Ended by', value: by, inline: true }
+      { name: '👤 Staff Member', value: user.tag, inline: true },
+      { name: '🛡️ Ended by', value: by, inline: true }
     )
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();

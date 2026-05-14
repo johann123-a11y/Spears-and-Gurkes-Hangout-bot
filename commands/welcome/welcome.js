@@ -40,7 +40,7 @@ function respond(action, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor(data.enabled ? '#57F287' : '#ED4245')
-    .setTitle(`Welcome Messages ${data.enabled ? 'Enabled ' : 'Disabled '}`)
+    .setTitle(`👋 Welcome Messages ${data.enabled ? 'Enabled ✅' : 'Disabled ❌'}`)
     .setTimestamp();
 
   if (channel) channel.send({ embeds: [embed] });

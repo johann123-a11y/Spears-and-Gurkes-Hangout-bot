@@ -34,15 +34,15 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('Staff Member Promoted')
+      .setTitle('\u2b06\ufe0f Staff Member Promoted')
       .addFields(
-        { name: 'Staff Member', value: `<@${member.user.id}>`, inline: true },
-        { name: 'Promoted by',  value: `<@${interaction.user.id}>`, inline: true },
-        { name: '\u200b',       value: '\u200b', inline: true },
-        { name: 'Old Role',     value: `<@&${oldRole.id}>`, inline: true },
-        { name: 'New Role',     value: `<@&${newRole.id}>`, inline: true },
-        { name: '\u200b',       value: '\u200b', inline: true },
-        { name: 'Reason',       value: reason },
+        { name: '\ud83d\udc64 Staff Member', value: `<@${member.user.id}>`, inline: true },
+        { name: '\ud83d\udee1\ufe0f Promoted by',  value: `<@${interaction.user.id}>`, inline: true },
+        { name: '\u200b',           value: '\u200b', inline: true },
+        { name: '\ud83c\udf96\ufe0f Old Role',     value: `<@&${oldRole.id}>`, inline: true },
+        { name: '\ud83c\udf96\ufe0f New Role',     value: `<@&${newRole.id}>`, inline: true },
+        { name: '\u200b',           value: '\u200b', inline: true },
+        { name: '\ud83d\udccb Reason',        value: reason },
       )
       .setThumbnail(member.user.displayAvatarURL())
       .setTimestamp();

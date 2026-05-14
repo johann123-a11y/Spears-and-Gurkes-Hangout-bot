@@ -38,8 +38,8 @@ function respond(msg, channel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('Welcome Message Updated')
-    .addFields({ name: 'New Message', value: msg })
+    .setTitle('✅ Welcome Message Updated')
+    .addFields({ name: '📝 New Message', value: msg })
     .setFooter({ text: 'Variables: {member} {server} {membercount}' })
     .setTimestamp();
 

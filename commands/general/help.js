@@ -19,22 +19,22 @@ module.exports = {
 function buildEmbed() {
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Spears and Gurkes Hangout — Command List')
+    .setTitle('📋 Spears and Gurkes Hangout — Command List')
     .setDescription('`?` prefix **or** `/` slash unless marked slash-only.\n\u200b')
     .addFields(
       {
-        name: 'Moderation [JrHelper+]',
+        name: '🔇 Moderation [JrHelper+]',
         value: [
           '`?mute @user {time} {reason}` — Timeouts a user',
           '`?unmute @user` — Removes a timeout',
         ].join('\n'),
       },
       {
-        name: 'Moderation [Mod+]',
+        name: '🗑️ Moderation [Mod+]',
         value: '`?clear {amount}` — Deletes messages (1–100)',
       },
       {
-        name: 'Moderation [Admin]',
+        name: '🔨 Moderation [Admin]',
         value: [
           '`?ban @user {reason}` — Permanently bans a user',
           '`?kick @user {reason}` — Kicks a user',
@@ -42,7 +42,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Strikes [SrMod+]',
+        name: '⚠️ Strikes [SrMod+]',
         value: [
           '`?strike @user {reason}` — Adds a strike',
           '`?strike remove @user {reason}` — Removes a strike',
@@ -51,7 +51,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Staff Management [Admin]',
+        name: '🛡️ Staff Management [Admin]',
         value: [
           '`?loa @user {time} {reason}` — Puts a user on LOA',
           '`?loa clear @user` — Removes LOA early',
@@ -63,7 +63,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Setup [Administrator]',
+        name: '⚙️ Setup [Administrator]',
         value: [
           '`?setrole list` — Shows configured roles (interactive)',
           '`?setrole set {slot} @role` — Sets a role slot',
@@ -76,7 +76,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Link Filter [Administrator] — Slash only',
+        name: '🔗 Link Filter [Administrator] — Slash only',
         value: [
           '`/media on / off` — Enable/disable link filter',
           '`/media add #channel` — Allow links in a channel',
@@ -85,7 +85,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Invite Filter [Administrator] — Slash only',
+        name: '🔗 Invite Filter [Administrator] — Slash only',
         value: [
           '`/partner on / off` — Enable/disable Discord invite filter',
           '`/partner add #channel` — Allow invites in a channel',
@@ -95,7 +95,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Welcome [Admin]',
+        name: '👋 Welcome [Admin]',
         value: [
           '`?welcome enable / disable` — Toggle welcome messages',
           '`?welcomechannel #channel` — Sets the welcome channel',
@@ -104,7 +104,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Mass DM & Reviews [Admin] — Slash only',
+        name: '📨 Mass DM & Reviews [Admin] — Slash only',
         value: [
           '`/send all` — DM an alle Member (Überschrift, Unterzeile, Text, Footer)',
           '`/send test` — Test-DM nur an dich',
@@ -114,7 +114,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Tickets [Admin] — Slash only',
+        name: '🎫 Tickets [Admin] — Slash only',
         value: [
           '`/ticket setup` — Create a panel (form)',
           '`/ticket send panel:{name}` — Send panel to channel',
@@ -127,7 +127,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Tickets [Staff] — Slash only',
+        name: '🎫 Tickets [Staff] — Slash only',
         value: [
           '`/ticket add @user` — Add user to ticket',
           '`/ticket remove @user` — Remove user from ticket',
@@ -139,7 +139,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Applications [Admin] — Slash only',
+        name: '📋 Applications [Admin] — Slash only',
         value: [
           '`/application setup` — Create application (form)',
           '`/application group` — Combine into one panel',
@@ -153,7 +153,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'Giveaways [Staff Team]',
+        name: '🎉 Giveaways [Staff Team]',
         value: [
           '`/gstart` — Start a giveaway (interactive)',
           '`?gstart {time} {winners} {prize}` — Quick giveaway',
@@ -162,7 +162,7 @@ function buildEmbed() {
         ].join('\n'),
       },
       {
-        name: 'General',
+        name: '💬 General',
         value: [
           '`?afk {reason}` — Set yourself AFK',
           '`?afk {time} {reason}` — AFK with time limit',

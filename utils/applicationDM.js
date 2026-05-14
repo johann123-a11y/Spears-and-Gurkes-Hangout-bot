@@ -178,7 +178,7 @@ async function finalizeApplication(user, dmChannel, session) {
   await dmChannel.send({
     embeds: [new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('Application Submitted!')
+      .setTitle('✅ Application Submitted!')
       .setDescription(
         `Your application for **${session.forWhat}** has been submitted.\n` +
         `You will be notified once it has been reviewed. Thank you!`
@@ -198,11 +198,11 @@ async function finalizeApplication(user, dmChannel, session) {
 
   const embed = new EmbedBuilder()
     .setColor('#FEE75C')
-    .setTitle('New Application — Pending')
+    .setTitle('📋 New Application — Pending')
     .addFields(
-      { name: 'Applicant',   value: `<@${user.id}> (${user.tag})`,                          inline: true },
-      { name: 'Applied for', value: session.forWhat,                                         inline: true },
-      { name: 'Submitted',   value: `<t:${Math.floor(Date.now() / 1000)}:F>`,               inline: true },
+      { name: '👤 Applicant',   value: `<@${user.id}> (${user.tag})`,                          inline: true },
+      { name: '📝 Applied for', value: session.forWhat,                                         inline: true },
+      { name: '🕐 Submitted',   value: `<t:${Math.floor(Date.now() / 1000)}:F>`,               inline: true },
       ...session.answers.map(a => ({ name: a.question, value: a.answer })),
     )
     .setThumbnail(user.displayAvatarURL())
@@ -210,10 +210,10 @@ async function finalizeApplication(user, dmChannel, session) {
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('Accept').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('Deny').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId(`app_warnhistory:${user.id}`).setLabel('Warn History').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`app_openticket:${user.id}`).setLabel('Open Ticket').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('✅ Accept').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('❌ Deny').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId(`app_warnhistory:${user.id}`).setLabel('📋 Warn History').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`app_openticket:${user.id}`).setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary),
   );
 
   const pingContent = pingTarget ? `<@${pingTarget}>` : null;

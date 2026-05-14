@@ -61,7 +61,7 @@ function buildEmbed(user) {
   if (!data) {
     return new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('LOA Status')
+      .setTitle('🏖️ LOA Status')
       .setDescription(`**${user.tag}** is not on LOA.`)
       .setTimestamp();
   }
@@ -70,18 +70,18 @@ function buildEmbed(user) {
   if (remaining <= 0) {
     return new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('LOA Status')
+      .setTitle('🏖️ LOA Status')
       .setDescription(`**${user.tag}**'s LOA has already expired.`)
       .setTimestamp();
   }
 
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('LOA Status')
+    .setTitle('🏖️ LOA Status')
     .addFields(
-      { name: 'Staff Member', value: user.tag,          inline: true },
-      { name: 'Remaining',    value: formatTime(remaining), inline: true },
-      { name: 'Reason',       value: data.reason }
+      { name: '👤 Staff Member', value: user.tag,          inline: true },
+      { name: '⏳ Remaining',    value: formatTime(remaining), inline: true },
+      { name: '📋 Reason',       value: data.reason }
     )
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();

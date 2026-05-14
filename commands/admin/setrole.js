@@ -121,11 +121,11 @@ function setRole(slot, roleId) {
 function buildSetEmbed(slot, role) {
   return new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('Role Set')
+    .setTitle('\u2705 Role Set')
     .addFields(
-      { name: 'Slot',    value: slot,      inline: true },
-      { name: 'Role',    value: `${role}`, inline: true },
-      { name: 'Role ID', value: role.id,   inline: true }
+      { name: '\ud83d\udd11 Slot',    value: slot,      inline: true },
+      { name: '\ud83c\udf96\ufe0f Role',    value: `${role}`, inline: true },
+      { name: '\ud83c\udd94 Role ID', value: role.id,   inline: true }
     )
     .setTimestamp();
 }
@@ -140,7 +140,7 @@ function buildListEmbed() {
 
   return new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Role Configuration')
+    .setTitle('\u2699\ufe0f Role Configuration')
     .setDescription('Select a slot below to change its role assignment.\n\u200b')
     .addFields(fields)
     .setTimestamp();

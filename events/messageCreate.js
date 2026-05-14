@@ -98,11 +98,11 @@ module.exports = {
         if (remaining > 0) {
           const embed = new EmbedBuilder()
             .setColor('#5865F2')
-            .setTitle('User is on LOA')
+            .setTitle('🏖️ User is on LOA')
             .setDescription(`<@${mentioned.id}> is currently on **Leave of Absence**.`)
             .addFields(
-              { name: 'Reason', value: data.reason },
-              { name: 'Returns in', value: formatTime(remaining) }
+              { name: '📋 Reason', value: data.reason },
+              { name: '⏳ Returns in', value: formatTime(remaining) }
             )
             .setTimestamp();
           message.channel.send({ embeds: [embed] });
@@ -115,12 +115,12 @@ module.exports = {
         const awayFor = formatTime(Date.now() - data.since);
         const embed = new EmbedBuilder()
           .setColor('#FEE75C')
-          .setTitle('User is AFK')
+          .setTitle('💤 User is AFK')
           .setDescription(`<@${mentioned.id}> is currently AFK.`)
           .addFields(
-            { name: 'Reason', value: data.reason },
-            { name: 'Away for', value: awayFor },
-            ...(data.until ? [{ name: 'Returns in', value: formatTime(data.until - Date.now()) }] : [])
+            { name: '📋 Reason', value: data.reason },
+            { name: '⏳ Away for', value: awayFor },
+            ...(data.until ? [{ name: '🔔 Returns in', value: formatTime(data.until - Date.now()) }] : [])
           )
           .setTimestamp();
         message.channel.send({ embeds: [embed] });

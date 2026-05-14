@@ -366,11 +366,11 @@ async function handleInfo(interaction) {
   const ticket = openTickets[interaction.channelId];
   if (ticket && !interaction.member.permissions.has('Administrator')) {
     const embed = new EmbedBuilder()
-      .setColor('#5865F2').setTitle('Ticket Info')
+      .setColor('#5865F2').setTitle('🎫 Ticket Info')
       .addFields(
-        { name: 'Panel',     value: ticket.panelName,                                        inline: true },
-        { name: 'Opened by', value: `<@${ticket.userId}>`,                                   inline: true },
-        { name: 'Opened at', value: `<t:${Math.floor(new Date(ticket.openedAt) / 1000)}:F>`, inline: true },
+        { name: '📋 Panel',     value: ticket.panelName,                                        inline: true },
+        { name: '👤 Opened by', value: `<@${ticket.userId}>`,                                   inline: true },
+        { name: '🕐 Opened at', value: `<t:${Math.floor(new Date(ticket.openedAt) / 1000)}:F>`, inline: true },
       );
     if (ticket.answers?.length > 0)
       embed.addFields(ticket.answers.map(a => ({ name: a.question, value: a.answer })));
@@ -405,13 +405,13 @@ async function sendTicketOverview(interaction, method = 'reply') {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Ticket System Overview')
+    .setTitle('🎫 Ticket System Overview')
     .addFields(
-      { name: `Panels (${panels.length})`,   value: panelsValue },
-      { name: 'Description',                  value: descValue },
-      { name: 'Ping Roles',                   value: perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
-      { name: 'View Roles',                   value: perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
-      { name: 'Log Channel',                  value: tickets.logChannelId ? `<#${tickets.logChannelId}>` : 'Not set', inline: true },
+      { name: `📋 Panels (${panels.length})`,   value: panelsValue },
+      { name: '📝 Description',                  value: descValue },
+      { name: '🔔 Ping Roles',                   value: perms.pingRoles.length > 0 ? perms.pingRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
+      { name: '👁️ View Roles',                   value: perms.viewRoles.length > 0 ? perms.viewRoles.map(id => `<@&${id}>`).join(', ') : 'None', inline: true },
+      { name: '📋 Log Channel',                  value: tickets.logChannelId ? `<#${tickets.logChannelId}>` : 'Not set', inline: true },
     )
     .setFooter({ text: 'Select a panel below • Use buttons to manage settings' })
     .setTimestamp();
@@ -568,12 +568,12 @@ async function handleRequestClose(interaction) {
   await interaction.reply({ content: 'Close request sent.', ephemeral: true });
   await interaction.channel.send({
     embeds: [new EmbedBuilder()
-      .setColor('#FEE75C').setTitle('Close Request')
+      .setColor('#FEE75C').setTitle('📩 Close Request')
       .setDescription(`<@${interaction.user.id}> has requested this ticket to be closed.`)
-      .addFields({ name: 'Reason', value: reason })
+      .addFields({ name: '📋 Reason', value: reason })
       .setTimestamp()],
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('Close Ticket').setStyle(ButtonStyle.Danger)
+      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
     )],
   });
 }
@@ -586,7 +586,7 @@ async function handleLogsSet(interaction) {
   writeData('tickets.json', tickets);
   interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('Ticket Log Channel Set')
+      .setColor('#57F287').setTitle('✅ Ticket Log Channel Set')
       .setDescription(`All ticket events will be logged to <#${channel.id}>.`)
       .setTimestamp()],
     ephemeral: true,
@@ -609,7 +609,7 @@ async function handleLogsInfo(interaction) {
 
   interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#5865F2').setTitle('Ticket Log Channel')
+      .setColor('#5865F2').setTitle('📋 Ticket Log Channel')
       .setDescription(tickets.logChannelId ? `Logs are sent to <#${tickets.logChannelId}>.` : 'No log channel configured.')
       .setFooter({ text: 'Use the menu below to set a new channel, or remove the current one.' })
       .setTimestamp()],
@@ -673,10 +673,10 @@ async function handlePermsInfo(interaction) {
 
   interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#5865F2').setTitle('Ticket Permission Settings')
+      .setColor('#5865F2').setTitle('🔒 Ticket Permission Settings')
       .addFields(
-        { name: 'Ping Roles (notified on open)', value: pingList },
-        { name: 'View Roles (can see all tickets)', value: viewList },
+        { name: '🔔 Ping Roles (notified on open)', value: pingList },
+        { name: '👁️ View Roles (can see all tickets)', value: viewList },
       )
       .setFooter({ text: 'Ping / View to add  •  to remove  •  to clear all' })
       .setTimestamp()],

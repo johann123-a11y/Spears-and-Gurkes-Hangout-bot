@@ -35,15 +35,15 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#ED4245')
-      .setTitle('Staff Member Demoted')
+      .setTitle('\u2b07\ufe0f Staff Member Demoted')
       .addFields(
-        { name: 'Staff Member', value: `<@${member.user.id}>`, inline: true },
-        { name: 'Demoted by',   value: `<@${interaction.user.id}>`, inline: true },
-        { name: '\u200b',       value: '\u200b', inline: true },
-        { name: 'Old Role',     value: `<@&${oldRole.id}>`, inline: true },
-        { name: 'New Role',     value: `<@&${newRole.id}>`, inline: true },
-        { name: '\u200b',       value: '\u200b', inline: true },
-        { name: 'Reason',       value: reason },
+        { name: '\ud83d\udc64 Staff Member', value: `<@${member.user.id}>`, inline: true },
+        { name: '\ud83d\udee1\ufe0f Demoted by',   value: `<@${interaction.user.id}>`, inline: true },
+        { name: '\u200b',           value: '\u200b', inline: true },
+        { name: '\ud83c\udf96\ufe0f Old Role',     value: `<@&${oldRole.id}>`, inline: true },
+        { name: '\ud83c\udf96\ufe0f New Role',     value: `<@&${newRole.id}>`, inline: true },
+        { name: '\u200b',           value: '\u200b', inline: true },
+        { name: '\ud83d\udccb Reason',        value: reason },
       )
       .setThumbnail(member.user.displayAvatarURL())
       .setTimestamp();

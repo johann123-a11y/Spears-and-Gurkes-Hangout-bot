@@ -54,10 +54,10 @@ function removePermMute(userId) {
 function buildEmbed(user, by) {
   return new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('User Unmuted')
+    .setTitle('🔊 User Unmuted')
     .addFields(
-      { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-      { name: 'Unmuted by', value: by, inline: true }
+      { name: '👤 User', value: `${user.tag} (${user.id})`, inline: true },
+      { name: '🛡️ Unmuted by', value: by, inline: true }
     )
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();

@@ -287,13 +287,13 @@ module.exports = {
           const kickLogs     = kicks?.entries.filter(e => e.target?.id === userId) || [];
 
           const fields = [];
-          if (banEntry) fields.push({ name: 'Banned', value: banEntry.reason || 'No reason', inline: false });
-          timeoutLogs.forEach(e => fields.push({ name: `Timeout by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
-          kickLogs.forEach(e => fields.push({ name: `Kicked by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
+          if (banEntry) fields.push({ name: '🔨 Banned', value: banEntry.reason || 'No reason', inline: false });
+          timeoutLogs.forEach(e => fields.push({ name: `🔇 Timeout by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
+          kickLogs.forEach(e => fields.push({ name: `👢 Kicked by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
 
           const embed = new EmbedBuilder()
             .setColor(fields.length > 0 ? '#FF6B35' : '#57F287')
-            .setTitle(`Warn/Punishment History — <@${userId}>`)
+            .setTitle(`📋 Warn/Punishment History — <@${userId}>`)
             .setDescription(fields.length === 0 ? 'No recorded punishments found.' : null)
             .addFields(fields)
             .setFooter({ text: 'Based on Discord audit logs (last 10 entries each)' })
@@ -351,7 +351,7 @@ module.exports = {
         const tickets = readData('tickets.json');
         const current = tickets.description || {};
         const previewEmbed = buildDescEmbed(current);
-        previewEmbed.setTitle('Ticket Description — Preview');
+        previewEmbed.setTitle('📝 Ticket Description — Preview');
         const editBtn = new ButtonBuilder()
           .setCustomId('ticket_desc_edit_btn')
           .setLabel('Edit Description')
@@ -378,10 +378,10 @@ module.exports = {
         const backBtn = new ButtonBuilder().setCustomId('ticket_info_nav_back').setLabel('← Back').setStyle(ButtonStyle.Secondary);
         return interaction.update({
           embeds: [new EmbedBuilder()
-            .setColor('#5865F2').setTitle('Ticket Permissions')
+            .setColor('#5865F2').setTitle('🔒 Ticket Permissions')
             .addFields(
-              { name: 'Ping Roles (notified on open)', value: pingList },
-              { name: 'View Roles (can see all tickets)', value: viewList },
+              { name: '🔔 Ping Roles (notified on open)', value: pingList },
+              { name: '👁️ View Roles (can see all tickets)', value: viewList },
             ).setFooter({ text: 'to add  •  to remove  •  to clear all' }).setTimestamp()],
           components: [row, new ActionRowBuilder().addComponents(backBtn)],
         });
@@ -394,7 +394,7 @@ module.exports = {
         const channelSel  = new ChannelSelectMenuBuilder().setCustomId('ticket_logs_channel_select').setPlaceholder('Select a new log channel...').setChannelTypes(ChannelType.GuildText);
         return interaction.update({
           embeds: [new EmbedBuilder()
-            .setColor('#5865F2').setTitle('Ticket Log Channel')
+            .setColor('#5865F2').setTitle('📋 Ticket Log Channel')
             .setDescription(tickets.logChannelId ? `Currently logging to <#${tickets.logChannelId}>.` : 'No log channel configured.')
             .setTimestamp()],
           components: [
@@ -411,7 +411,7 @@ module.exports = {
       // Review: submit button → show star buttons 
       if (interaction.customId === 'review_submit_btn') {
         const starBtns = [1,2,3,4,5].map(n =>
-          new ButtonBuilder().setCustomId(`review_star:${n}`).setLabel(''.repeat(n)).setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder().setCustomId(`review_star:${n}`).setLabel('⭐'.repeat(n)).setStyle(ButtonStyle.Secondary)
         );
         return interaction.reply({
           content: '**How would you rate our server?**\nClick on a star rating:',
@@ -420,12 +420,12 @@ module.exports = {
         });
       }
 
-      // Review: star clicked → show improvement modal 
+      // Review: star clicked → show improvement modal
       if (interaction.customId.startsWith('review_star:')) {
         const stars = interaction.customId.split(':')[1];
         const modal = new ModalBuilder()
           .setCustomId(`review_improve_modal:${stars}`)
-          .setTitle(`${''.repeat(parseInt(stars))} Rating`)
+          .setTitle(`${'⭐'.repeat(parseInt(stars))} Rating`)
           .addComponents(
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
@@ -477,11 +477,11 @@ module.exports = {
           const gwMsg = interaction.message;
           const oldEmbed = gwMsg.embeds[0];
           if (oldEmbed) {
-            const newDesc = oldEmbed.description.replace(/\*\*Entries:\*\* \d+/, `**Entries:** ${gw.participants.length}`);
+            const newDesc = oldEmbed.description.replace(/👥 \*\*Entries:\*\* \d+/, `👥 **Entries:** ${gw.participants.length}`);
             const updatedEmbed = EmbedBuilder.from(oldEmbed).setDescription(newDesc);
             gwMsg.edit({ embeds: [updatedEmbed] }).catch(() => {});
           }
-          return interaction.reply({ content: 'You joined the giveaway! Good luck!', ephemeral: true });
+          return interaction.reply({ content: '🎉 You joined the giveaway! Good luck!', ephemeral: true });
         } else {
           const leaveBtn = new ButtonBuilder()
             .setCustomId(`giveaway_leave:${msgId}`)
@@ -514,7 +514,7 @@ module.exports = {
             channel.messages.fetch(msgId).then(gwMsg => {
               const oldEmbed = gwMsg.embeds[0];
               if (oldEmbed) {
-                const newDesc = oldEmbed.description.replace(/\*\*Entries:\*\* \d+/, `**Entries:** ${gw.participants.length}`);
+                const newDesc = oldEmbed.description.replace(/👥 \*\*Entries:\*\* \d+/, `👥 **Entries:** ${gw.participants.length}`);
                 gwMsg.edit({ embeds: [EmbedBuilder.from(oldEmbed).setDescription(newDesc)] }).catch(() => {});
               }
             }).catch(() => {});
@@ -591,17 +591,17 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setColor('#5865F2')
-          .setTitle('Activity Check')
+          .setTitle('📋 Activity Check')
           .setDescription(message)
           .addFields(
-            { name: 'Deadline', value: `<t:${Math.floor(deadline / 1000)}:R> (<t:${Math.floor(deadline / 1000)}:f>)` },
-            ...(roleId ? [{ name: 'Role', value: `<@&${roleId}>` }] : []),
+            { name: '⏰ Deadline', value: `<t:${Math.floor(deadline / 1000)}:R> (<t:${Math.floor(deadline / 1000)}:f>)` },
+            ...(roleId ? [{ name: '🎖️ Role', value: `<@&${roleId}>` }] : []),
           )
           .setTimestamp();
 
         const btn = new ButtonBuilder()
           .setCustomId('activitycheck_confirm')
-          .setLabel('I\'m active!')
+          .setLabel('✅ I\'m active!')
           .setStyle(ButtonStyle.Success);
 
         const pingContent = roleId ? `<@&${roleId}>` : '';
@@ -686,7 +686,7 @@ module.exports = {
           .setTimestamp();
 
         const row = new AR2().addComponents(
-          new BB2().setCustomId('review_submit_btn').setLabel('Submit Review').setStyle(BS2.Primary).setEmoji(''),
+          new BB2().setCustomId('review_submit_btn').setLabel('⭐ Submit Review').setStyle(BS2.Primary),
         );
 
         if (isTest) {
@@ -734,7 +734,7 @@ module.exports = {
         if (!channel)
           return interaction.reply({ content: 'Review channel not found. Ask an admin to re-set it with `/review channel`.', ephemeral: true });
 
-        const starStr = ''.repeat(stars) + ''.repeat(5 - stars);
+        const starStr = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
         const embed = new EmbedBuilder()
           .setColor('#FFD700')
           .setTitle(starStr)
@@ -759,16 +759,16 @@ module.exports = {
 
         return interaction.reply({
           embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('Application Created')
+            .setColor('#57F287').setTitle('✅ Application Created')
             .addFields(
-              { name: 'Name',     value: name,    inline: true },
-              { name: 'For',      value: forWhat, inline: true },
-              { name: 'Questions', value: 'None yet — add them below!' },
+              { name: '📋 Name',     value: name,    inline: true },
+              { name: '📝 For',      value: forWhat, inline: true },
+              { name: '❓ Questions', value: 'None yet — add them below!' },
             ).setTimestamp()],
           components: [new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId(`app_addq_yesno:${panelId}`).setLabel('Yes/No Question').setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId(`app_addq_text:${panelId}`).setLabel('Text Question').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('Done').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`app_addq_done:${panelId}`).setLabel('✅ Done').setStyle(ButtonStyle.Success),
           )],
           ephemeral: true,
         });
@@ -830,12 +830,12 @@ module.exports = {
         writeData('applicationResults.json', results);
 
         const resultEmbed = new EmbedBuilder()
-          .setColor('#57F287').setTitle('Application Accepted')
+          .setColor('#57F287').setTitle('✅ Application Accepted')
           .addFields(
-            { name: 'Applicant',   value: `<@${result.userId}> (${result.username})`, inline: true },
-            { name: 'For',         value: result.forWhat,                              inline: true },
-            { name: 'Accepted by', value: `<@${interaction.user.id}>`,                inline: true },
-            { name: 'Reason',      value: reason },
+            { name: '👤 Applicant',   value: `<@${result.userId}> (${result.username})`, inline: true },
+            { name: '📝 For',         value: result.forWhat,                              inline: true },
+            { name: '🛡️ Accepted by', value: `<@${interaction.user.id}>`,                inline: true },
+            { name: '📋 Reason',      value: reason },
             ...result.answers.map(a => ({ name: a.question, value: a.answer || '—' })),
           ).setTimestamp();
 
@@ -844,7 +844,7 @@ module.exports = {
           const user = await interaction.client.users.fetch(result.userId);
           await user.send({
             embeds: [new EmbedBuilder()
-              .setColor('#57F287').setTitle('Application Accepted!')
+              .setColor('#57F287').setTitle('✅ Application Accepted!')
               .setDescription(
                 `You got **accepted** as **${result.forWhat}** by <@${interaction.user.id}>!\n\n**Reason:** ${reason}`
               ).setTimestamp()],
@@ -877,12 +877,12 @@ module.exports = {
         writeData('applicationResults.json', results);
 
         const resultEmbed = new EmbedBuilder()
-          .setColor('#ED4245').setTitle('Application Denied')
+          .setColor('#ED4245').setTitle('❌ Application Denied')
           .addFields(
-            { name: 'Applicant', value: `<@${result.userId}> (${result.username})`, inline: true },
-            { name: 'For',       value: result.forWhat,                              inline: true },
-            { name: 'Denied by', value: `<@${interaction.user.id}>`,                inline: true },
-            { name: 'Reason',    value: reason },
+            { name: '👤 Applicant', value: `<@${result.userId}> (${result.username})`, inline: true },
+            { name: '📝 For',       value: result.forWhat,                              inline: true },
+            { name: '🛡️ Denied by', value: `<@${interaction.user.id}>`,                inline: true },
+            { name: '📋 Reason',    value: reason },
             ...result.answers.map(a => ({ name: a.question, value: a.answer || '—' })),
           ).setTimestamp();
 
@@ -891,7 +891,7 @@ module.exports = {
           const user = await interaction.client.users.fetch(result.userId);
           await user.send({
             embeds: [new EmbedBuilder()
-              .setColor('#ED4245').setTitle('Application Denied')
+              .setColor('#ED4245').setTitle('❌ Application Denied')
               .setDescription(
                 `You got **denied** as **${result.forWhat}** by <@${interaction.user.id}>.\n\n**Reason:** ${reason}`
               ).setTimestamp()],
@@ -945,13 +945,13 @@ module.exports = {
 
         return interaction.reply({
           embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('Ticket Panel Created')
+            .setColor('#57F287').setTitle('✅ Ticket Panel Created')
             .addFields(
-              { name: 'Panel ID',     value: panelId,                                        inline: true },
-              { name: 'Button',       value: `${label} (${color})`,                          inline: true },
-              { name: 'Category',     value: categoryId ? `<#${categoryId}>` : 'None set',   inline: true },
-              { name: 'Questions',    value: questions.length > 0 ? questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : 'None' },
-              { name: 'Next Steps',   value: `• Set description: \`/ticket description\`\n• Send panel: \`/ticket send panel:${panelId}\`\n• Group panels: \`/ticket group\`` },
+              { name: '🔑 Panel ID',  value: panelId,                                        inline: true },
+              { name: '🔘 Button',    value: `${label} (${color})`,                          inline: true },
+              { name: '📁 Category',  value: categoryId ? `<#${categoryId}>` : 'None set',   inline: true },
+              { name: '❓ Questions', value: questions.length > 0 ? questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : 'None' },
+              { name: '➡️ Next Steps', value: `• Set description: \`/ticket description\`\n• Send panel: \`/ticket send panel:${panelId}\`\n• Group panels: \`/ticket group\`` },
             ).setTimestamp()],
           ephemeral: true,
         });
@@ -969,7 +969,7 @@ module.exports = {
 
         const previewEmbed = buildDescEmbed(tickets.description);
         const infoEmbed    = new EmbedBuilder()
-          .setColor('#57F287').setTitle('Description Updated')
+          .setColor('#57F287').setTitle('✅ Description Updated')
           .setDescription('**Preview:**')
           .setFooter({ text: 'Use /ticket group or /ticket send to post the panel' })
           .setTimestamp();
@@ -1062,12 +1062,12 @@ module.exports = {
         writeData('loa.json', loa);
         return interaction.reply({
           embeds: [new EmbedBuilder()
-            .setColor('#5865F2').setTitle('LOA Set')
+            .setColor('#5865F2').setTitle('🏖️ LOA Set')
             .addFields(
-              { name: 'Staff Member', value: member.user.tag,      inline: true },
-              { name: 'Duration',     value: formatTime(ms),       inline: true },
-              { name: 'Set by',       value: interaction.user.tag, inline: true },
-              { name: 'Reason',       value: reason },
+              { name: '👤 Staff Member', value: member.user.tag,      inline: true },
+              { name: '⏳ Duration',     value: formatTime(ms),       inline: true },
+              { name: '🛡️ Set by',       value: interaction.user.tag, inline: true },
+              { name: '📋 Reason',       value: reason },
             ).setTimestamp()],
           ephemeral: true,
         });
@@ -1086,10 +1086,10 @@ module.exports = {
         return interaction.update({
           content: null,
           embeds: [new EmbedBuilder()
-            .setColor('#57F287').setTitle('Role Set')
+            .setColor('#57F287').setTitle('✅ Role Set')
             .addFields(
-              { name: 'Slot', value: slot,            inline: true },
-              { name: 'Role', value: `<@&${roleId}>`, inline: true },
+              { name: '🔑 Slot', value: slot,            inline: true },
+              { name: '🎖️ Role', value: `<@&${roleId}>`, inline: true },
             ).setTimestamp()],
           components: [],
         });
@@ -1219,10 +1219,10 @@ module.exports = {
         } catch {}
 
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('Accept with Reason').setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('Deny with Reason').setStyle(ButtonStyle.Danger),
-          new ButtonBuilder().setCustomId(`app_warnhistory:${result.userId}`).setLabel('Warn History').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`app_openticket:${result.userId}`).setLabel('Open Ticket').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId(`app_accept:${resultId}`).setLabel('✅ Accept').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`app_deny:${resultId}`).setLabel('❌ Deny').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId(`app_warnhistory:${result.userId}`).setLabel('📋 Warn History').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId(`app_openticket:${result.userId}`).setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary),
         );
 
         return interaction.update({ embeds: [embed], components: [row] });

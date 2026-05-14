@@ -84,7 +84,7 @@ async function performPingPermRemove(guild, pingTarget, targetRole, channel, int
 
       const embed = new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('Ping Permission Removed')
+        .setTitle('🔕 Ping Permission Removed')
         .setDescription(`The role **${targetRole.name}** can no longer use \`@everyone\` / \`@here\`.`)
         .setTimestamp();
 
@@ -103,7 +103,7 @@ async function performPingPermRemove(guild, pingTarget, targetRole, channel, int
 
     const embed = new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('Ping Permission Removed')
+      .setTitle('🔕 Ping Permission Removed')
       .setDescription(`The role **${mentionableRole.name}** is no longer mentionable by **${targetRole.name}**.`)
       .setTimestamp();
 
@@ -128,7 +128,7 @@ async function performPingPerm(guild, pingTarget, targetRole, channel, interacti
 
       const embed = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('Ping Permission Granted')
+        .setTitle('🔔 Ping Permission Granted')
         .setDescription(`The role **${targetRole.name}** can now use \`@everyone\` / \`@here\`.`)
         .setTimestamp();
 
@@ -148,7 +148,7 @@ async function performPingPerm(guild, pingTarget, targetRole, channel, interacti
 
     const embed = new EmbedBuilder()
       .setColor('#5865F2')
-      .setTitle('Ping Permission Granted')
+      .setTitle('🔔 Ping Permission Granted')
       .setDescription(`The role **${mentionableRole.name}** is now mentionable by **${targetRole.name}**.`)
       .setTimestamp();
 

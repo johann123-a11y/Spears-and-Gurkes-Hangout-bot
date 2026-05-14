@@ -34,7 +34,7 @@ module.exports = {
       return interaction.reply({
         embeds: [new EmbedBuilder()
           .setColor('#57F287')
-          .setTitle('Staff Role Set')
+          .setTitle('✅ Staff Role Set')
           .setDescription(`<@&${role.id}> can now use all staff commands.`)
           .setTimestamp()],
         ephemeral: true,
@@ -46,8 +46,8 @@ module.exports = {
       return interaction.reply({
         embeds: [new EmbedBuilder()
           .setColor('#5865F2')
-          .setTitle('Staff Role')
-          .addFields({ name: 'Current Staff Role', value: roleId ? `<@&${roleId}>` : '*(not set)*' })
+          .setTitle('🛡️ Staff Role')
+          .addFields({ name: '🎖️ Current Staff Role', value: roleId ? `<@&${roleId}>` : '*(not set)*' })
           .setTimestamp()],
         ephemeral: true,
       });

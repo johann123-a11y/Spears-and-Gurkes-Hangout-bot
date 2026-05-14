@@ -18,8 +18,8 @@ async function sendLog(client, { action, executor, target, fields = {}, color = 
     .setColor(color)
     .setTitle(`${action}`)
     .addFields(
-      { name: 'Executed by', value: executor, inline: true },
-      ...(target ? [{ name: 'Target', value: target, inline: true }] : []),
+      { name: '🛡️ Executed by', value: executor, inline: true },
+      ...(target ? [{ name: '🎯 Target', value: target, inline: true }] : []),
       ...extraFields
     )
     .setTimestamp();

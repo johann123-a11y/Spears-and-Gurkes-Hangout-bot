@@ -144,7 +144,7 @@ async function createTicketChannel(interaction, panel, answers) {
   // Build ticket embed
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle(`${panel.name}`)
+    .setTitle(`🎫 ${panel.name}`)
     .setDescription(`Ticket opened by <@${interaction.user.id}>\n\nA staff member will be with you shortly.\n\nIf you ping anyone, your ticket will get closed and you won't get paid.`)
     .setThumbnail(interaction.user.displayAvatarURL())
     .setTimestamp();
@@ -154,12 +154,12 @@ async function createTicketChannel(interaction, panel, answers) {
 
   const closeBtn = new ButtonBuilder()
     .setCustomId('ticket_close_btn')
-    .setLabel('Close Ticket')
+    .setLabel('🔒 Close Ticket')
     .setStyle(ButtonStyle.Danger);
 
   const requestCloseBtn = new ButtonBuilder()
     .setCustomId('ticket_request_close_btn')
-    .setLabel('Request Close')
+    .setLabel('📩 Request Close')
     .setStyle(ButtonStyle.Secondary);
 
   // Build content with ping mentions
@@ -198,13 +198,13 @@ async function createTicketChannel(interaction, panel, answers) {
     if (logCh) {
       logCh.send({
         embeds: [new EmbedBuilder()
-          .setColor('#57F287').setTitle('Ticket Opened')
+          .setColor('#57F287').setTitle('📂 Ticket Opened')
           .addFields(
-            { name: 'Ticket ID',  value: `#${ticketId}`,                          inline: true },
-            { name: 'Panel',          value: panel.name,                              inline: true },
-            { name: 'Opened by',      value: `<@${interaction.user.id}>`,             inline: true },
-            { name: 'Channel',        value: `<#${ticketChannel.id}>`,                inline: true },
-            { name: 'Time',           value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+            { name: '🔢 Ticket ID',  value: `#${ticketId}`,                          inline: true },
+            { name: '📋 Panel',      value: panel.name,                              inline: true },
+            { name: '👤 Opened by',  value: `<@${interaction.user.id}>`,             inline: true },
+            { name: '💬 Channel',    value: `<#${ticketChannel.id}>`,                inline: true },
+            { name: '🕐 Time',       value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
           ).setTimestamp()],
       }).catch(() => {});
     }
@@ -272,12 +272,12 @@ async function closeTicket(channel, reason, closedBy, client) {
   try {
     await openedByUser.send({
       embeds: [new EmbedBuilder()
-        .setColor('#ED4245').setTitle('Your Ticket Was Closed')
+        .setColor('#ED4245').setTitle('🔒 Your Ticket Was Closed')
         .addFields(
-          { name: 'Panel',     value: ticket.panelName,                       inline: true },
-          { name: 'Closed by', value: closedBy.tag,                           inline: true },
-          { name: 'Time',      value: `<t:${Math.floor(closedAt / 1000)}:F>`, inline: true },
-          { name: 'Reason',    value: reason },
+          { name: '📋 Panel',     value: ticket.panelName,                       inline: true },
+          { name: '🛡️ Closed by', value: closedBy.tag,                           inline: true },
+          { name: '🕐 Time',      value: `<t:${Math.floor(closedAt / 1000)}:F>`, inline: true },
+          { name: '📝 Reason',    value: reason },
         ).setTimestamp()],
     });
   } catch { /* DMs disabled */ }
@@ -288,16 +288,16 @@ async function closeTicket(channel, reason, closedBy, client) {
     const logCh = client.channels.cache.get(tickets.logChannelId);
     if (logCh) {
       const embed = new EmbedBuilder()
-        .setColor('#ED4245').setTitle('Ticket Closed')
+        .setColor('#ED4245').setTitle('🔒 Ticket Closed')
         .addFields(
-          { name: 'Ticket ID', value: `#${ticketId}`,                              inline: true },
-          { name: 'Panel',         value: ticket.panelName,                             inline: true },
-          { name: 'Opened by',     value: `<@${ticket.userId}>`,                        inline: true },
-          { name: 'Closed by',     value: `<@${closedBy.id}>`,                          inline: true },
-          { name: 'Open Time',     value: `<t:${Math.floor(ticket.openedAt / 1000)}:F>`, inline: true },
-          { name: 'Closed Time',   value: `<t:${Math.floor(closedAt / 1000)}:F>`,       inline: true },
-          { name: 'Reason',        value: reason },
-        ).setFooter({ text: 'Transcript auto-deletes in 3 days' }).setTimestamp();
+          { name: '🔢 Ticket ID', value: `#${ticketId}`,                              inline: true },
+          { name: '📋 Panel',     value: ticket.panelName,                             inline: true },
+          { name: '👤 Opened by', value: `<@${ticket.userId}>`,                        inline: true },
+          { name: '🛡️ Closed by', value: `<@${closedBy.id}>`,                          inline: true },
+          { name: '🕐 Open Time', value: `<t:${Math.floor(ticket.openedAt / 1000)}:F>`, inline: true },
+          { name: '🕐 Closed Time', value: `<t:${Math.floor(closedAt / 1000)}:F>`,     inline: true },
+          { name: '📝 Reason',    value: reason },
+        ).setFooter({ text: '📄 Transcript auto-deletes in 3 days' }).setTimestamp();
 
       const baseUrl = getBaseUrl();
       const btns = [];
@@ -309,7 +309,7 @@ async function closeTicket(channel, reason, closedBy, client) {
       }
       btns.push(new ButtonBuilder()
         .setCustomId(`transcript_save:${ticketId}`)
-        .setLabel('Save Transcript')
+        .setLabel('💾 Save Transcript')
         .setStyle(ButtonStyle.Secondary));
 
       logCh.send({
@@ -345,11 +345,11 @@ async function handleRequestCloseButton(interaction) {
   await interaction.reply({ content: 'Close request sent.', ephemeral: true });
   await interaction.channel.send({
     embeds: [new EmbedBuilder()
-      .setColor('#FEE75C').setTitle('Close Request')
+      .setColor('#FEE75C').setTitle('📩 Close Request')
       .setDescription(`<@${interaction.user.id}> has requested this ticket to be closed.`)
       .setTimestamp()],
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('Close Ticket').setStyle(ButtonStyle.Danger)
+      new ButtonBuilder().setCustomId('ticket_close_btn').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
     )],
   });
 }

@@ -14,14 +14,14 @@ module.exports = {
       : '—';
 
     sendLog(client, {
-      action: 'Member Left',
+      action: '👋 Member Left',
       executor: `${member.user.tag}`,
       target: `<@${member.id}>`,
       fields: {
-        'Account':  `<t:${Math.floor(member.user.createdAt / 1000)}:R>`,
-        'Joined':   joinedAt,
-        'Roles':    roles.length > 1024 ? roles.substring(0, 1021) + '...' : roles,
-        'Members':  `${member.guild.memberCount}`,
+        '📅 Account':  `<t:${Math.floor(member.user.createdAt / 1000)}:R>`,
+        '📥 Joined':   joinedAt,
+        '🎖️ Roles':    roles.length > 1024 ? roles.substring(0, 1021) + '...' : roles,
+        '👥 Members':  `${member.guild.memberCount}`,
       },
       color: '#ED4245',
     });

@@ -71,8 +71,8 @@ async function rerollGiveaway(msgId, count, guild, replyChannel, interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')
-    .setTitle(`Giveaway Rerolled — ${gw.prize}`)
-    .setDescription(`**New Winner(s):** ${winnerMentions}`)
+    .setTitle(`🎉 Giveaway Rerolled — ${gw.prize}`)
+    .setDescription(`🏆 **New Winner(s):** ${winnerMentions}`)
     .setTimestamp();
 
   if (interaction) {

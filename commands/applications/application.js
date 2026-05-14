@@ -114,7 +114,7 @@ async function handleSetChannel(interaction) {
   writeData('applications.json', apps);
   return interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('Pending Channel Set')
+      .setColor('#57F287').setTitle('✅ Pending Channel Set')
       .setDescription(`New applications will be posted to <#${channel.id}>.`)
       .setTimestamp()],
     ephemeral: true,
@@ -131,7 +131,7 @@ async function handleSetResultChannel(interaction, type) {
   const label = type === 'accepted' ? 'Accepted' : 'Denied';
   return interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle(`${label} Channel Set`)
+      .setColor('#57F287').setTitle(`✅ ${label} Channel Set`)
       .setDescription(`${label} applications will be posted to <#${channel.id}>.`)
       .setTimestamp()],
     ephemeral: true,
@@ -149,11 +149,11 @@ async function handleResultsView(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Application Results')
+    .setTitle('📋 Application Results')
     .addFields(
-      { name: 'Pending',  value: `**${pending.length}**`, inline: true },
-      { name: 'Accepted', value: `**${accepted}**`,        inline: true },
-      { name: 'Denied',   value: `**${denied}**`,          inline: true },
+      { name: '⏳ Pending',  value: `**${pending.length}**`, inline: true },
+      { name: '✅ Accepted', value: `**${accepted}**`,        inline: true },
+      { name: '❌ Denied',   value: `**${denied}**`,          inline: true },
     )
     .setTimestamp();
 
@@ -186,7 +186,7 @@ async function handlePing(interaction) {
   writeData('applications.json', apps);
   return interaction.reply({
     embeds: [new EmbedBuilder()
-      .setColor('#57F287').setTitle('Ping Target Set')
+      .setColor('#57F287').setTitle('🔔 Ping Target Set')
       .setDescription(`<@${target.id}> will be pinged when a new application arrives.`)
       .setTimestamp()],
     ephemeral: true,
@@ -335,13 +335,13 @@ async function handleInfo(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Application System Info')
+    .setTitle('📋 Application System Info')
     .setTimestamp();
 
   // Channels 
   const ch = apps.channels || {};
   embed.addFields({
-    name: 'Channels',
+    name: '💬 Channels',
     value: [
       `**Pending:** ${ch.pending  ? `<#${ch.pending}>`  : '*(not set)*'}`,
       `**Accepted:** ${ch.accepted ? `<#${ch.accepted}>` : '*(not set)*'}`,
@@ -351,7 +351,7 @@ async function handleInfo(interaction) {
 
   // Ping target 
   embed.addFields({
-    name: 'Ping on new application',
+    name: '🔔 Ping on new application',
     value: apps.pingTarget
       ? (apps.pingTarget.startsWith('role:')
           ? `<@&${apps.pingTarget.slice(5)}>`
@@ -362,7 +362,7 @@ async function handleInfo(interaction) {
 
   // Panel message 
   embed.addFields({
-    name: 'Panel message',
+    name: '📩 Panel message',
     value: apps.group?.channelId && apps.group?.messageId
       ? `[Jump](https://discord.com/channels/${interaction.guildId}/${apps.group.channelId}/${apps.group.messageId})`
       : '*(not sent yet)*',
@@ -371,7 +371,7 @@ async function handleInfo(interaction) {
 
   // Application panels 
   if (panels.length === 0) {
-    embed.addFields({ name: 'Panels', value: '*(none created yet)*' });
+    embed.addFields({ name: '📋 Panels', value: '*(none created yet)*' });
   } else {
     for (const panel of panels) {
       const qList = panel.questions?.length

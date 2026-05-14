@@ -92,7 +92,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#5865F2')
-      .setTitle('Guess the Number!')
+      .setTitle('🔢 Guess the Number!')
       .setDescription(`The number is between **1** and **${max}**.\n\nType your guess in the chat!`)
       .setTimestamp();
 

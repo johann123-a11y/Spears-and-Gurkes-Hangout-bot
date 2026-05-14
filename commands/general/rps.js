@@ -11,9 +11,9 @@ const duels   = new Map();
 
 function rpsButtons(gameId) {
   return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:rock`).setLabel('Rock').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:paper`).setLabel('Paper').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:scissors`).setLabel('Scissors').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:rock`).setLabel('🪨 Rock').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:paper`).setLabel('📄 Paper').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`rps_pick:${gameId}:scissors`).setLabel('✂️ Scissors').setStyle(ButtonStyle.Secondary),
   );
 }
 
@@ -27,7 +27,7 @@ function determineWinner(pick1, pick2) {
   return 'player2';
 }
 
-const EMOJI = { rock: '', paper: '', scissors: '' };
+const EMOJI = { rock: '🪨', paper: '📄', scissors: '✂️' };
 
 async function endLobby(messageId, client) {
   const lobby = lobbies.get(messageId);
@@ -40,7 +40,7 @@ async function endLobby(messageId, client) {
   // Disable the join button
   if (lobbyMsg) {
     const disabledRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('rps_join_disabled').setLabel('Join').setStyle(ButtonStyle.Primary).setDisabled(true),
+      new ButtonBuilder().setCustomId('rps_join_disabled').setLabel('🎟️ Join').setStyle(ButtonStyle.Primary).setDisabled(true),
     );
     lobbyMsg.edit({ components: [disabledRow] }).catch(() => {});
   }
@@ -63,12 +63,12 @@ async function endLobby(messageId, client) {
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('Rock Paper Scissors — FIGHT!')
+    .setTitle('⚔️ Rock Paper Scissors — FIGHT!')
     .setDescription(
-      `Prize: **${lobby.prize}**\n\n` +
+      `🎁 Prize: **${lobby.prize}**\n\n` +
       `<@${p1}> vs <@${p2}>\n\n` +
       `Both players: pick your move below!\n` +
-      `**Paper** beats Rock · **Rock** beats Scissors · **Scissors** beats Paper`
+      `📄 **Paper** beats Rock · 🪨 **Rock** beats Scissors · ✂️ **Scissors** beats Paper`
     )
     .setTimestamp();
 
@@ -126,17 +126,17 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('Rock Paper Scissors Event!')
+        .setTitle('🎮 Rock Paper Scissors Event!')
         .setDescription(
-          `**Prize:** ${prize}\n` +
-          `**Ends:** <t:${endsTs}:R>\n\n` +
+          `🎁 **Prize:** ${prize}\n` +
+          `⏰ **Ends:** <t:${endsTs}:R>\n\n` +
           `Click **Join** to enter! 2 players will be picked to face off.`
         )
         .setFooter({ text: `Hosted by ${interaction.user.tag}` })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`rps_join:placeholder`).setLabel('Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`rps_join:placeholder`).setLabel('🎟️ Join').setStyle(ButtonStyle.Primary),
       );
 
       await interaction.reply({ embeds: [embed], components: [row] });
@@ -144,7 +144,7 @@ module.exports = {
 
       // Update button with real messageId
       const realRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`rps_join:${msg.id}`).setLabel('Join').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`rps_join:${msg.id}`).setLabel('🎟️ Join').setStyle(ButtonStyle.Primary),
       );
       await msg.edit({ components: [realRow] }).catch(() => {});
 
@@ -201,12 +201,12 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setColor('#5865F2')
-        .setTitle('Rock Paper Scissors — FIGHT!')
+        .setTitle('⚔️ Rock Paper Scissors — FIGHT!')
         .setDescription(
-          (prize ? `Prize: **${prize}**\n\n` : '') +
+          (prize ? `🎁 Prize: **${prize}**\n\n` : '') +
           `<@${user1.id}> vs <@${user2.id}>\n\n` +
           `Both players: pick your move below!\n` +
-          `**Paper** beats Rock · **Rock** beats Scissors · **Scissors** beats Paper`
+          `📄 **Paper** beats Rock · 🪨 **Rock** beats Scissors · ✂️ **Scissors** beats Paper`
         )
         .setTimestamp();
 
@@ -265,18 +265,18 @@ module.exports = {
       let desc;
       if (result === 'tie') {
         desc =
-          `<@${duel.player1}> picked **${EMOJI[duel.pick1]} ${duel.pick1}**\n` +
-          `<@${duel.player2}> picked **${EMOJI[duel.pick2]} ${duel.pick2}**\n\n` +
-          `It's a **tie**! No winner this time.`;
+          `<@${duel.player1}> picked ${EMOJI[duel.pick1]} **${duel.pick1}**\n` +
+          `<@${duel.player2}> picked ${EMOJI[duel.pick2]} **${duel.pick2}**\n\n` +
+          `It's a tie! No winner this time.`;
       } else {
         const winnerId = result === 'player1' ? duel.player1 : duel.player2;
         const loserId  = result === 'player1' ? duel.player2 : duel.player1;
         const winPick  = result === 'player1' ? duel.pick1   : duel.pick2;
         const losPick  = result === 'player1' ? duel.pick2   : duel.pick1;
         desc =
-          `<@${duel.player1}> picked **${EMOJI[duel.pick1]} ${duel.pick1}**\n` +
-          `<@${duel.player2}> picked **${EMOJI[duel.pick2]} ${duel.pick2}**\n\n` +
-          `<@${winnerId}> wins with **${EMOJI[winPick]} ${winPick}** over **${EMOJI[losPick]} ${losPick}**!\n` +
+          `<@${duel.player1}> picked ${EMOJI[duel.pick1]} **${duel.pick1}**\n` +
+          `<@${duel.player2}> picked ${EMOJI[duel.pick2]} **${duel.pick2}**\n\n` +
+          `<@${winnerId}> wins with ${winPick} over ${losPick}!\n` +
           `Prize: **${duel.prize}**`;
       }
 
@@ -288,9 +288,9 @@ module.exports = {
 
       // Disable buttons on original message
       const disabledRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('rps_rock_d').setLabel('Rock').setStyle(ButtonStyle.Secondary).setDisabled(true),
-        new ButtonBuilder().setCustomId('rps_paper_d').setLabel('Paper').setStyle(ButtonStyle.Secondary).setDisabled(true),
-        new ButtonBuilder().setCustomId('rps_scissors_d').setLabel('Scissors').setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('rps_rock_d').setLabel('🪨 Rock').setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('rps_paper_d').setLabel('📄 Paper').setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('rps_scissors_d').setLabel('✂️ Scissors').setStyle(ButtonStyle.Secondary).setDisabled(true),
       );
       interaction.message.edit({ components: [disabledRow] }).catch(() => {});
 

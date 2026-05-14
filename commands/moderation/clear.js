@@ -34,10 +34,10 @@ module.exports = {
     const reply = await message.channel.send({
       embeds: [new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('Messages Cleared')
+        .setTitle('🗑️ Messages Cleared')
         .addFields(
-          { name: 'Deleted', value: `${count} message(s)`, inline: true },
-          { name: 'By',      value: message.author.tag,    inline: true },
+          { name: '🗑️ Deleted', value: `${count} message(s)`, inline: true },
+          { name: '🛡️ By',      value: message.author.tag,    inline: true },
         )
         .setTimestamp()],
     });
@@ -68,10 +68,10 @@ module.exports = {
     await interaction.editReply({
       embeds: [new EmbedBuilder()
         .setColor('#57F287')
-        .setTitle('Messages Cleared')
+        .setTitle('🗑️ Messages Cleared')
         .addFields(
-          { name: 'Deleted', value: `${count} message(s)`, inline: true },
-          { name: 'By',      value: interaction.user.tag,  inline: true },
+          { name: '🗑️ Deleted', value: `${count} message(s)`, inline: true },
+          { name: '🛡️ By',      value: interaction.user.tag,  inline: true },
         )
         .setTimestamp()],
     });

@@ -74,12 +74,12 @@ function savePermMute(userId, guildId, reason) {
 function buildEmbed(user, duration, reason, by) {
   return new EmbedBuilder()
     .setColor('#FF6B35')
-    .setTitle('User Muted')
+    .setTitle('🔇 User Muted')
     .addFields(
-      { name: 'User',     value: `${user.tag} (${user.id})`, inline: true },
-      { name: 'Duration', value: duration,                    inline: true },
-      { name: 'Muted by', value: by,                          inline: true },
-      { name: 'Reason',   value: reason }
+      { name: '👤 User',     value: `${user.tag} (${user.id})`, inline: true },
+      { name: '⏳ Duration', value: duration,                    inline: true },
+      { name: '🛡️ Muted by', value: by,                         inline: true },
+      { name: '📋 Reason',   value: reason }
     )
     .setThumbnail(user.displayAvatarURL())
     .setTimestamp();
