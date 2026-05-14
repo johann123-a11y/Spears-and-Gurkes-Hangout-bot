@@ -1058,6 +1058,11 @@ module.exports = {
         return handleModal(interaction);
       }
 
+      if (interaction.customId === 'dok_modal') {
+        const { handleModal } = require('../commands/general/dok');
+        return handleModal(interaction);
+      }
+
       // CheckLOA set modal 
       if (interaction.customId.startsWith('checkloa_set_modal:')) {
         const userId      = interaction.customId.split(':')[1];

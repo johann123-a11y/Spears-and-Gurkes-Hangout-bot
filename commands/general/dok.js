@@ -1,8 +1,9 @@
 const {
   SlashCommandBuilder, EmbedBuilder,
   ActionRowBuilder, ButtonBuilder, ButtonStyle,
+  ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
-const { checkPerm, parseTime, formatTime } = require('../../utils');
+const { checkPerm, parseTime } = require('../../utils');
 
 // Active lobbies:  messageId → { participants, prize, channelId, channel, duration, round, ended }
 const lobbies = new Map();
@@ -142,16 +143,42 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('dok')
     .setDescription('Start a Double or Keep event [Staff Team]')
-    .setDefaultMemberPermissions(0)
-    .addStringOption(o => o.setName('prize').setDescription('Starting prize (e.g. 10m)').setRequired(true))
-    .addStringOption(o => o.setName('duration').setDescription('Duration per round (e.g. 1m, 5m)').setRequired(true)),
+    .setDefaultMemberPermissions(0),
 
   async executeSlash(interaction) {
     if (!checkPerm(interaction.member, 'dok'))
       return interaction.reply({ content: 'Only **Staff Team** can use this command.', ephemeral: true });
 
-    const prize  = interaction.options.getString('prize');
-    const durStr = interaction.options.getString('duration');
+    const modal = new ModalBuilder()
+      .setCustomId('dok_modal')
+      .setTitle('Double or Keep');
+
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('dok_prize')
+          .setLabel('Prize (e.g. 10m)')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('10m')
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('dok_duration')
+          .setLabel('Duration per round (e.g. 1m, 5m, 1h)')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('5m')
+          .setRequired(true)
+      ),
+    );
+
+    return interaction.showModal(modal);
+  },
+
+  // ── Modal submit ─────────────────────────────────────────────────────────
+  async handleModal(interaction) {
+    const prize  = interaction.fields.getTextInputValue('dok_prize').trim();
+    const durStr = interaction.fields.getTextInputValue('dok_duration').trim();
     const ms     = parseTime(durStr);
     if (!ms) return interaction.reply({ content: 'Invalid duration. Use e.g. `1m`, `5m`.', ephemeral: true });
 
