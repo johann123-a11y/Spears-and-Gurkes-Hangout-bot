@@ -27,9 +27,9 @@ function splitStealButtons(gameId) {
   );
 }
 
-async function startGame(p1, p2, prize, channelId, client, replyFn) {
+async function startGame(p1, p2, prize, channelId, client, replyFn, channelRef = null) {
   const gameId = `ss_${Date.now()}`;
-  games.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize, channelId });
+  games.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize, channelId, msg: null, timeout: null, channel: null });
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
@@ -43,12 +43,43 @@ async function startGame(p1, p2, prize, channelId, client, replyFn) {
     )
     .setTimestamp();
 
-  await replyFn({
+  const sentMsg = await replyFn({
     content: `<@${p1}> <@${p2}>`,
     embeds: [embed],
     components: [splitStealButtons(gameId)],
     allowedMentions: { users: [p1, p2] },
   });
+
+  // Store message ref and start 90s timeout
+  if (games.has(gameId)) {
+    const game = games.get(gameId);
+    game.msg     = sentMsg ?? null;
+    game.channel = channelRef;
+    game.timeout = setTimeout(() => sosTimeout(gameId), 90_000);
+  }
+}
+
+async function sosTimeout(gameId) {
+  const game = games.get(gameId);
+  if (!game) return;
+  games.delete(gameId);
+
+  const disabledRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('ss_split_d').setLabel('🤝 Split').setStyle(ButtonStyle.Success).setDisabled(true),
+    new ButtonBuilder().setCustomId('ss_steal_d').setLabel('😈 Steal').setStyle(ButtonStyle.Danger).setDisabled(true),
+  );
+  game.msg?.edit({ components: [disabledRow] }).catch(() => {});
+
+  const ch = game.channel;
+
+  const onlyOne = (game.pick1 && !game.pick2) || (!game.pick1 && game.pick2);
+  const winner  = game.pick1 ? game.player1 : game.player2;
+
+  if (onlyOne) {
+    ch?.send({ content: `<@${winner}> is the only one who responded and wins the full prize: **${game.prize}**!` }).catch(() => {});
+  } else {
+    ch?.send({ content: `No one claimed the prize! The **${game.prize}** Split or Steal event has ended.` }).catch(() => {});
+  }
 }
 
 async function endLobby(messageId, client) {
@@ -85,7 +116,7 @@ async function endLobby(messageId, client) {
   const [p1] = pool.splice(idx1, 1);
   const p2   = pool[Math.floor(Math.random() * pool.length)];
 
-  await startGame(p1, p2, lobby.prize, lobby.channelId, client, opts => channel.send(opts).catch(console.error));
+  await startGame(p1, p2, lobby.prize, lobby.channelId, client, opts => channel.send(opts).catch(console.error), channel);
 }
 
 module.exports = {
@@ -173,6 +204,7 @@ module.exports = {
       await startGame(
         user1.id, user2.id, prize, interaction.channelId, interaction.client,
         opts => interaction.reply(opts),
+        interaction.channel,
       );
     }
   },
@@ -218,9 +250,10 @@ module.exports = {
 
     if (!game.pick1 || !game.pick2) return;
 
-    // Both picked — resolve 
+    // Both picked — resolve
+    clearTimeout(game.timeout);
     games.delete(gameId);
-    const channel = await interaction.client.channels.fetch(game.channelId).catch(() => null);
+    const channel = game.channel ?? await interaction.client.channels.fetch(game.channelId).catch(() => null);
 
     const p1Pick = game.pick1;
     const p2Pick = game.pick2;

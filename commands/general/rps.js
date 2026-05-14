@@ -59,7 +59,7 @@ async function endLobby(messageId, client) {
   const p2      = pool[idx2];
 
   const gameId  = `${messageId}_${Date.now()}`;
-  duels.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize: lobby.prize, channelId: lobby.channelId });
+  duels.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize: lobby.prize, channelId: lobby.channelId, msg: null, timeout: null });
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
@@ -73,15 +73,42 @@ async function endLobby(messageId, client) {
     .setTimestamp();
 
   if (channel) {
-    channel.send({
+    const panelMsg = await channel.send({
       content: `<@${p1}> <@${p2}>`,
       embeds: [embed],
       components: [rpsButtons(gameId)],
       allowedMentions: { users: [p1, p2] },
-    }).catch(() => {});
+    }).catch(() => null);
+
+    if (panelMsg && duels.has(gameId)) {
+      const duel = duels.get(gameId);
+      duel.msg = panelMsg;
+      duel.timeout = setTimeout(() => rpsTimeout(gameId, channel), 90_000);
+    }
   }
 
   lobbies.delete(messageId);
+}
+
+async function rpsTimeout(gameId, channel) {
+  const duel = duels.get(gameId);
+  if (!duel) return;
+  duels.delete(gameId);
+
+  const disabledRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('rps_rock_d').setLabel('🪨 Rock').setStyle(ButtonStyle.Secondary).setDisabled(true),
+    new ButtonBuilder().setCustomId('rps_paper_d').setLabel('📄 Paper').setStyle(ButtonStyle.Secondary).setDisabled(true),
+    new ButtonBuilder().setCustomId('rps_scissors_d').setLabel('✂️ Scissors').setStyle(ButtonStyle.Secondary).setDisabled(true),
+  );
+  duel.msg?.edit({ components: [disabledRow] }).catch(() => {});
+
+  if (duel.pick1 && !duel.pick2) {
+    channel.send({ content: `<@${duel.player1}> wins — their opponent didn't respond in time! Prize: **${duel.prize}**` }).catch(() => {});
+  } else if (!duel.pick1 && duel.pick2) {
+    channel.send({ content: `<@${duel.player2}> wins — their opponent didn't respond in time! Prize: **${duel.prize}**` }).catch(() => {});
+  } else {
+    channel.send({ content: `No one claimed the prize! The **${duel.prize}** RPS event has ended.` }).catch(() => {});
+  }
 }
 
 module.exports = {
@@ -197,6 +224,8 @@ module.exports = {
         pick2: null,
         prize,
         channelId: interaction.channelId,
+        msg: null,
+        timeout: null,
       });
 
       const embed = new EmbedBuilder()
@@ -216,6 +245,13 @@ module.exports = {
         components: [rpsButtons(gameId)],
         allowedMentions: { users: [user1.id, user2.id] },
       });
+
+      const panelMsg = await interaction.fetchReply().catch(() => null);
+      if (panelMsg && duels.has(gameId)) {
+        const duel = duels.get(gameId);
+        duel.msg = panelMsg;
+        duel.timeout = setTimeout(() => rpsTimeout(gameId, interaction.channel), 90_000);
+      }
     }
   },
 
@@ -257,6 +293,7 @@ module.exports = {
 
     // Both picked → resolve
     if (duel.pick1 && duel.pick2) {
+      clearTimeout(duel.timeout);
       duels.delete(gameId);
 
       const result  = determineWinner(duel.pick1, duel.pick2);

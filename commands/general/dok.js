@@ -47,7 +47,7 @@ function doublePrize(prize) {
 }
 
 // ── Start a new lobby ─────────────────────────────────────────────────────────
-async function startLobby(channel, prize, duration, round, client) {
+async function startLobby(channel, prize, duration, round, client, previousWinner = null) {
   const endsTs = Math.floor((Date.now() + duration) / 1000);
 
   const embed = new EmbedBuilder()
@@ -79,6 +79,7 @@ async function startLobby(channel, prize, duration, round, client) {
     channelId: channel.id,
     duration,
     round,
+    previousWinner,
     ended: false,
   });
 
@@ -116,12 +117,15 @@ async function endLobby(messageId, client) {
   const gameId = `dok_${Date.now()}`;
   pending.set(gameId, {
     winner,
+    previousWinner: lobby.previousWinner ?? null,
     prize:     lobby.prize,
     channel,
     channelId: lobby.channelId,
     duration:  lobby.duration,
     round:     lobby.round,
     client,
+    msg:     null,
+    timeout: null,
   });
 
   const embed = new EmbedBuilder()
@@ -140,12 +144,40 @@ async function endLobby(messageId, client) {
     new ButtonBuilder().setCustomId(`dok_pick:${gameId}:keep`).setLabel(`💰 Keep — ${lobby.prize}`).setStyle(ButtonStyle.Primary),
   );
 
-  channel.send({
+  const panelMsg = await channel.send({
     content: `<@${winner}>`,
     embeds: [embed],
     components: [row],
     allowedMentions: { users: [winner] },
-  }).catch(() => {});
+  }).catch(() => null);
+
+  if (panelMsg && pending.has(gameId)) {
+    const game = pending.get(gameId);
+    game.msg     = panelMsg;
+    game.timeout = setTimeout(() => dokTimeout(gameId), 90_000);
+  }
+}
+
+async function dokTimeout(gameId) {
+  const game = pending.get(gameId);
+  if (!game) return;
+  pending.delete(gameId);
+
+  const disabledRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('dok_d_d').setLabel(`📈 Double — ${doublePrize(game.prize)}`).setStyle(ButtonStyle.Success).setDisabled(true),
+    new ButtonBuilder().setCustomId('dok_k_d').setLabel(`💰 Keep — ${game.prize}`).setStyle(ButtonStyle.Primary).setDisabled(true),
+  );
+  game.msg?.edit({ components: [disabledRow] }).catch(() => {});
+
+  if (game.previousWinner) {
+    game.channel.send({
+      content: `<@${game.winner}> didn't respond in time. The previous winner <@${game.previousWinner}> takes the prize: **${game.prize}**!`,
+    }).catch(() => {});
+  } else {
+    game.channel.send({
+      content: `No one claimed the prize! The **${game.prize}** Double or Keep event has ended.`,
+    }).catch(() => {});
+  }
 }
 
 // ── Button handlers ───────────────────────────────────────────────────────────
@@ -220,6 +252,7 @@ module.exports = {
     if (interaction.user.id !== game.winner)
       return interaction.reply({ content: 'Only the winner can make this choice!', ephemeral: true });
 
+    clearTimeout(game.timeout);
     pending.delete(gameId);
 
     // Disable buttons
@@ -256,7 +289,7 @@ module.exports = {
         .setTimestamp();
 
       await interaction.reply({ embeds: [embed] });
-      await startLobby(game.channel, newPrize, game.duration, game.round + 1, game.client);
+      await startLobby(game.channel, newPrize, game.duration, game.round + 1, game.client, game.winner);
     }
   },
 
