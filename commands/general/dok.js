@@ -41,23 +41,23 @@ async function startLobby(channel, prize, duration, round, client) {
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')
-    .setTitle(`Double or Keep — Round ${round}`)
+    .setTitle(`💰 Double or Keep — Round ${round}`)
     .setDescription(
-      `**Prize:** ${prize}\n` +
-      `**Ends:** <t:${endsTs}:R>\n\n` +
+      `🏆 **Prize:** ${prize}\n` +
+      `⏰ **Ends:** <t:${endsTs}:R>\n\n` +
       `Click **Join** to enter! One winner will choose to double the prize or keep it.`
     )
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`dok_join:placeholder`).setLabel('Join').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId(`dok_join:placeholder`).setLabel('🎮 Join').setStyle(ButtonStyle.Primary),
   );
 
   const msg = await channel.send({ embeds: [embed], components: [row] });
 
   // Update button with real messageId
   const realRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`dok_join:${msg.id}`).setLabel('Join').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId(`dok_join:${msg.id}`).setLabel('🎮 Join').setStyle(ButtonStyle.Primary),
   );
   await msg.edit({ components: [realRow] }).catch(() => {});
 
@@ -115,18 +115,18 @@ async function endLobby(messageId, client) {
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')
-    .setTitle(`Double or Keep — Round ${lobby.round}`)
+    .setTitle(`💰 Double or Keep — Round ${lobby.round}`)
     .setDescription(
       `Congratulations <@${winner}>!\n\n` +
-      `**Current prize:** ${lobby.prize}\n` +
-      `**If doubled:** ${doublePrize(lobby.prize)}\n\n` +
+      `🏆 **Current prize:** ${lobby.prize}\n` +
+      `📈 **If doubled:** ${doublePrize(lobby.prize)}\n\n` +
       `What do you want to do?`
     )
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`dok_pick:${gameId}:double`).setLabel(`Double — ${doublePrize(lobby.prize)}`).setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId(`dok_pick:${gameId}:keep`).setLabel(`Keep — ${lobby.prize}`).setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId(`dok_pick:${gameId}:double`).setLabel(`📈 Double — ${doublePrize(lobby.prize)}`).setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId(`dok_pick:${gameId}:keep`).setLabel(`💰 Keep — ${lobby.prize}`).setStyle(ButtonStyle.Primary),
   );
 
   channel.send({
@@ -213,8 +213,8 @@ module.exports = {
 
     // Disable buttons
     const disabledRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('dok_d_d').setLabel(`Double — ${doublePrize(game.prize)}`).setStyle(ButtonStyle.Success).setDisabled(true),
-      new ButtonBuilder().setCustomId('dok_k_d').setLabel(`Keep — ${game.prize}`).setStyle(ButtonStyle.Primary).setDisabled(true),
+      new ButtonBuilder().setCustomId('dok_d_d').setLabel(`📈 Double — ${doublePrize(game.prize)}`).setStyle(ButtonStyle.Success).setDisabled(true),
+      new ButtonBuilder().setCustomId('dok_k_d').setLabel(`💰 Keep — ${game.prize}`).setStyle(ButtonStyle.Primary).setDisabled(true),
     );
     interaction.message.edit({ components: [disabledRow] }).catch(() => {});
 
@@ -224,7 +224,7 @@ module.exports = {
         .setTitle('Double or Keep — Result')
         .setDescription(
           `<@${game.winner}> chose to **Keep**!\n\n` +
-          `Prize: **${game.prize}**`
+          `💰 Prize: **${game.prize}**`
         )
         .setTimestamp();
 
@@ -239,7 +239,7 @@ module.exports = {
         .setTitle('Double or Keep — Doubled!')
         .setDescription(
           `<@${game.winner}> chose to **Double**!\n\n` +
-          `The prize is now **${newPrize}**!\n` +
+          `📈 The prize is now **${newPrize}**!\n` +
           `A new round is starting...`
         )
         .setTimestamp();
