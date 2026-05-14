@@ -9,7 +9,6 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('guessthenumber')
     .setDescription('Guess the Number game [Staff Team]')
-    .setDefaultMemberPermissions(0)
     .addSubcommand(sub =>
       sub.setName('start')
         .setDescription('Start a new Guess the Number game')
