@@ -21,18 +21,29 @@ function parsePrize(prize) {
 }
 
 function doublePrize(prize) {
+  // Try k/m/b format first (e.g. "10m" → "20m")
   const p = parsePrize(prize);
-  if (!p) return prize + ' x2'; // fallback for non-numeric prizes
-  const doubled = p.raw * 2;
-  // Format back
-  if (doubled >= 1e9 && doubled % 1e9 === 0) return `${doubled / 1e9}b`;
-  if (doubled >= 1e6 && doubled % 1e6 === 0) return `${doubled / 1e6}m`;
-  if (doubled >= 1e3 && doubled % 1e3 === 0) return `${doubled / 1e3}k`;
-  // Decimals
-  if (doubled >= 1e9) return `${+(doubled / 1e9).toFixed(2)}b`;
-  if (doubled >= 1e6) return `${+(doubled / 1e6).toFixed(2)}m`;
-  if (doubled >= 1e3) return `${+(doubled / 1e3).toFixed(2)}k`;
-  return `${doubled}`;
+  if (p) {
+    const doubled = p.raw * 2;
+    if (doubled >= 1e9 && doubled % 1e9 === 0) return `${doubled / 1e9}b`;
+    if (doubled >= 1e6 && doubled % 1e6 === 0) return `${doubled / 1e6}m`;
+    if (doubled >= 1e3 && doubled % 1e3 === 0) return `${doubled / 1e3}k`;
+    if (doubled >= 1e9) return `${+(doubled / 1e9).toFixed(2)}b`;
+    if (doubled >= 1e6) return `${+(doubled / 1e6).toFixed(2)}m`;
+    if (doubled >= 1e3) return `${+(doubled / 1e3).toFixed(2)}k`;
+    return `${doubled}`;
+  }
+  // Fallback: find any leading number and double it, keep the rest as-is
+  // e.g. "15sec" → "30sec", "100 coins" → "200 coins"
+  const numMatch = prize.trim().match(/^(\d+(?:\.\d+)?)(.*)/);
+  if (numMatch) {
+    const num    = parseFloat(numMatch[1]);
+    const rest   = numMatch[2];
+    const doubled = num % 1 === 0 ? (num * 2).toString() : (num * 2).toFixed(2).replace(/\.?0+$/, '');
+    return `${doubled}${rest}`;
+  }
+  // No number found — just append x2
+  return `${prize} x2`;
 }
 
 // ── Start a new lobby ─────────────────────────────────────────────────────────
