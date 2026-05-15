@@ -440,6 +440,12 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
+      // First to Press the Button
+      if (interaction.customId.startsWith('ftpb_claim:')) {
+        const { handleClaim } = require('../commands/general/ftpb');
+        return handleClaim(interaction);
+      }
+
       // Double or Keep buttons
       if (interaction.customId.startsWith('dok_join:')) {
         const { handleJoin } = require('../commands/general/dok');
@@ -1066,6 +1072,11 @@ module.exports = {
 
       if (interaction.customId === 'dok_modal') {
         const { handleModal } = require('../commands/general/dok');
+        return handleModal(interaction);
+      }
+
+      if (interaction.customId === 'ftpb_modal') {
+        const { handleModal } = require('../commands/general/ftpb');
         return handleModal(interaction);
       }
 
