@@ -78,8 +78,10 @@ async function rerollGiveaway(msgId, count, guild, replyChannel, interaction) {
   if (interaction) {
     await interaction.editReply({ embeds: [embed] });
     if (channel && channel.id !== interaction.channelId)
-      channel.send({ embeds: [embed] });
+      channel.send({ content: winnerMentions, embeds: [embed], allowedMentions: { users: winners } });
+    else
+      channel.send({ content: winnerMentions, allowedMentions: { users: winners } });
   } else if (channel) {
-    channel.send({ embeds: [embed] });
+    channel.send({ content: winnerMentions, embeds: [embed], allowedMentions: { users: winners } });
   }
 }
