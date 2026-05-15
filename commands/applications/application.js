@@ -332,19 +332,29 @@ async function handleOpen(interaction) {
   if (desc.text)   embed.setDescription(desc.text);
   if (desc.footer) embed.setFooter({ text: desc.footer });
 
-  const menu = new StringSelectMenuBuilder()
-    .setCustomId('app_apply_select')
-    .setPlaceholder('Select an application...')
-    .addOptions(toShow.map(p =>
-      new StringSelectMenuOptionBuilder()
-        .setLabel(p.name)
-        .setValue(p.id)
-        .setDescription(`Apply for: ${p.forWhat}`)
-    ));
+  let component;
+  if (toShow.length === 1) {
+    // Single panel → just a button
+    component = new ButtonBuilder()
+      .setCustomId(`app_apply_btn:${toShow[0].id}`)
+      .setLabel(`Apply for ${toShow[0].name}`)
+      .setStyle(ButtonStyle.Primary);
+  } else {
+    // Multiple panels → dropdown
+    component = new StringSelectMenuBuilder()
+      .setCustomId('app_apply_select')
+      .setPlaceholder('Select an application...')
+      .addOptions(toShow.map(p =>
+        new StringSelectMenuOptionBuilder()
+          .setLabel(p.name)
+          .setValue(p.id)
+          .setDescription(`Apply for: ${p.forWhat}`)
+      ));
+  }
 
   const sent = await interaction.channel.send({
     embeds: [embed],
-    components: [new ActionRowBuilder().addComponents(menu)],
+    components: [new ActionRowBuilder().addComponents(component)],
   });
 
   if (!apps.group) apps.group = {};

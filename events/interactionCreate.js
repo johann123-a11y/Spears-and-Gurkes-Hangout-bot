@@ -11,7 +11,7 @@ const {
   handleRequestCloseButton,
 } = require('../utils/ticketHandler');
 const { buildDescEmbed, sendTicketOverview } = require('../commands/tickets/ticket');
-const { startApplication, handleDMButton } = require('../utils/applicationDM');
+const { startApplication, handleDMButton, handleDMAnswer } = require('../utils/applicationDM');
 const { getAppId } = require('../commands/applications/application');
 const {
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
@@ -182,7 +182,13 @@ module.exports = {
         return interaction.update({ content: 'All ticket ping and view role settings cleared.', embeds: [], components: [] });
       }
 
-      // Application: yes/no DM buttons 
+      // Application: single-panel button
+      if (interaction.customId.startsWith('app_apply_btn:')) {
+        const panelId = interaction.customId.split(':')[1];
+        return startApplication(interaction, panelId);
+      }
+
+      // Application: yes/no DM buttons
       if (interaction.customId.startsWith('app_answer_yes:'))
         return handleDMButton(interaction, 'Yes');
       if (interaction.customId.startsWith('app_answer_no:'))
