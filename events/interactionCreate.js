@@ -584,8 +584,8 @@ module.exports = {
       }
     }
 
-    // Modal submits 
-    if (interaction.isModalSubmit()) {
+    // Modal submits
+    if (interaction.isModalSubmit()) { try {
       // Giveaway modal
       if (interaction.customId === 'giveaway_modal') {
         const time        = interaction.fields.getTextInputValue('gw_time');
@@ -1104,9 +1104,14 @@ module.exports = {
           ephemeral: true,
         });
       }
-    }
+    } catch (err) {
+      console.error('Error in modal submit:', err);
+      const msg = { content: 'An error occurred.', ephemeral: true };
+      if (interaction.replied || interaction.deferred) interaction.followUp(msg).catch(() => {});
+      else interaction.reply(msg).catch(() => {});
+    } }
 
-    // Role Select Menus 
+    // Role Select Menus
     if (interaction.isRoleSelectMenu()) {
       // setrole: pick role for a slot
       if (interaction.customId.startsWith('setrole_pick_role:')) {

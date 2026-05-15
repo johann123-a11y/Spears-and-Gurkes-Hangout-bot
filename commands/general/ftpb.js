@@ -48,9 +48,10 @@ module.exports = {
     const prize  = interaction.fields.getTextInputValue('ftpb_prize').trim();
     const durStr = interaction.fields.getTextInputValue('ftpb_duration').trim();
 
-    // Allow "0" / "0s" as immediate (no delay)
-    const ms = (durStr === '0' || durStr === '0s') ? 0 : parseTime(durStr);
-    if (ms === null || (ms === 0 && durStr !== '0' && durStr !== '0s') || (!ms && durStr !== '0' && durStr !== '0s'))
+    // Allow "0" / "0s" as immediate (no delay), otherwise parse normally
+    const isZero = durStr === '0' || durStr === '0s';
+    const ms = isZero ? 0 : parseTime(durStr);
+    if (!isZero && !ms)
       return interaction.reply({ content: 'Invalid duration. Use e.g. `0`, `10s`, `30s`, `1m`.', ephemeral: true });
 
     await interaction.reply({ content: '🏆 First to Press the Button event started!', ephemeral: true });
