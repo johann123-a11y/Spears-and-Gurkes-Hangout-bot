@@ -34,7 +34,7 @@ module.exports = {
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
           .setCustomId('ftpb_duration')
-          .setLabel('Delay before button activates (0, 10s, 1m, ...)')
+          .setLabel('Delay until button activates (0, 10s, 1m)')
           .setStyle(TextInputStyle.Short)
           .setPlaceholder('10s')
           .setRequired(true)
