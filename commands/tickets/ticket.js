@@ -227,8 +227,8 @@ module.exports = {
     if (sub === 'requestclose')   return handleRequestClose(interaction);
 
     if (sub === 'blacklist' || sub === 'unblacklist') {
-      if (!isStaff(interaction.member))
-        return interaction.reply({ content: 'Only **Staff** can manage the blacklist.', ephemeral: true });
+      if (!interaction.member.permissions.has('Administrator'))
+        return interaction.reply({ content: 'Only **Administrators** can manage the blacklist.', ephemeral: true });
       const user = interaction.options.getUser('user');
       if (sub === 'blacklist') {
         blacklistAdd(user.id, 'ticket');

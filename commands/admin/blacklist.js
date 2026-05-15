@@ -39,7 +39,7 @@ module.exports = {
     ),
 
   async executeSlash(interaction) {
-    if (!interaction.member.permissions.has('ManageGuild'))
+    if (!interaction.member.permissions.has('Administrator'))
       return interaction.reply({ content: 'No permission.', ephemeral: true });
 
     const sub  = interaction.options.getSubcommand();

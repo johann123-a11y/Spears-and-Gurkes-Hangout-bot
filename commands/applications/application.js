@@ -98,7 +98,7 @@ module.exports = {
 
     // Blacklist subcommands — staff only
     if (sub === 'blacklist' || sub === 'unblacklist') {
-      if (!interaction.member.permissions.has('ManageGuild'))
+      if (!interaction.member.permissions.has('Administrator'))
         return interaction.reply({ content: 'Only **Staff** can manage the blacklist.', ephemeral: true });
       const user = interaction.options.getUser('user');
       if (sub === 'blacklist') {
