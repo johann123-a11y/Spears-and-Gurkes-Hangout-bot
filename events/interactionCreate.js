@@ -470,13 +470,19 @@ module.exports = {
         return handlePick(interaction);
       }
 
-      // Giveaway join button 
+      // Giveaway join button
       if (interaction.customId.startsWith('giveaway_join:')) {
         const msgId = interaction.customId.split(':')[1];
         const giveaways = readData('giveaways.json');
         const gw = giveaways[msgId];
         if (!gw || gw.ended)
           return interaction.reply({ content: 'This giveaway has already ended.', ephemeral: true });
+
+        // Blacklist check
+        const gwBl = readData('blacklist.json');
+        const gwBlEntry = gwBl[interaction.user.id];
+        if (gwBlEntry?.giveaway || gwBlEntry?.all)
+          return interaction.reply({ content: 'You are not allowed to join giveaways.', ephemeral: true });
 
         if (!gw.participants) gw.participants = [];
 

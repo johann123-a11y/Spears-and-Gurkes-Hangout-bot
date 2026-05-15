@@ -22,10 +22,10 @@ module.exports = {
   name: 'blacklist',
   data: new SlashCommandBuilder()
     .setName('blacklist')
-    .setDescription('Blacklist a user from tickets AND applications [Staff]')
+    .setDescription('Blacklist a user from everything (tickets, applications, giveaways) [Admin]')
     .addSubcommand(sub =>
       sub.setName('add')
-        .setDescription('Blacklist a user from everything')
+        .setDescription('Blacklist a user from everything (tickets, applications, giveaways)')
         .addUserOption(o => o.setName('user').setDescription('User to blacklist').setRequired(true))
     )
     .addSubcommand(sub =>
@@ -50,7 +50,7 @@ module.exports = {
       return interaction.reply({
         embeds: [new EmbedBuilder()
           .setColor('#ED4245').setTitle('🚫 Blacklisted')
-          .setDescription(`<@${user.id}> is now blacklisted from **tickets and applications**.`)
+          .setDescription(`<@${user.id}> is now blacklisted from **tickets, applications and giveaways**.`)
           .setTimestamp()],
         ephemeral: true,
       });
