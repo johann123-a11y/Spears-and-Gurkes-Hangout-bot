@@ -34,6 +34,12 @@ async function startApplication(interaction, panelId) {
   const panel = apps.panels?.[panelId];
   if (!panel) return interaction.reply({ content: 'Application not found.', ephemeral: true });
 
+  // Blacklist check
+  const blacklist = readData('blacklist.json');
+  const bl = blacklist[interaction.user.id];
+  if (bl?.application || bl?.all)
+    return interaction.reply({ content: 'You are not allowed to submit applications.', ephemeral: true });
+
   // Check duplicate pending
   const results = readData('applicationResults.json');
   const existing = Object.values(results).find(

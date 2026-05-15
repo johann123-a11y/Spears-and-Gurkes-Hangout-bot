@@ -4,6 +4,7 @@ const {
   ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
+const { blacklistAdd, blacklistRemove } = require('../admin/blacklist');
 
 function getAppId(name) {
   return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -41,12 +42,24 @@ module.exports = {
         )
     )
 
-    // /application info 
+    // /application info
     .addSubcommand(sub =>
       sub.setName('info').setDescription('Show all configured application panels and settings [Admin]')
     )
 
-    // /application set (subcommand group) 
+    // /application blacklist & unblacklist
+    .addSubcommand(sub =>
+      sub.setName('blacklist')
+        .setDescription('Prevent a user from submitting applications [Staff]')
+        .addUserOption(o => o.setName('user').setDescription('User to blacklist').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('unblacklist')
+        .setDescription('Allow a user to apply again [Staff]')
+        .addUserOption(o => o.setName('user').setDescription('User to unblacklist').setRequired(true))
+    )
+
+    // /application set (subcommand group)
     .addSubcommandGroup(group =>
       group.setName('set').setDescription('Set application channels')
         .addSubcommand(sub =>
@@ -80,11 +93,25 @@ module.exports = {
   },
 
   async executeSlash(interaction) {
-    if (!interaction.member.permissions.has('Administrator'))
-      return interaction.reply({ content: 'Only **Administrators** can use this command.', ephemeral: true });
-
     const group = interaction.options.getSubcommandGroup(false);
     const sub   = interaction.options.getSubcommand();
+
+    // Blacklist subcommands — staff only
+    if (sub === 'blacklist' || sub === 'unblacklist') {
+      if (!interaction.member.permissions.has('ManageGuild'))
+        return interaction.reply({ content: 'Only **Staff** can manage the blacklist.', ephemeral: true });
+      const user = interaction.options.getUser('user');
+      if (sub === 'blacklist') {
+        blacklistAdd(user.id, 'application');
+        return interaction.reply({ content: `🚫 <@${user.id}> can no longer submit applications.`, ephemeral: true });
+      } else {
+        blacklistRemove(user.id, 'application');
+        return interaction.reply({ content: `✅ <@${user.id}> can submit applications again.`, ephemeral: true });
+      }
+    }
+
+    if (!interaction.member.permissions.has('Administrator'))
+      return interaction.reply({ content: 'Only **Administrators** can use this command.', ephemeral: true });
 
     if (group === 'set') {
       if (sub === 'channel') return handleSetChannel(interaction);

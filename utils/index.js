@@ -34,6 +34,7 @@ function getDefault(filename) {
     'staffConfig.json':   { staffRoleId: null },
     'lockperms.json':     { roles: [] },
     'review.json':        { channel: null, guildId: null },
+    'blacklist.json':     {},
   };
   return defaults[filename] ?? {};
 }

@@ -8,6 +8,7 @@ const {
 const { readData, writeData } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 const { closeTicket } = require('../../utils/ticketHandler');
+const { blacklistAdd, blacklistRemove } = require('../admin/blacklist');
 
 function getPanelId(name) {
   return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -157,11 +158,23 @@ module.exports = {
         .addStringOption(o => o.setName('reason').setDescription('Reason for closing').setRequired(true))
     )
 
-    // /ticket requestclose 
+    // /ticket requestclose
     .addSubcommand(sub =>
       sub.setName('requestclose')
         .setDescription('Ask staff to close the ticket')
         .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
+    )
+
+    // /ticket blacklist & unblacklist
+    .addSubcommand(sub =>
+      sub.setName('blacklist')
+        .setDescription('Prevent a user from opening tickets [Staff]')
+        .addUserOption(o => o.setName('user').setDescription('User to blacklist').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('unblacklist')
+        .setDescription('Allow a user to open tickets again [Staff]')
+        .addUserOption(o => o.setName('user').setDescription('User to unblacklist').setRequired(true))
     ),
 
   async execute(message) {
@@ -212,6 +225,19 @@ module.exports = {
     if (sub === 'move')           return handleMove(interaction);
     if (sub === 'close')          return handleClose(interaction);
     if (sub === 'requestclose')   return handleRequestClose(interaction);
+
+    if (sub === 'blacklist' || sub === 'unblacklist') {
+      if (!isStaff(interaction.member))
+        return interaction.reply({ content: 'Only **Staff** can manage the blacklist.', ephemeral: true });
+      const user = interaction.options.getUser('user');
+      if (sub === 'blacklist') {
+        blacklistAdd(user.id, 'ticket');
+        return interaction.reply({ content: `🚫 <@${user.id}> can no longer open tickets.`, ephemeral: true });
+      } else {
+        blacklistRemove(user.id, 'ticket');
+        return interaction.reply({ content: `✅ <@${user.id}> can open tickets again.`, ephemeral: true });
+      }
+    }
   },
 };
 

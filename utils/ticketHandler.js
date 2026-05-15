@@ -20,6 +20,12 @@ async function handleTicketOpen(interaction) {
   if (!panel)
     return interaction.reply({ content: 'This ticket panel no longer exists.', ephemeral: true });
 
+  // Blacklist check
+  const blacklist = readData('blacklist.json');
+  const bl = blacklist[interaction.user.id];
+  if (bl?.ticket || bl?.all)
+    return interaction.reply({ content: 'You are not allowed to open tickets.', ephemeral: true });
+
   if (panel.questions.length > 0) {
     // Show modal with pre-open questions (Discord max: 5 inputs)
     const modal = new ModalBuilder()
