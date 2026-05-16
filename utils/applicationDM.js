@@ -40,6 +40,11 @@ async function startApplication(interaction, panelId) {
   if (bl?.application || bl?.all)
     return interaction.reply({ content: 'You are not allowed to submit applications.', ephemeral: true });
 
+  // Check if user already has an active session (application in progress)
+  const activeSessions = readData('appSessions.json');
+  if (activeSessions[interaction.user.id])
+    return interaction.reply({ content: 'You already have an application in progress! Check your DMs and finish it first. Type `cancel` in the DM to cancel.', ephemeral: true });
+
   // Check duplicate pending
   const results = readData('applicationResults.json');
   const existing = Object.values(results).find(
