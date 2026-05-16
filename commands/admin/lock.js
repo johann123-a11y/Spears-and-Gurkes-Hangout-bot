@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const { readData, writeData } = require('../../utils');
+const { readData, writeData, isStaffMember } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 const config = require('../../config.json');
 
@@ -21,8 +21,8 @@ module.exports = [
     description: 'Locks the current channel. [Staff]',
 
     async execute(message) {
-      if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
-        return message.reply('You need **Manage Channels** permission to use this.');
+      if (!isStaffMember(message.member))
+        return message.reply('Only **Staff Team** can use this command.');
 
       const channel = message.channel;
 
@@ -56,8 +56,8 @@ module.exports = [
     description: 'Unlocks the current channel. [Staff]',
 
     async execute(message) {
-      if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
-        return message.reply('You need **Manage Channels** permission to use this.');
+      if (!isStaffMember(message.member))
+        return message.reply('Only **Staff Team** can use this command.');
 
       const channel = message.channel;
 
