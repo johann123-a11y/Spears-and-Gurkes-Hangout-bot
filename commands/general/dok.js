@@ -47,7 +47,7 @@ function doublePrize(prize) {
 }
 
 // ── Start a new lobby ─────────────────────────────────────────────────────────
-async function startLobby(channel, prize, duration, round, client, previousWinner = null) {
+async function startLobby(channel, prize, duration, round, client, previousWinner = null, hostUser = null) {
   const endsTs = Math.floor((Date.now() + duration) / 1000);
 
   const embed = new EmbedBuilder()
@@ -58,6 +58,7 @@ async function startLobby(channel, prize, duration, round, client, previousWinne
       `⏰ **Ends:** <t:${endsTs}:R>\n\n` +
       `Click **Join** to enter! One winner will choose to double the prize or keep it.`
     )
+    .setFooter({ text: `Hosted by ${hostUser?.tag || 'Staff'}` })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -81,6 +82,7 @@ async function startLobby(channel, prize, duration, round, client, previousWinne
     round,
     previousWinner,
     ended: false,
+    hostUser,
   });
 
   setTimeout(() => endLobby(msg.id, client), duration);
@@ -126,6 +128,7 @@ async function endLobby(messageId, client) {
     client,
     msg:     null,
     timeout: null,
+    hostUser: lobby.hostUser ?? null,
   });
 
   const embed = new EmbedBuilder()
@@ -137,6 +140,7 @@ async function endLobby(messageId, client) {
       `📈 **If doubled:** ${doublePrize(lobby.prize)}\n\n` +
       `What do you want to do?`
     )
+    .setFooter({ text: `Hosted by ${lobby.hostUser?.tag || 'Staff'}` })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -225,7 +229,7 @@ module.exports = {
     if (!ms) return interaction.reply({ content: 'Invalid duration. Use e.g. `1m`, `5m`.', ephemeral: true });
 
     await interaction.reply({ content: 'Double or Keep event started!', ephemeral: true });
-    await startLobby(interaction.channel, prize, ms, 1, interaction.client);
+    await startLobby(interaction.channel, prize, ms, 1, interaction.client, null, { id: interaction.user.id, tag: interaction.user.tag });
   },
 
   // ── Join button ─────────────────────────────────────────────────────────
@@ -269,6 +273,7 @@ module.exports = {
           `<@${game.winner}> chose to **Keep**!\n\n` +
           `💰 Prize: **${game.prize}**`
         )
+        .setFooter({ text: `Hosted by ${game.hostUser?.tag || 'Staff'}` })
         .setTimestamp();
 
       await interaction.reply({ embeds: [embed] });
@@ -285,10 +290,11 @@ module.exports = {
           `📈 The prize is now **${newPrize}**!\n` +
           `A new round is starting...`
         )
+        .setFooter({ text: `Hosted by ${game.hostUser?.tag || 'Staff'}` })
         .setTimestamp();
 
       await interaction.reply({ embeds: [embed] });
-      await startLobby(game.channel, newPrize, game.duration, game.round + 1, game.client, game.winner);
+      await startLobby(game.channel, newPrize, game.duration, game.round + 1, game.client, game.winner, game.hostUser);
     }
   },
 

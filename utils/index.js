@@ -35,6 +35,7 @@ function getDefault(filename) {
     'lockperms.json':     { roles: [] },
     'review.json':        { channel: null, guildId: null },
     'blacklist.json':     {},
+    'warns.json':         {},
   };
   return defaults[filename] ?? {};
 }
@@ -125,6 +126,7 @@ const COMMAND_DEFAULTS = {
   // General (configurable)
   afk: 'everyone', help: 'everyone', hereping: 'staffTeam',
   guessthenumber: 'staffTeam', rps: 'staffTeam', sos: 'staffTeam', dok: 'staffTeam', ftpb: 'staffTeam',
+  warn: 'staffTeam',
 };
 
 const COMMAND_LABELS = {

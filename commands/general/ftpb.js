@@ -68,6 +68,7 @@ module.exports = {
           ? `⏳ Button activates <t:${activatesTs}:R> — get ready!`
           : `🟢 **The button is active NOW — first to press wins!**`)
       )
+      .setFooter({ text: `Hosted by ${interaction.user.tag}` })
       .setTimestamp();
 
     const lockedRow = new ActionRowBuilder().addComponents(
@@ -99,6 +100,7 @@ module.exports = {
           `💰 **Prize:** ${prize}\n\n` +
           `🟢 **GO! First to press wins!**`
         )
+        .setFooter({ text: `Hosted by ${interaction.user.tag}` })
         .setTimestamp();
 
       await msg.edit({ embeds: [activeEmbed], components: [activeRow] }).catch(() => {});
@@ -127,9 +129,10 @@ module.exports = {
     );
     await interaction.message.edit({ components: [disabledRow] }).catch(() => {});
 
-    // Extract prize from embed
+    // Extract prize and host from embed
     const prizeMatch = interaction.message.embeds[0]?.description?.match(/\*\*Prize:\*\* (.+)/);
     const prize = prizeMatch ? prizeMatch[1].trim() : 'the prize';
+    const existingFooter = interaction.message.embeds[0]?.footer?.text || null;
 
     const winEmbed = new EmbedBuilder()
       .setColor('#57F287')
@@ -139,6 +142,8 @@ module.exports = {
         `💰 **Prize:** ${prize}`
       )
       .setTimestamp();
+
+    if (existingFooter) winEmbed.setFooter({ text: existingFooter });
 
     await interaction.reply({ embeds: [winEmbed] });
   },

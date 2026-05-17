@@ -27,9 +27,9 @@ function splitStealButtons(gameId) {
   );
 }
 
-async function startGame(p1, p2, prize, channelId, client, replyFn, channelRef = null) {
+async function startGame(p1, p2, prize, channelId, client, replyFn, channelRef = null, hostUser = null) {
   const gameId = `ss_${Date.now()}`;
-  games.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize, channelId, msg: null, timeout: null, channel: null });
+  games.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize, channelId, msg: null, timeout: null, channel: null, hostUser });
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
@@ -41,6 +41,7 @@ async function startGame(p1, p2, prize, channelId, client, replyFn, channelRef =
       `🤝 **Split** — divide the prize equally\n` +
       `😈 **Steal** — take everything (but if both steal, nobody gets anything!)`
     )
+    .setFooter({ text: `Hosted by ${hostUser?.tag || 'Staff'}` })
     .setTimestamp();
 
   const sentMsg = await replyFn({
@@ -116,7 +117,7 @@ async function endLobby(messageId, client) {
   const [p1] = pool.splice(idx1, 1);
   const p2   = pool[Math.floor(Math.random() * pool.length)];
 
-  await startGame(p1, p2, lobby.prize, lobby.channelId, client, opts => channel.send(opts).catch(console.error), channel);
+  await startGame(p1, p2, lobby.prize, lobby.channelId, client, opts => channel.send(opts).catch(console.error), channel, lobby.hostUser);
 }
 
 module.exports = {
@@ -184,6 +185,7 @@ module.exports = {
         guildId:   interaction.guildId,
         endsAt:    Date.now() + ms,
         ended:     false,
+        hostUser:  { id: interaction.user.id, tag: interaction.user.tag },
       });
 
       setTimeout(() => endLobby(msg.id, interaction.client), ms);
@@ -204,6 +206,7 @@ module.exports = {
         user1.id, user2.id, prize, interaction.channelId, interaction.client,
         opts => interaction.reply(opts),
         interaction.channel,
+        { id: interaction.user.id, tag: interaction.user.tag },
       );
     }
   },
@@ -292,6 +295,7 @@ module.exports = {
       .setColor(color)
       .setTitle(title)
       .setDescription(desc)
+      .setFooter({ text: `Hosted by ${game.hostUser?.tag || 'Staff'}` })
       .setTimestamp();
 
     const disabledRow = new ActionRowBuilder().addComponents(

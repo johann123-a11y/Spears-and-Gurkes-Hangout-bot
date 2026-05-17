@@ -297,6 +297,14 @@ module.exports = {
           timeoutLogs.forEach(e => fields.push({ name: `🔇 Timeout by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
           kickLogs.forEach(e => fields.push({ name: `👢 Kicked by ${e.executor?.tag || '?'}`, value: e.reason || 'No reason', inline: false }));
 
+          const warnsData = readData('warns.json');
+          const userWarns = warnsData[userId];
+          if (userWarns?.warns?.length > 0) {
+            userWarns.warns.slice(-5).forEach(w =>
+              fields.push({ name: `⚠️ Bot Warn by ${w.by}`, value: w.reason || 'No reason', inline: false })
+            );
+          }
+
           const embed = new EmbedBuilder()
             .setColor(fields.length > 0 ? '#FF6B35' : '#57F287')
             .setTitle(`📋 Warn/Punishment History — <@${userId}>`)
@@ -921,7 +929,7 @@ module.exports = {
             embeds: [new EmbedBuilder()
               .setColor('#ED4245').setTitle('❌ Application Denied')
               .setDescription(
-                `You got **denied** as **${result.forWhat}** by <@${interaction.user.id}>.\n\n**Reason:** ${reason}`
+                `You got **denied** as **${result.forWhat}** by <@${interaction.user.id}>.\n\n**Reason:** ${reason}\n\n⚠️ You may apply again in **2 weeks**. If you apply again before then or get denied again, you will be **permanently application blacklisted**.`
               ).setTimestamp()],
           });
         } catch { /* DMs closed */ }

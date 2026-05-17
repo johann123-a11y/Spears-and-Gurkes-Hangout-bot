@@ -59,7 +59,7 @@ async function endLobby(messageId, client) {
   const p2      = pool[idx2];
 
   const gameId  = `${messageId}_${Date.now()}`;
-  duels.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize: lobby.prize, channelId: lobby.channelId, msg: null, timeout: null });
+  duels.set(gameId, { player1: p1, player2: p2, pick1: null, pick2: null, prize: lobby.prize, channelId: lobby.channelId, msg: null, timeout: null, hostUser: lobby.hostUser });
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
@@ -70,6 +70,7 @@ async function endLobby(messageId, client) {
       `Both players: pick your move below!\n` +
       `📄 **Paper** beats Rock · 🪨 **Rock** beats Scissors · ✂️ **Scissors** beats Paper`
     )
+    .setFooter({ text: `Hosted by ${lobby.hostUser?.tag || 'Staff'}` })
     .setTimestamp();
 
   if (channel) {
@@ -181,6 +182,7 @@ module.exports = {
         guildId:   interaction.guildId,
         endsAt,
         ended: false,
+        hostUser: { id: interaction.user.id, tag: interaction.user.tag },
       });
 
       setTimeout(() => endLobby(msg.id, interaction.client), ms);
@@ -225,6 +227,7 @@ module.exports = {
         channelId: interaction.channelId,
         msg: null,
         timeout: null,
+        hostUser: { id: interaction.user.id, tag: interaction.user.tag },
       });
 
       const embed = new EmbedBuilder()
@@ -236,6 +239,7 @@ module.exports = {
           `Both players: pick your move below!\n` +
           `📄 **Paper** beats Rock · 🪨 **Rock** beats Scissors · ✂️ **Scissors** beats Paper`
         )
+        .setFooter({ text: `Hosted by ${interaction.user.tag}` })
         .setTimestamp();
 
       await interaction.reply({
@@ -320,6 +324,7 @@ module.exports = {
         .setColor(result === 'tie' ? '#FEE75C' : '#57F287')
         .setTitle(result === 'tie' ? 'It\'s a Tie!' : 'We have a winner!')
         .setDescription(desc)
+        .setFooter({ text: `Hosted by ${duel.hostUser?.tag || 'Staff'}` })
         .setTimestamp();
 
       // Disable buttons on original message

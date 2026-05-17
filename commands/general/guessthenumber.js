@@ -47,9 +47,17 @@ module.exports = {
         .setPlaceholder('Leave empty for a random number')
         .setRequired(false);
 
+      const prizeInput = new TextInputBuilder()
+        .setCustomId('gtn_prize')
+        .setLabel('Prize (optional, e.g. 10m)')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setPlaceholder('10m');
+
       modal.addComponents(
         new ActionRowBuilder().addComponents(maxInput),
         new ActionRowBuilder().addComponents(numberInput),
+        new ActionRowBuilder().addComponents(prizeInput),
       );
 
       return interaction.showModal(modal);
@@ -73,6 +81,7 @@ module.exports = {
   async handleModal(interaction) {
     const maxRaw    = interaction.fields.getTextInputValue('gtn_max').trim();
     const numberRaw = interaction.fields.getTextInputValue('gtn_number').trim();
+    const prize     = interaction.fields.getTextInputValue('gtn_prize').trim() || null;
 
     const max = parseInt(maxRaw);
     if (isNaN(max) || max < 2)
@@ -87,12 +96,16 @@ module.exports = {
         return interaction.reply({ content: `The number must be between **1** and **${max}**.`, ephemeral: true });
     }
 
-    activeGames.set(interaction.channelId, { number, max });
+    activeGames.set(interaction.channelId, { number, max, prize, hostId: interaction.user.id, hostTag: interaction.user.tag });
+
+    let desc = `The number is between **1** and **${max}**.\n\nType your guess in the chat!`;
+    if (prize) desc += `\n\n💰 **Prize:** ${prize}`;
+    desc += `\n👤 **Host:** <@${interaction.user.id}>`;
 
     const embed = new EmbedBuilder()
       .setColor('#5865F2')
       .setTitle('🔢 Guess the Number!')
-      .setDescription(`The number is between **1** and **${max}**.\n\nType your guess in the chat!`)
+      .setDescription(desc)
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -108,9 +121,16 @@ module.exports = {
 
     if (guess === game.number) {
       activeGames.delete(message.channel.id);
-      message.channel.send(
-        `<@${message.author.id}> guessed the number! It was **${game.number}**! `
-      ).catch(() => {});
+      const embed = new EmbedBuilder()
+        .setColor('#57F287')
+        .setTitle('🎉 Correct!')
+        .setDescription(
+          `<@${message.author.id}> guessed the number! It was **${game.number}**!` +
+          (game.prize ? `\n\n💰 **Prize:** ${game.prize}` : '') +
+          (game.hostId ? `\n👤 **Host:** <@${game.hostId}>` : '')
+        )
+        .setTimestamp();
+      message.channel.send({ embeds: [embed] }).catch(() => {});
     }
   },
 };
