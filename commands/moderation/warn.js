@@ -120,7 +120,7 @@ module.exports = {
           { name: '🔢 Remaining Warns',    value: `${userData.count}`,         inline: true },
           { name: '🔨 Current Punishment', value: formatPunishment(newPunishment), inline: true },
         ).setTimestamp();
-      return message.reply({ embeds: [embed] });
+      return message.reply({ content: `<@${target.id}>`, embeds: [embed], allowedMentions: { users: [target.id] } });
     }
 
     // ?warn @user [reason]
@@ -143,7 +143,7 @@ module.exports = {
         { name: '🔢 Total Warns',value: `${userData.count}`,         inline: true },
         { name: '🔨 Punishment', value: formatPunishment(punishment), inline: true },
       ).setTimestamp();
-    return message.reply({ embeds: [embed] });
+    return message.reply({ content: `<@${target.id}>`, embeds: [embed], allowedMentions: { users: [target.id] } });
   },
 
   async executeSlash(interaction) {
@@ -169,7 +169,7 @@ module.exports = {
           { name: '🔢 Total Warns',value: `${userData.count}`,                  inline: true },
           { name: '🔨 Punishment', value: formatPunishment(punishment),          inline: true },
         ).setTimestamp();
-      return interaction.reply({ embeds: [embed] });
+      return interaction.reply({ content: `<@${target.id}>`, embeds: [embed], allowedMentions: { users: [target.id] } });
     }
 
     if (sub === 'remove') {
@@ -184,7 +184,7 @@ module.exports = {
           { name: '🔢 Remaining Warns',    value: `${userData.count}`,                 inline: true },
           { name: '🔨 Current Punishment', value: formatPunishment(newPunishment),      inline: true },
         ).setTimestamp();
-      return interaction.reply({ embeds: [embed] });
+      return interaction.reply({ content: `<@${target.id}>`, embeds: [embed], allowedMentions: { users: [target.id] } });
     }
   },
 };
