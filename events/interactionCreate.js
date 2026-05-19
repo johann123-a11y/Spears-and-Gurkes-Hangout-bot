@@ -1094,6 +1094,11 @@ module.exports = {
         return handleModal(interaction);
       }
 
+      if (interaction.customId === 'embed_modal') {
+        const { handleModal } = require('../commands/admin/embed');
+        return handleModal(interaction);
+      }
+
       // CheckLOA set modal 
       if (interaction.customId.startsWith('checkloa_set_modal:')) {
         const userId      = interaction.customId.split(':')[1];
