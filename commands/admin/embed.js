@@ -38,7 +38,7 @@ module.exports = {
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
           .setCustomId('embed_color')
-          .setLabel('Color (hex, e.g. #FFD700 — leave empty for blue)')
+          .setLabel('Color (hex, e.g. #FFD700, empty = blue)')
           .setStyle(TextInputStyle.Short)
           .setRequired(false)
           .setMaxLength(7)

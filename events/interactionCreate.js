@@ -34,7 +34,7 @@ module.exports = {
         await command.executeSlash(interaction, client);
       } catch (err) {
         console.error(`Error in slash command ${interaction.commandName}:`, err);
-        const msg = { content: 'An error occurred.', ephemeral: true };
+        const msg = { content: `❌ **Error:** \`${err.message}\``, ephemeral: true };
         if (interaction.replied || interaction.deferred) interaction.followUp(msg).catch(() => {});
         else interaction.reply(msg).catch(() => {});
       }
@@ -1125,7 +1125,7 @@ module.exports = {
       }
     } catch (err) {
       console.error('Error in modal submit:', err);
-      const msg = { content: 'An error occurred.', ephemeral: true };
+      const msg = { content: `❌ **Error:** \`${err.message}\``, ephemeral: true };
       if (interaction.replied || interaction.deferred) interaction.followUp(msg).catch(() => {});
       else interaction.reply(msg).catch(() => {});
     } }
