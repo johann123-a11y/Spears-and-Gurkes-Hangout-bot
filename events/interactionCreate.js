@@ -29,7 +29,8 @@ module.exports = {
     // Slash commands 
     if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
-      if (!command?.executeSlash) return;
+      if (!command?.executeSlash)
+        return interaction.reply({ content: '❌ Command not found or not yet loaded. Try again in a moment.', ephemeral: true }).catch(() => {});
       try {
         await command.executeSlash(interaction, client);
       } catch (err) {
