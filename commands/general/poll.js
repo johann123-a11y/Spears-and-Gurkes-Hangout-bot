@@ -24,33 +24,45 @@ module.exports = {
     ),
 
   async executeSlash(interaction) {
-    if (!checkPerm(interaction.member, 'poll'))
-      return interaction.reply({ content: 'Only **Staff** can use this command.', ephemeral: true });
+    // Acknowledge immediately so Discord never times out
+    await interaction.deferReply({ ephemeral: true });
 
-    const question = interaction.options.getString('question');
+    try {
+      if (!checkPerm(interaction.member, 'poll'))
+        return interaction.editReply({ content: 'Only **Staff** can use this command.' });
 
-    const options = [];
-    for (let i = 1; i <= 9; i++) {
-      const opt = interaction.options.getString(`option${i}`);
-      if (opt) options.push(opt);
-    }
+      const question = interaction.options.getString('question');
 
-    const description = options
-      .map((opt, i) => `${NUMBER_EMOJIS[i]}  ${opt}`)
-      .join('\n\n');
+      const options = [];
+      for (let i = 1; i <= 9; i++) {
+        const opt = interaction.options.getString(`option${i}`);
+        if (opt) options.push(opt);
+      }
 
-    const embed = new EmbedBuilder()
-      .setColor('#5865F2')
-      .setTitle('📊 ' + question)
-      .setDescription(description)
-      .setFooter({ text: `Poll by ${interaction.user.tag} • Vote by clicking a reaction below` })
-      .setTimestamp();
+      if (options.length < 2)
+        return interaction.editReply({ content: '❌ You need at least **2 options**.' });
 
-    await interaction.reply({ content: '✅ Poll created!', ephemeral: true });
-    const msg = await interaction.channel.send({ embeds: [embed] });
+      const description = options
+        .map((opt, i) => `${NUMBER_EMOJIS[i]}  ${opt}`)
+        .join('\n\n');
 
-    for (let i = 0; i < options.length; i++) {
-      await msg.react(NUMBER_EMOJIS[i]);
+      const embed = new EmbedBuilder()
+        .setColor('#5865F2')
+        .setTitle('📊 ' + question)
+        .setDescription(description)
+        .setFooter({ text: `Poll by ${interaction.user.tag} • Vote by clicking a reaction below` })
+        .setTimestamp();
+
+      const msg = await interaction.channel.send({ embeds: [embed] });
+
+      for (let i = 0; i < options.length; i++) {
+        await msg.react(NUMBER_EMOJIS[i]);
+      }
+
+      await interaction.editReply({ content: '✅ Poll created!' });
+    } catch (err) {
+      console.error('[poll] Error:', err);
+      await interaction.editReply({ content: `❌ **Error:** \`${err.message}\`` }).catch(() => {});
     }
   },
 };
