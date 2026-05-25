@@ -1,0 +1,12 @@
+services:
+  hangout-bot-prod:
+    build: .
+    container_name: hangout-bot-prod
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - vps-shared
+
+networks:
+  vps-shared:
+    external: true
