@@ -63,6 +63,27 @@ module.exports = [
 
       await channel.permissionOverwrites.edit(message.guild.id, { SendMessages: null }).catch(() => {});
 
+      // If the channel was staff-locked, also reset the explicit staff role denies and temp exception
+      const sl = readData('staffLock.json');
+      const lockData = sl[channel.id];
+      if (lockData) {
+        for (const roleId of getExemptRoleIds(message.guild)) {
+          const role = message.guild.roles.cache.get(roleId);
+          if (role) await channel.permissionOverwrites.edit(role, { SendMessages: null }).catch(() => {});
+        }
+        if (lockData.allowedId) {
+          if (lockData.allowedType === 'role') {
+            const role = message.guild.roles.cache.get(lockData.allowedId);
+            if (role) await channel.permissionOverwrites.edit(role, { SendMessages: null }).catch(() => {});
+          } else {
+            const member = await message.guild.members.fetch(lockData.allowedId).catch(() => null);
+            if (member) await channel.permissionOverwrites.edit(member, { SendMessages: null }).catch(() => {});
+          }
+        }
+        delete sl[channel.id];
+        writeData('staffLock.json', sl);
+      }
+
       message.channel.send({
         embeds: [new EmbedBuilder()
           .setColor('#57F287')

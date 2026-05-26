@@ -33,6 +33,7 @@ function getDefault(filename) {
     'appSessions.json':   {},
     'staffConfig.json':   { staffRoleId: null },
     'lockperms.json':     { roles: [] },
+    'staffLock.json':     {},
     'review.json':        { channel: null, guildId: null },
     'blacklist.json':     {},
     'warns.json':         {},
