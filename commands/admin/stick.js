@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 
 module.exports = {
@@ -9,7 +9,12 @@ module.exports = {
     .setDescription('Sticks a message to the channel [Admin Only]')
     .addSubcommand(sub =>
       sub.setName('set')
-        .setDescription('Set the sticky message')
+        .setDescription('Set a sticky embed message')
+        .addStringOption(o => o.setName('message').setDescription('The message to stick').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('messageset')
+        .setDescription('Set a plain-text sticky message that pings on every repost')
         .addStringOption(o => o.setName('message').setDescription('The message to stick').setRequired(true))
     )
     .addSubcommand(sub =>
@@ -18,58 +23,66 @@ module.exports = {
     ),
 
   async execute(message, args) {
-    if (!message.member.permissions.has("Administrator"))
+    if (!message.member.permissions.has('Administrator'))
       return message.reply('Only **Admins** can use this command.');
 
     const sub = args[0]?.toLowerCase();
 
-    if (sub === 'remove') {
-      return removeStick(message.channel, message.channel);
+    if (sub === 'remove') return removeStick(message.channel, message.channel);
+
+    if (sub === 'messageset') {
+      const text = args.slice(1).join(' ');
+      if (!text) return message.reply('Usage: `?stick messageset {message}`');
+      return setStick(message.channel, text, message, 'text');
     }
 
     const text = sub === 'set' ? args.slice(1).join(' ') : args.join(' ');
     if (!text) return message.reply('Usage: `?stick {message}` or `?stick remove`');
-
-    await setStick(message.channel, text, message);
+    await setStick(message.channel, text, message, 'embed');
   },
 
   async executeSlash(interaction) {
-    if (!interaction.member.permissions.has("Administrator"))
+    if (!interaction.member.permissions.has('Administrator'))
       return interaction.reply({ content: 'Only **Admins** can use this command.', ephemeral: true });
 
-    const sub = interaction.options.getSubcommand();
+    const sub  = interaction.options.getSubcommand();
+    const text = interaction.options.getString('message');
 
     if (sub === 'remove') {
       await interaction.deferReply({ ephemeral: true });
       return removeStick(interaction.channel, null, interaction);
     }
 
-    const text = interaction.options.getString('message');
     await interaction.reply({ content: 'Sticky message set!', ephemeral: true });
-    await setStick(interaction.channel, text, null);
+    await setStick(interaction.channel, text, null, sub === 'messageset' ? 'text' : 'embed');
   },
 };
 
-// isRepost: true when triggered by a new message in the channel — suppress pings so @everyone
-// doesn't fire on every single message. Pings only happen when the sticky is first set.
-async function setStick(channel, text, message, isRepost = false) {
-  const sticky = readData('sticky.json');
+// commandMessage: Discord message to delete after setting (or null)
+// type: 'embed' (default) | 'text' (plain, pings every repost)
+async function setStick(channel, text, commandMessage, type = 'embed') {
+  const sticky   = readData('sticky.json');
   const oldMsgId = sticky[channel.id]?.messageId;
 
-  if (message) message.delete().catch(() => {});
+  if (commandMessage) commandMessage.delete().catch(() => {});
 
-  const sent = await channel.send({
-    content: `📌 ${text}`,
-    allowedMentions: isRepost ? { parse: [] } : { parse: ['roles', 'users', 'everyone'] },
-  });
+  let sent;
+  if (type === 'text') {
+    sent = await channel.send({
+      content: `📌 ${text}`,
+      allowedMentions: { parse: ['roles', 'users', 'everyone'] },
+    });
+  } else {
+    sent = await channel.send({
+      embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`📌 ${text}`)],
+    });
+  }
 
-  sticky[channel.id] = { text, messageId: sent.id };
+  sticky[channel.id] = { text, messageId: sent.id, type };
   writeData('sticky.json', sticky);
 
   if (oldMsgId) {
-    channel.messages.fetch(oldMsgId)
-      .then(old => old.delete())
-      .catch(() => {});
+    channel.messages.fetch(oldMsgId).then(old => old.delete()).catch(() => {});
   }
 }
 
@@ -92,5 +105,5 @@ async function removeStick(channel, replyChannel, interaction) {
   else if (replyChannel) replyChannel.send(msg);
 }
 
-module.exports.setStick = setStick;
+module.exports.setStick    = setStick;
 module.exports.removeStick = removeStick;
