@@ -197,7 +197,7 @@ module.exports = {
     const stickyData = sticky[message.channel.id];
     if (stickyData && message.id !== stickyData.messageId && !stickyLocks.has(message.channel.id)) {
       stickyLocks.add(message.channel.id);
-      setStick(message.channel, stickyData.text, null)
+      setStick(message.channel, stickyData.text, null, true)
         .catch(() => {})
         .finally(() => stickyLocks.delete(message.channel.id));
     }

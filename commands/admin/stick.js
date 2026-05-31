@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 
 module.exports = {
@@ -50,24 +50,22 @@ module.exports = {
   },
 };
 
-async function setStick(channel, text, message) {
+// isRepost: true when triggered by a new message in the channel — suppress pings so @everyone
+// doesn't fire on every single message. Pings only happen when the sticky is first set.
+async function setStick(channel, text, message, isRepost = false) {
   const sticky = readData('sticky.json');
   const oldMsgId = sticky[channel.id]?.messageId;
 
-  // Delete command message immediately (fire-and-forget)
   if (message) message.delete().catch(() => {});
 
-  // Send new sticky first so it appears instantly
-  const embed = new EmbedBuilder()
-    .setColor('#FEE75C')
-    .setDescription(`📌 ${text}`);
-
-  const sent = await channel.send({ embeds: [embed] });
+  const sent = await channel.send({
+    content: `📌 ${text}`,
+    allowedMentions: isRepost ? { parse: [] } : { parse: ['roles', 'users', 'everyone'] },
+  });
 
   sticky[channel.id] = { text, messageId: sent.id };
   writeData('sticky.json', sticky);
 
-  // Delete old sticky in background after new one is already posted
   if (oldMsgId) {
     channel.messages.fetch(oldMsgId)
       .then(old => old.delete())
