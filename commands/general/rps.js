@@ -2,7 +2,7 @@ const {
   SlashCommandBuilder, EmbedBuilder,
   ActionRowBuilder, ButtonBuilder, ButtonStyle,
 } = require('discord.js');
-const { checkPerm, parseTime, formatTime } = require('../../utils');
+const { checkPerm, parseTime, formatTime, trackActivity } = require('../../utils');
 
 // Active lobbies: messageId → { participants: [], prize, channelId, guildId, endsAt, ended }
 const lobbies = new Map();
@@ -185,6 +185,7 @@ module.exports = {
         hostUser: { id: interaction.user.id, tag: interaction.user.tag },
       });
 
+      trackActivity(interaction.user.id, interaction.user.tag, 'rps', { prize });
       setTimeout(() => endLobby(msg.id, interaction.client), ms);
     }
 

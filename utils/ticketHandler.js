@@ -2,7 +2,7 @@ const {
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
-const { readData, writeData, isStaffMember } = require('./index');
+const { readData, writeData, isStaffMember, trackActivity } = require('./index');
 const { saveTranscript, fetchAllMessages } = require('./transcripts');
 
 function getBaseUrl() {
@@ -315,6 +315,7 @@ async function closeTicket(channel, reason, closedBy, client) {
 
   delete openTickets[channel.id];
   writeData('openTickets.json', openTickets);
+  trackActivity(closedBy.id, closedBy.tag, 'ticket_closed');
   setTimeout(() => channel.delete().catch(() => {}), 5000);
   return true;
 }

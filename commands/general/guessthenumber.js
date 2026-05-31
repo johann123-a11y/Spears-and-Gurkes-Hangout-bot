@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
-const { checkPerm } = require('../../utils');
+const { checkPerm, trackActivity } = require('../../utils');
 
 // Active games: channelId → { number, max }
 const activeGames = new Map();
@@ -97,6 +97,7 @@ module.exports = {
     }
 
     activeGames.set(interaction.channelId, { number, max, prize, hostId: interaction.user.id, hostTag: interaction.user.tag });
+    trackActivity(interaction.user.id, interaction.user.tag, 'gtn', { prize: prize || '—' });
 
     let desc = `The number is between **1** and **${max}**.\n\nType your guess in the chat!`;
     if (prize) desc += `\n\n💰 **Prize:** ${prize}`;

@@ -34,6 +34,7 @@ function getDefault(filename) {
     'staffConfig.json':   { staffRoleId: null },
     'lockperms.json':     { roles: [] },
     'staffLock.json':     {},
+    'activity.json':      {},
     'review.json':        { channel: null, guildId: null },
     'blacklist.json':     {},
     'warns.json':         {},
@@ -158,9 +159,41 @@ function checkPerm(member, commandName) {
   return hasPermission(member, level);
 }
 
+function trackActivity(userId, username, category, data = {}) {
+  const activity = readData('activity.json');
+  if (!activity[userId]) {
+    activity[userId] = {
+      username,
+      tickets:  { closed: 0, renamed: 0, usersAdded: 0 },
+      giveaways: [],
+      minigames: { poll: 0, rps: [], dok: [], sos: [], ftpb: [], gtn: [] },
+    };
+  }
+  const u = activity[userId];
+  u.username = username;
+  if (!u.tickets)  u.tickets  = { closed: 0, renamed: 0, usersAdded: 0 };
+  if (!u.giveaways) u.giveaways = [];
+  if (!u.minigames) u.minigames = { poll: 0, rps: 0, dok: [], sos: [], ftpb: [], gtn: [] };
+
+  switch (category) {
+    case 'ticket_closed':     u.tickets.closed++;     break;
+    case 'ticket_renamed':    u.tickets.renamed++;    break;
+    case 'ticket_user_added': u.tickets.usersAdded++; break;
+    case 'giveaway': u.giveaways.push({ prize: data.prize, ts: Date.now() }); break;
+    case 'poll': u.minigames.poll = (u.minigames.poll || 0) + 1; break;
+    case 'rps':  if (!Array.isArray(u.minigames.rps))  u.minigames.rps  = []; u.minigames.rps.push({  prize: data.prize, ts: Date.now() }); break;
+    case 'dok':  if (!Array.isArray(u.minigames.dok))  u.minigames.dok  = []; u.minigames.dok.push({  prize: data.prize, ts: Date.now() }); break;
+    case 'sos':  if (!Array.isArray(u.minigames.sos))  u.minigames.sos  = []; u.minigames.sos.push({  prize: data.prize, ts: Date.now() }); break;
+    case 'ftpb': if (!Array.isArray(u.minigames.ftpb)) u.minigames.ftpb = []; u.minigames.ftpb.push({ prize: data.prize, ts: Date.now() }); break;
+    case 'gtn':  if (!Array.isArray(u.minigames.gtn))  u.minigames.gtn  = []; u.minigames.gtn.push({  prize: data.prize, ts: Date.now() }); break;
+  }
+  writeData('activity.json', activity);
+}
+
 module.exports = {
   parseTime, formatTime, readData, writeData, loadCache,
   promoteOrder, getMemberRoleLevel,
   hasPermission, checkPerm, isStaffMember,
+  trackActivity,
   COMMAND_DEFAULTS, COMMAND_LABELS,
 };

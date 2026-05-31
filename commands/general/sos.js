@@ -2,7 +2,7 @@ const {
   SlashCommandBuilder, EmbedBuilder,
   ActionRowBuilder, ButtonBuilder, ButtonStyle,
 } = require('discord.js');
-const { checkPerm, parseTime } = require('../../utils');
+const { checkPerm, parseTime, trackActivity } = require('../../utils');
 
 // Active lobbies: messageId → { participants, prize, channelId, endsAt, ended }
 const lobbies = new Map();
@@ -188,10 +188,11 @@ module.exports = {
         hostUser:  { id: interaction.user.id, tag: interaction.user.tag },
       });
 
+      trackActivity(interaction.user.id, interaction.user.tag, 'sos', { prize });
       setTimeout(() => endLobby(msg.id, interaction.client), ms);
     }
 
-    // /sos duel 
+    // /sos duel
     if (sub === 'duel') {
       const user1 = interaction.options.getUser('user1');
       const user2 = interaction.options.getUser('user2');
@@ -202,6 +203,7 @@ module.exports = {
       if (user1.bot || user2.bot)
         return interaction.reply({ content: 'Bots cannot participate.', ephemeral: true });
 
+      trackActivity(interaction.user.id, interaction.user.tag, 'sos', { prize });
       await startGame(
         user1.id, user2.id, prize, interaction.channelId, interaction.client,
         opts => interaction.reply(opts),

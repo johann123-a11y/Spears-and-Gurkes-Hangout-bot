@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { checkPerm } = require('../../utils');
+const { checkPerm, trackActivity } = require('../../utils');
 
 const NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
 
@@ -59,6 +59,7 @@ module.exports = {
         await msg.react(NUMBER_EMOJIS[i]);
       }
 
+      trackActivity(interaction.user.id, interaction.user.tag, 'poll');
       await interaction.editReply({ content: '✅ Poll created!' });
     } catch (err) {
       console.error('[poll] Error:', err);

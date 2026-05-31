@@ -8,7 +8,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require('discord.js');
-const { checkPerm, parseTime, formatTime, readData, writeData } = require('../../utils');
+const { checkPerm, parseTime, formatTime, readData, writeData, trackActivity } = require('../../utils');
 
 module.exports = {
   name: 'gstart',
@@ -35,6 +35,7 @@ module.exports = {
     if (!ms) return message.reply('Invalid time format.');
     if (isNaN(winners) || winners < 1) return message.reply('Winners must be a positive number.');
 
+    trackActivity(message.author.id, message.author.tag, 'giveaway', { prize });
     await createGiveaway(message.channel, ms, winners, prize, description, message.author.id);
   },
 

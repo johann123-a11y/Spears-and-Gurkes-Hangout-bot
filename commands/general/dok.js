@@ -3,7 +3,7 @@ const {
   ActionRowBuilder, ButtonBuilder, ButtonStyle,
   ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
-const { checkPerm, parseTime } = require('../../utils');
+const { checkPerm, parseTime, trackActivity } = require('../../utils');
 
 // Active lobbies:  messageId → { participants, prize, channelId, channel, duration, round, ended }
 const lobbies = new Map();
@@ -229,6 +229,7 @@ module.exports = {
     if (!ms) return interaction.reply({ content: 'Invalid duration. Use e.g. `1m`, `5m`.', ephemeral: true });
 
     await interaction.reply({ content: 'Double or Keep event started!', ephemeral: true });
+    trackActivity(interaction.user.id, interaction.user.tag, 'dok', { prize });
     await startLobby(interaction.channel, prize, ms, 1, interaction.client, null, { id: interaction.user.id, tag: interaction.user.tag });
   },
 

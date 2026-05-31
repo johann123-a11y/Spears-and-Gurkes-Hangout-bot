@@ -5,7 +5,7 @@ const {
   ModalBuilder, TextInputBuilder, TextInputStyle,
   ChannelSelectMenuBuilder,
 } = require('discord.js');
-const { readData, writeData } = require('../../utils');
+const { readData, writeData, trackActivity } = require('../../utils');
 const { sendLog } = require('../../utils/logger');
 const { closeTicket } = require('../../utils/ticketHandler');
 const { blacklistAdd, blacklistRemove } = require('../admin/blacklist');
@@ -482,6 +482,7 @@ async function handleAdd(interaction) {
       [PermissionFlagsBits.ReadMessageHistory]: true,
     });
     interaction.reply({ content: `**${user.tag}** has been added to this ticket.` });
+    trackActivity(interaction.user.id, interaction.user.tag, 'ticket_user_added');
     sendLog(interaction.client, {
       action: 'Ticket Member Added',
       executor: interaction.user.tag,
@@ -534,6 +535,7 @@ async function handleRename(interaction) {
   try {
     await interaction.channel.setName(newName);
     interaction.editReply({ content: `Ticket renamed to **${newName}**.` });
+    trackActivity(interaction.user.id, interaction.user.tag, 'ticket_renamed');
     sendLog(interaction.client, {
       action: 'Ticket Renamed',
       executor: interaction.user.tag,

@@ -3,7 +3,7 @@ const {
   ActionRowBuilder, ButtonBuilder, ButtonStyle,
   ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
-const { checkPerm, parseTime } = require('../../utils');
+const { checkPerm, parseTime, trackActivity } = require('../../utils');
 
 // Already-claimed message IDs (prevents double-claim race condition)
 const claimed = new Set();
@@ -55,6 +55,7 @@ module.exports = {
       return interaction.reply({ content: 'Invalid duration. Use e.g. `0`, `10s`, `30s`, `1m`.', ephemeral: true });
 
     await interaction.reply({ content: '🏆 First to Press the Button event started!', ephemeral: true });
+    trackActivity(interaction.user.id, interaction.user.tag, 'ftpb', { prize });
 
     const activatesTs = Math.floor((Date.now() + ms) / 1000);
 

@@ -1,4 +1,4 @@
-const { parseTime, readData, writeData, checkPerm, formatTime } = require('../utils');
+const { parseTime, readData, writeData, checkPerm, formatTime, trackActivity } = require('../utils');
 const { createGiveaway } = require('../commands/giveaways/gstart');
 const { setPerm, buildSetEmbed, LEVEL_CHOICES } = require('../commands/admin/perms');
 const { setRole, buildSetEmbed: buildSetRoleEmbed, ROLE_KEYS } = require('../commands/admin/setrole');
@@ -611,6 +611,7 @@ module.exports = {
         const winners     = parseInt(winnersRaw);
         if (!ms)                             return interaction.reply({ content: 'Invalid time format.', ephemeral: true });
         if (isNaN(winners) || winners < 1)   return interaction.reply({ content: 'Winners must be a positive number.', ephemeral: true });
+        trackActivity(interaction.user.id, interaction.user.tag, 'giveaway', { prize });
         await interaction.reply({ content: 'Giveaway started!', ephemeral: true });
         await createGiveaway(interaction.channel, ms, winners, prize, description, interaction.user.id);
         return;
