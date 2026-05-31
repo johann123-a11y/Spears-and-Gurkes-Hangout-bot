@@ -145,7 +145,7 @@ module.exports = {
       writeData('afk.json', afk);
       const awayFor = formatTime(Date.now() - since);
       message.reply(`Welcome back! Your AFK has been removed. You were away for **${awayFor}**.`).then(m => {
-        setTimeout(() => m.delete().catch(() => {}), 5000);
+        setTimeout(() => m.delete().catch(() => {}), 10000);
       });
     }
 
@@ -170,7 +170,7 @@ module.exports = {
               { name: '⏳ Returns in', value: formatTime(remaining) }
             )
             .setTimestamp();
-          message.channel.send({ embeds: [embed] });
+          message.channel.send({ embeds: [embed] }).then(m => setTimeout(() => m.delete().catch(() => {}), 10000));
         }
       }
 
@@ -188,7 +188,7 @@ module.exports = {
             ...(data.until ? [{ name: '🔔 Returns in', value: formatTime(data.until - Date.now()) }] : [])
           )
           .setTimestamp();
-        message.channel.send({ embeds: [embed] });
+        message.channel.send({ embeds: [embed] }).then(m => setTimeout(() => m.delete().catch(() => {}), 10000));
       }
     }
 
