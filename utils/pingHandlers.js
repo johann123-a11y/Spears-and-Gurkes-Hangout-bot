@@ -128,7 +128,7 @@ async function handleModal(interaction) {
   cfg.message = message;
   saveCfg(cmdName, cfg);
 
-  return interaction.reply(buildPanel(cmdName));
+  return interaction.update(buildPanel(cmdName));
 }
 
 // Role select: ping_roles:cmdname → save immediately, update panel
