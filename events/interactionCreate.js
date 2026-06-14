@@ -1324,12 +1324,12 @@ module.exports = {
           .setCustomId(`ticket_info_edit:${panel.id}`)
           .setPlaceholder('Edit this panel...')
           .addOptions(
-            new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text').setEmoji(''),
-            new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color').setEmoji(''),
-            new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID').setEmoji(''),
-            new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question').setEmoji(''),
-            new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number').setEmoji(''),
-            new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel').setEmoji(''),
+            new StringSelectMenuOptionBuilder().setLabel('Button Label').setValue('label').setDescription('Change the button text'),
+            new StringSelectMenuOptionBuilder().setLabel('Button Color').setValue('color').setDescription('Change button color'),
+            new StringSelectMenuOptionBuilder().setLabel('Category').setValue('category').setDescription('Change the ticket category ID'),
+            new StringSelectMenuOptionBuilder().setLabel('Add Question').setValue('addq').setDescription('Add a pre-open question'),
+            new StringSelectMenuOptionBuilder().setLabel('Remove Question').setValue('removeq').setDescription('Remove a question by number'),
+            new StringSelectMenuOptionBuilder().setLabel('Delete Panel').setValue('delete').setDescription('Permanently delete this panel'),
           );
 
         return interaction.update({

@@ -60,12 +60,18 @@ for (const folder of fs.readdirSync(commandsPath)) {
 const eventsPath = path.join(__dirname, 'events');
 for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
   const event = require(path.join(eventsPath, file));
-  if (event.once) {
-    client.once(event.name, (...args) => event.execute(...args, client));
-  } else {
-    client.on(event.name, (...args) => event.execute(...args, client));
-  }
+  const handler = async (...args) => {
+    try {
+      await event.execute(...args, client);
+    } catch (err) {
+      console.error(`[Event: ${event.name}]`, err);
+    }
+  };
+  if (event.once) client.once(event.name, handler);
+  else client.on(event.name, handler);
 }
+
+client.on('error', err => console.error('[Discord client error]', err));
 
 const { loadCache, readData, writeData } = require('./utils');
 

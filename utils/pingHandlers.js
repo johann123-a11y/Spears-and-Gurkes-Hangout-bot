@@ -44,16 +44,12 @@ function buildPanel(cmdName) {
     .setPlaceholder('Erlaubte Rollen (leer = alle dürfen)')
     .setMinValues(0)
     .setMaxValues(25);
-  if (cfg.allowedRoles.length > 0)
-    roleSelect.setDefaultValues(cfg.allowedRoles.map(id => ({ id, type: 'role' })));
 
   const channelSelect = new ChannelSelectMenuBuilder()
     .setCustomId(`ping_channels:${cmdName}`)
     .setPlaceholder('Erlaubte Kanäle (leer = überall)')
     .setMinValues(0)
     .setMaxValues(25);
-  if (cfg.allowedChannels.length > 0)
-    channelSelect.setDefaultValues(cfg.allowedChannels.map(id => ({ id, type: 'channel' })));
 
   return {
     embeds: [embed],
