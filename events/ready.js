@@ -24,6 +24,11 @@ async function checkTimers(client) {
   let loaChanged = false;
   for (const [userId, data] of Object.entries(loa)) {
     if (data.endTime <= now) {
+      // Delete and save BEFORE sending message — prevents resend on crash/restart
+      delete loa[userId];
+      loaChanged = true;
+      writeData('loa.json', loa);
+
       try {
         const guild = client.guilds.cache.get(config.guildId);
         const loaChannel = guild?.channels.cache.get(config.loaChannel);
@@ -36,12 +41,8 @@ async function checkTimers(client) {
           loaChannel.send({ embeds: [embed] });
         }
       } catch { /* ignore */ }
-
-      delete loa[userId];
-      loaChanged = true;
     }
   }
-  if (loaChanged) writeData('loa.json', loa);
 
   // --- AFK expiry ---
   const afk = readData('afk.json');

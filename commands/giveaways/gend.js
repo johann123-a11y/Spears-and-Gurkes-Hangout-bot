@@ -70,6 +70,11 @@ async function endGiveaway(msgId, guild, replyChannel, interaction) {
 
   const endedAt = Math.floor(Date.now() / 1000);
 
+  // Mark as ended in DB BEFORE sending messages — prevents double-end on crash/restart
+  giveaways[msgId].ended = true;
+  giveaways[msgId].winnerIds = winners.map(m => m.user.id);
+  writeData('giveaways.json', giveaways);
+
   // Keep original info, just swap in winner + ended state
   const embed = new EmbedBuilder()
     .setColor('#ED4245')
@@ -88,10 +93,6 @@ async function endGiveaway(msgId, guild, replyChannel, interaction) {
 
   if (winners.length > 0)
     channel.send(`Congratulations ${winnerMentions}! You won **${gw.prize}**!`);
-
-  giveaways[msgId].ended = true;
-  giveaways[msgId].winnerIds = winners.map(m => m.user.id);
-  writeData('giveaways.json', giveaways);
 
   if (interaction) interaction.editReply('Giveaway ended!');
 }
