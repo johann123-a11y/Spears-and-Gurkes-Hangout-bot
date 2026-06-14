@@ -51,18 +51,41 @@ function getDefault(filename) {
   return defaults[filename] ?? {};
 }
 
+// Keys that have been modified but not yet confirmed saved to MongoDB
+const dirtyKeys = new Set();
+
 function readData(filename) {
   return cache[filename] ?? getDefault(filename);
 }
 
 function writeData(filename, data) {
   cache[filename] = data;
-  // Fire-and-forget save to MongoDB
+  dirtyKeys.add(filename);
   Store.findOneAndUpdate(
     { key: filename },
-    { key: filename, data },
-    { upsert: true, new: true }
-  ).catch(err => console.error(`Failed to save ${filename}:`, err));
+    { $set: { data } },
+    { upsert: true, returnDocument: 'after' }
+  )
+    .then(() => dirtyKeys.delete(filename))
+    .catch(err => console.error(`[DB] Failed to save ${filename}:`, err));
+}
+
+// Flush all dirty keys to MongoDB — awaitable, used for periodic saves and shutdown
+async function flushDirty() {
+  const keys = [...dirtyKeys];
+  for (const key of keys) {
+    if (!(key in cache)) continue;
+    try {
+      await Store.findOneAndUpdate(
+        { key },
+        { $set: { data: cache[key] } },
+        { upsert: true, returnDocument: 'after' }
+      );
+      dirtyKeys.delete(key);
+    } catch (err) {
+      console.error(`[DB] Flush failed for ${key}:`, err);
+    }
+  }
 }
 
 function parseTime(timeStr) {
@@ -201,7 +224,7 @@ function trackActivity(userId, username, category, data = {}) {
 }
 
 module.exports = {
-  parseTime, formatTime, readData, writeData, loadCache,
+  parseTime, formatTime, readData, writeData, loadCache, flushDirty,
   promoteOrder, getMemberRoleLevel,
   hasPermission, checkPerm, isStaffMember,
   trackActivity,

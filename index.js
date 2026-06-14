@@ -73,7 +73,7 @@ for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
 
 client.on('error', err => console.error('[Discord client error]', err));
 
-const { loadCache, readData, writeData } = require('./utils');
+const { loadCache, readData, writeData, flushDirty } = require('./utils');
 
 // Permanent mute renewer 
 async function renewPermMutes() {
@@ -143,6 +143,15 @@ async function processExpiredActivityChecks() {
   if (changed) writeData('activitychecks.json', checks);
 }
 
+async function gracefulShutdown(signal) {
+  console.log(`[Shutdown] ${signal} received — flushing cache to MongoDB...`);
+  await flushDirty();
+  console.log('[Shutdown] Flush complete. Exiting.');
+  process.exit(0);
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+
 connectDB().then(async () => {
   await loadCache();
   await cleanupExpired();
@@ -153,5 +162,7 @@ connectDB().then(async () => {
   // Renew permanent mutes every 24 hours
   setInterval(renewPermMutes, 24 * 60 * 60 * 1000);
   renewPermMutes();
+  // Flush any pending MongoDB writes every 30 seconds as a safety net
+  setInterval(() => flushDirty().catch(e => console.error('[DB] Periodic flush error:', e)), 30 * 1000);
   client.login(process.env.TOKEN);
 });
