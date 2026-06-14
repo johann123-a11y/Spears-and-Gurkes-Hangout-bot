@@ -38,13 +38,20 @@ async function triggerAntiRaid(guild, userId, reason, client) {
     ?? await guild.members.fetch(userId).catch(() => null);
   if (!member) return;
 
-  const roleIds = [...member.roles.cache.keys()].filter(id => id !== guild.id);
+  // Exclude @everyone and integration-managed roles (can't be manually removed)
+  const rolesToRemove = [...member.roles.cache.values()]
+    .filter(r => r.id !== guild.id && !r.managed)
+    .map(r => r.id);
 
-  // Fire role removal and timeout in parallel for minimum delay
-  await Promise.all([
-    roleIds.length ? member.roles.remove(roleIds, `AntiRaid: ${reason}`).catch(() => {}) : Promise.resolve(),
-    member.timeout(28 * 24 * 60 * 60 * 1000, `AntiRaid: ${reason}`).catch(() => {}),
-  ]);
+  // Remove roles FIRST — Discord won't timeout members who still have Administrator
+  if (rolesToRemove.length) {
+    await member.roles.remove(rolesToRemove, `AntiRaid: ${reason}`)
+      .catch(e => console.error('[AntiRaid] Role removal failed:', e.message));
+  }
+
+  // Timeout after roles are stripped (now safe even for ex-admins)
+  await member.timeout(28 * 24 * 60 * 60 * 1000, `AntiRaid: ${reason}`)
+    .catch(e => console.error('[AntiRaid] Timeout failed:', e.message));
 
   // Alert and log after action is taken
   if (cfg.channelId) {
