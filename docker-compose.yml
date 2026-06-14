@@ -4,6 +4,8 @@ services:
     container_name: hangout-bot-prod
     restart: unless-stopped
     env_file: .env
+    ports:
+      - "3001:3001"
     networks:
       - vps-shared
 

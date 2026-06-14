@@ -2,24 +2,24 @@ const { AuditLogEvent } = require('discord.js');
 const { sendLog } = require('../utils/logger');
 
 module.exports = {
-  name: 'channelCreate',
-  async execute(channel, client) {
-    if (channel.name.startsWith('ticket-')) return;
-
+  name: 'roleCreate',
+  async execute(role, client) {
     let exec = null;
     try {
-      const audit = await channel.guild.fetchAuditLogs({ type: AuditLogEvent.ChannelCreate, limit: 1 });
+      const audit = await role.guild.fetchAuditLogs({ type: AuditLogEvent.RoleCreate, limit: 1 });
       const entry = audit.entries.first();
       if (entry && Date.now() - entry.createdTimestamp < 5000) exec = entry.executor;
     } catch {}
 
     sendLog(client, {
-      action: '📢 Channel Erstellt',
+      action: '🎨 Rolle Erstellt',
       executor: exec?.tag ?? 'Unknown',
-      target: `<#${channel.id}> (${channel.name})`,
+      target: `<@&${role.id}> (${role.name})`,
       fields: {
         '👮 Erstellt von': exec ? `<@${exec.id}>` : 'Unknown',
-        '📁 Typ': channel.type.toString(),
+        '🎨 Farbe': role.hexColor,
+        '📌 Angeheftet': role.hoist ? 'Ja' : 'Nein',
+        '💬 Erwähnbar': role.mentionable ? 'Ja' : 'Nein',
       },
       color: '#57F287',
     });

@@ -1,4 +1,5 @@
 const { parseTime, readData, writeData, checkPerm, formatTime, trackActivity } = require('../utils');
+const pingHandlers = require('../utils/pingHandlers');
 const { createGiveaway } = require('../commands/giveaways/gstart');
 const { setPerm, buildSetEmbed, LEVEL_CHOICES } = require('../commands/admin/perms');
 const { setRole, buildSetEmbed: buildSetRoleEmbed, ROLE_KEYS } = require('../commands/admin/setrole');
@@ -44,6 +45,10 @@ module.exports = {
 
     // Buttons 
     if (interaction.isButton()) {
+      // Ping command: edit message button
+      if (interaction.customId.startsWith('ping_edit_msg:'))
+        return pingHandlers.handleButton(interaction);
+
       // Ticket panel open button
       if (interaction.customId.startsWith('ticket_open:'))
         return handleTicketOpen(interaction);
@@ -601,6 +606,10 @@ module.exports = {
 
     // Modal submits
     if (interaction.isModalSubmit()) { try {
+      // Ping command: message modal
+      if (interaction.customId.startsWith('ping_modal:'))
+        return pingHandlers.handleModal(interaction);
+
       // Giveaway modal
       if (interaction.customId === 'giveaway_modal') {
         const time        = interaction.fields.getTextInputValue('gw_time');
@@ -1134,6 +1143,10 @@ module.exports = {
 
     // Role Select Menus
     if (interaction.isRoleSelectMenu()) {
+      // Ping command: allowed roles
+      if (interaction.customId.startsWith('ping_roles:'))
+        return pingHandlers.handleRoles(interaction);
+
       // setrole: pick role for a slot
       if (interaction.customId.startsWith('setrole_pick_role:')) {
         if (!interaction.member.permissions.has('Administrator'))
@@ -1180,8 +1193,12 @@ module.exports = {
       }
     }
 
-    // Channel Select Menus 
+    // Channel Select Menus
     if (interaction.isChannelSelectMenu()) {
+      // Ping command: allowed channels
+      if (interaction.customId.startsWith('ping_channels:'))
+        return pingHandlers.handleChannels(interaction);
+
       // ticket logs: set log channel
       if (interaction.customId === 'ticket_logs_channel_select') {
         const channelId = interaction.values[0];

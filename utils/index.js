@@ -38,6 +38,15 @@ function getDefault(filename) {
     'review.json':        { channel: null, guildId: null },
     'blacklist.json':     {},
     'warns.json':         {},
+    'antiraid.json':      { channelId: null, enabled: true, exemptUsers: [] },
+    'pingcommands.json':  {
+      gping:        { message: null, allowedRoles: [], allowedChannels: [] },
+      gpingdaily:   { message: null, allowedRoles: [], allowedChannels: [] },
+      gpingweekly:  { message: null, allowedRoles: [], allowedChannels: [] },
+      qping:        { message: null, allowedRoles: [], allowedChannels: [] },
+      qpingstream:  { message: null, allowedRoles: [], allowedChannels: [] },
+      gpingmassive: { message: null, allowedRoles: [], allowedChannels: [] },
+    },
   };
   return defaults[filename] ?? {};
 }
@@ -164,28 +173,29 @@ function trackActivity(userId, username, category, data = {}) {
   if (!activity[userId]) {
     activity[userId] = {
       username,
-      tickets:  { closed: 0, renamed: 0, usersAdded: 0 },
+      tickets:  { closed: [], renamed: [], usersAdded: [] },
       giveaways: [],
-      minigames: { poll: 0, rps: [], dok: [], sos: [], ftpb: [], gtn: [] },
+      minigames: { poll: [], rps: [], dok: [], sos: [], ftpb: [], gtn: [] },
     };
   }
   const u = activity[userId];
   u.username = username;
-  if (!u.tickets)  u.tickets  = { closed: 0, renamed: 0, usersAdded: 0 };
+  if (!u.tickets)   u.tickets   = { closed: [], renamed: [], usersAdded: [] };
   if (!u.giveaways) u.giveaways = [];
-  if (!u.minigames) u.minigames = { poll: 0, rps: 0, dok: [], sos: [], ftpb: [], gtn: [] };
+  if (!u.minigames) u.minigames = { poll: [], rps: [], dok: [], sos: [], ftpb: [], gtn: [] };
 
+  const now = Date.now();
   switch (category) {
-    case 'ticket_closed':     u.tickets.closed++;     break;
-    case 'ticket_renamed':    u.tickets.renamed++;    break;
-    case 'ticket_user_added': u.tickets.usersAdded++; break;
-    case 'giveaway': u.giveaways.push({ prize: data.prize, ts: Date.now() }); break;
-    case 'poll': u.minigames.poll = (u.minigames.poll || 0) + 1; break;
-    case 'rps':  if (!Array.isArray(u.minigames.rps))  u.minigames.rps  = []; u.minigames.rps.push({  prize: data.prize, ts: Date.now() }); break;
-    case 'dok':  if (!Array.isArray(u.minigames.dok))  u.minigames.dok  = []; u.minigames.dok.push({  prize: data.prize, ts: Date.now() }); break;
-    case 'sos':  if (!Array.isArray(u.minigames.sos))  u.minigames.sos  = []; u.minigames.sos.push({  prize: data.prize, ts: Date.now() }); break;
-    case 'ftpb': if (!Array.isArray(u.minigames.ftpb)) u.minigames.ftpb = []; u.minigames.ftpb.push({ prize: data.prize, ts: Date.now() }); break;
-    case 'gtn':  if (!Array.isArray(u.minigames.gtn))  u.minigames.gtn  = []; u.minigames.gtn.push({  prize: data.prize, ts: Date.now() }); break;
+    case 'ticket_closed':     if (!Array.isArray(u.tickets.closed))     u.tickets.closed     = []; u.tickets.closed.push({ ts: now });     break;
+    case 'ticket_renamed':    if (!Array.isArray(u.tickets.renamed))    u.tickets.renamed    = []; u.tickets.renamed.push({ ts: now });    break;
+    case 'ticket_user_added': if (!Array.isArray(u.tickets.usersAdded)) u.tickets.usersAdded = []; u.tickets.usersAdded.push({ ts: now }); break;
+    case 'giveaway': u.giveaways.push({ prize: data.prize, ts: now }); break;
+    case 'poll': if (!Array.isArray(u.minigames.poll)) u.minigames.poll = []; u.minigames.poll.push({ ts: now }); break;
+    case 'rps':  if (!Array.isArray(u.minigames.rps))  u.minigames.rps  = []; u.minigames.rps.push({  prize: data.prize, ts: now }); break;
+    case 'dok':  if (!Array.isArray(u.minigames.dok))  u.minigames.dok  = []; u.minigames.dok.push({  prize: data.prize, ts: now }); break;
+    case 'sos':  if (!Array.isArray(u.minigames.sos))  u.minigames.sos  = []; u.minigames.sos.push({  prize: data.prize, ts: now }); break;
+    case 'ftpb': if (!Array.isArray(u.minigames.ftpb)) u.minigames.ftpb = []; u.minigames.ftpb.push({ prize: data.prize, ts: now }); break;
+    case 'gtn':  if (!Array.isArray(u.minigames.gtn))  u.minigames.gtn  = []; u.minigames.gtn.push({  prize: data.prize, ts: now }); break;
   }
   writeData('activity.json', activity);
 }

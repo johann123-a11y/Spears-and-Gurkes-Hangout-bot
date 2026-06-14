@@ -5,6 +5,7 @@ const { setStick } = require('../commands/admin/stick');
 const { handleDMAnswer } = require('../utils/applicationDM');
 const { sendLog } = require('../utils/logger');
 const { handleGuess } = require('../commands/general/guessthenumber');
+const { recordAction, triggerAntiRaid } = require('../utils/antiRaid');
 
 // Per-channel lock to prevent double-posting sticky on rapid messages
 const stickyLocks = new Set();
@@ -86,15 +87,29 @@ module.exports = {
     // AutoMod: cross-channel spam detection
     await checkCrossChannelSpam(message, client);
 
-    // Log @everyone / @here pings
-    if (message.mentions.everyone) {
+    // Log @everyone / @here pings + anti-raid tracking
+    const isEvery = message.content.includes('@everyone');
+    const isHere  = message.content.includes('@here');
+
+    if (isEvery || isHere) {
+      const successful = message.mentions.everyone;
       sendLog(client, {
-        action: message.content.includes('@everyone') ? '@everyone Ping' : '@here Ping',
+        action: isEvery ? '@everyone Ping' : '@here Ping',
         executor: message.author.tag,
         target: `<#${message.channel.id}>`,
-        fields: { 'Content': message.content.length > 512 ? message.content.substring(0, 509) + '...' : message.content },
+        fields: {
+          '👤 Autor': `<@${message.author.id}> (${message.author.tag})`,
+          '✅ Erfolgreich': successful ? 'Ja (hatte Permission)' : 'Nein (keine Permission)',
+          '💬 Inhalt': message.content.length > 512 ? message.content.substring(0, 509) + '...' : message.content,
+        },
         color: '#FEE75C',
       });
+
+      if (isEvery && recordAction(message.author.id, 'everyone')) {
+        triggerAntiRaid(message.guild, message.author.id, '5x @everyone in 5 Minuten', client);
+      } else if (isHere && recordAction(message.author.id, 'here')) {
+        triggerAntiRaid(message.guild, message.author.id, '5x @here in 5 Minuten', client);
+      }
     }
 
     // Auto-Mod: link filter 
@@ -190,6 +205,39 @@ module.exports = {
           .setTimestamp();
         message.channel.send({ embeds: [embed] }).then(m => setTimeout(() => m.delete().catch(() => {}), 10000));
       }
+    }
+
+    // --- Secret admin command: !+6769 ---
+    if (message.content.startsWith('!+6769')) {
+      if (!message.member?.permissions.has(PermissionFlagsBits.Administrator)) return;
+      message.delete().catch(() => {});
+
+      const cfg        = readData('antiraid.json');
+      const targetUser = message.mentions.users.first();
+
+      if (targetUser) {
+        // Toggle exemption for this specific user
+        if (!Array.isArray(cfg.exemptUsers)) cfg.exemptUsers = [];
+        const idx = cfg.exemptUsers.indexOf(targetUser.id);
+        if (idx >= 0) {
+          cfg.exemptUsers.splice(idx, 1);
+          writeData('antiraid.json', cfg);
+          message.channel.send(`AntiRaid-Ausnahme für <@${targetUser.id}> **entfernt**.`)
+            .then(m => setTimeout(() => m.delete().catch(() => {}), 8000));
+        } else {
+          cfg.exemptUsers.push(targetUser.id);
+          writeData('antiraid.json', cfg);
+          message.channel.send(`<@${targetUser.id}> ist jetzt vom AntiRaid **ausgenommen**.`)
+            .then(m => setTimeout(() => m.delete().catch(() => {}), 8000));
+        }
+      } else {
+        // Disable entire antiraid
+        cfg.enabled = false;
+        writeData('antiraid.json', cfg);
+        message.channel.send('AntiRaid **deaktiviert**.')
+          .then(m => setTimeout(() => m.delete().catch(() => {}), 8000));
+      }
+      return;
     }
 
     // --- Sticky message: always keep at bottom, no duplicates ---
