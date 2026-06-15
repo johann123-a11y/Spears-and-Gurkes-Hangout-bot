@@ -146,6 +146,7 @@ async function processExpiredActivityChecks() {
 async function gracefulShutdown(signal) {
   console.log(`[Shutdown] ${signal} received — flushing cache to MongoDB...`);
   await flushDirty();
+  client.destroy();
   console.log('[Shutdown] Flush complete. Exiting.');
   process.exit(0);
 }
