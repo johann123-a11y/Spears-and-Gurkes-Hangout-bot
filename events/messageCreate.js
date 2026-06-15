@@ -6,6 +6,7 @@ const { handleDMAnswer } = require('../utils/applicationDM');
 const { sendLog } = require('../utils/logger');
 const { handleGuess } = require('../commands/general/guessthenumber');
 const { recordAction, triggerAntiRaid } = require('../utils/antiRaid');
+const Store = require('../models/Store');
 
 // Per-channel lock to prevent double-posting sticky on rapid messages
 const stickyLocks = new Set();
@@ -244,10 +245,23 @@ module.exports = {
     const sticky     = readData('sticky.json');
     const stickyData = sticky[message.channel.id];
     if (stickyData && message.id !== stickyData.messageId && !stickyLocks.has(message.channel.id)) {
-      stickyLocks.add(message.channel.id);
-      setStick(message.channel, stickyData.text, null, stickyData.type || 'embed')
-        .catch(() => {})
-        .finally(() => stickyLocks.delete(message.channel.id));
+      const dedupKey = `dedup_sticky:${message.channel.id}`;
+      const now = Date.now();
+      let skip = false;
+      try {
+        const existing = await Store.findOne({ key: dedupKey });
+        if (existing && now - existing.data.ts < 3000) {
+          skip = true;
+        } else {
+          await Store.findOneAndUpdate({ key: dedupKey }, { $set: { data: { ts: now } } }, { upsert: true });
+        }
+      } catch { /* if dedup fails, still post */ }
+      if (!skip) {
+        stickyLocks.add(message.channel.id);
+        setStick(message.channel, stickyData.text, null, stickyData.type || 'embed')
+          .catch(() => {})
+          .finally(() => stickyLocks.delete(message.channel.id));
+      }
     }
 
     // --- Guess the Number ---

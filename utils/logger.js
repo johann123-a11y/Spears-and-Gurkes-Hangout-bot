@@ -1,7 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { readData } = require('./index');
-
-const recentLogs = new Map();
+const Store = require('../models/Store');
 
 async function sendLog(client, { action, executor, target, fields = {}, color = '#5865F2' }) {
   const logs = readData('logs.json');
@@ -10,12 +9,18 @@ async function sendLog(client, { action, executor, target, fields = {}, color = 
   const channel = client.channels.cache.get(logs.channelId);
   if (!channel) return;
 
-  // Deduplicate: skip if exact same log was sent within 2 seconds
-  const key = `${action}|${executor}|${target}`;
+  // Cross-instance deduplication via MongoDB — prevents doubles when multiple instances run
+  const dedupKey = `dedup_log:${action}|${executor}|${target}`;
   const now = Date.now();
-  if (recentLogs.has(key) && now - recentLogs.get(key) < 2000) return;
-  recentLogs.set(key, now);
-  setTimeout(() => recentLogs.delete(key), 2000);
+  try {
+    const existing = await Store.findOne({ key: dedupKey });
+    if (existing && now - existing.data.ts < 3000) return;
+    await Store.findOneAndUpdate(
+      { key: dedupKey },
+      { $set: { data: { ts: now } } },
+      { upsert: true }
+    );
+  } catch { /* if dedup fails, still send */ }
 
   const extraFields = Object.entries(fields).map(([name, value]) => ({
     name,
