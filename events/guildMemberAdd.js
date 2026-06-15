@@ -25,6 +25,12 @@ module.exports = {
       color: '#57F287',
     });
 
+    // Auto-role
+    const autorole = readData('autorole.json');
+    if (autorole.roleId) {
+      member.roles.add(autorole.roleId).catch(() => {});
+    }
+
     const data = readData('welcome.json');
     if (!data.enabled || !data.channel) return;
 
