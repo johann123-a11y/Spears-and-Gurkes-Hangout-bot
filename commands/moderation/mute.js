@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { parseTime, formatTime, checkPerm, readData, writeData } = require('../../utils');
-const { sendLog } = require('../../utils/logger');
 
 const MAX_TIMEOUT = 28 * 24 * 60 * 60 * 1000; // 28 days (Discord max)
 
@@ -33,7 +32,6 @@ module.exports = {
       await target.timeout(ms, reason);
       if (isPerm) savePermMute(target.user.id, message.guild.id, reason);
       message.channel.send({ embeds: [buildEmbed(target.user, isPerm ? 'Permanent' : formatTime(ms), reason, message.author.tag)] });
-      sendLog(message.client, { action: 'User Muted', executor: message.author.tag, target: target.user.tag, fields: { Duration: isPerm ? 'Permanent' : formatTime(ms), Reason: reason }, color: '#FF6B35' });
     } catch {
       message.reply('Could not mute that user. Check my permissions and role hierarchy.');
     }
@@ -58,7 +56,6 @@ module.exports = {
       await member.timeout(ms, reason);
       if (isPerm) savePermMute(user.id, interaction.guild.id, reason);
       interaction.reply({ embeds: [buildEmbed(user, isPerm ? 'Permanent' : formatTime(ms), reason, interaction.user.tag)] });
-      sendLog(interaction.client, { action: 'User Muted', executor: interaction.user.tag, target: user.tag, fields: { Duration: isPerm ? 'Permanent' : formatTime(ms), Reason: reason }, color: '#FF6B35' });
     } catch {
       interaction.reply({ content: 'Could not mute that user.', ephemeral: true });
     }

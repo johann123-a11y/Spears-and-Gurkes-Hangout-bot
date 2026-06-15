@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { sendLog } = require('../../utils/logger');
 
 module.exports = {
   name: 'kick',
@@ -23,7 +22,6 @@ module.exports = {
     try {
       await target.kick(reason);
       message.channel.send({ embeds: [buildEmbed(target.user, time, reason, message.author.tag)] });
-      sendLog(message.client, { action: 'User Kicked', executor: message.author.tag, target: target.user.tag, fields: { Duration: time, Reason: reason }, color: '#FEE75C' });
     } catch {
       message.reply('Could not kick that user. Check my permissions and role hierarchy.');
     }
@@ -42,7 +40,6 @@ module.exports = {
     try {
       await member.kick(reason);
       interaction.reply({ embeds: [buildEmbed(user, time, reason, interaction.user.tag)] });
-      sendLog(interaction.client, { action: 'User Kicked', executor: interaction.user.tag, target: user.tag, fields: { Duration: time, Reason: reason }, color: '#FEE75C' });
     } catch {
       interaction.reply({ content: 'Could not kick that user.', ephemeral: true });
     }

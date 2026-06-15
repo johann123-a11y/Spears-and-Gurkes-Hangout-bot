@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
-const { sendLog } = require('../../utils/logger');
 
 module.exports = {
   name: 'demote',
@@ -54,12 +53,5 @@ module.exports = {
       allowedMentions: { users: [member.user.id] },
     });
 
-    sendLog(interaction.client, {
-      action: 'Staff Demoted',
-      executor: interaction.user.tag,
-      target: member.user.tag,
-      fields: { 'Old Role': oldRole.name, 'New Role': newRole.name, Reason: reason },
-      color: '#ED4245',
-    });
   },
 };

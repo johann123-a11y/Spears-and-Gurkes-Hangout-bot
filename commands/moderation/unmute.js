@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { checkPerm, readData, writeData } = require('../../utils');
-const { sendLog } = require('../../utils/logger');
 
 module.exports = {
   name: 'unmute',
@@ -21,7 +20,6 @@ module.exports = {
       await target.timeout(null);
       removePermMute(target.user.id);
       message.channel.send({ embeds: [buildEmbed(target.user, message.author.tag)] });
-      sendLog(message.client, { action: 'User Unmuted', executor: message.author.tag, target: target.user.tag, color: '#57F287' });
     } catch {
       message.reply('Could not unmute that user.');
     }
@@ -39,7 +37,6 @@ module.exports = {
       await member.timeout(null);
       removePermMute(user.id);
       interaction.reply({ embeds: [buildEmbed(user, interaction.user.tag)] });
-      sendLog(interaction.client, { action: 'User Unmuted', executor: interaction.user.tag, target: user.tag, color: '#57F287' });
     } catch {
       interaction.reply({ content: 'Could not unmute that user.', ephemeral: true });
     }
