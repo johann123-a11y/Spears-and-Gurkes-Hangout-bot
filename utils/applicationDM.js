@@ -121,11 +121,15 @@ async function sendQuestion(dmChannel, session) {
   }
 }
 
-// Handle a text answer from DMs 
+// Handle a text answer from DMs
 async function handleDMAnswer(message) {
   let session = sessions.get(message.author.id);
   if (!session) session = await restoreSession(message.author.id, message.client);
-  if (!session) return;
+  if (!session) {
+    if (message.content.trim().toLowerCase() === 'cancel')
+      message.channel.send({ content: 'You don\'t have an active application to cancel.' }).catch(() => {});
+    return;
+  }
   if (message.channel.id !== session.dmChannelId) return;
 
   const q = session.questions[session.currentIndex];
@@ -137,10 +141,26 @@ async function handleDMAnswer(message) {
   }
 
   if (q.type === 'yesno') {
-    return message.channel.send({ content: 'Please use the **Yes** or **No** buttons above to answer this question.' });
+    // Resend the question with fresh buttons (old ones may have stopped working)
+    const embed = new EmbedBuilder()
+      .setColor('#FEE75C')
+      .setTitle(`Question ${session.currentIndex + 1}/${session.questions.length}`)
+      .setDescription(q.text)
+      .setFooter({ text: 'Click Yes or No below, or type cancel to cancel' })
+      .setTimestamp();
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`app_answer_yes:${session.panelId}`).setLabel('Yes').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId(`app_answer_no:${session.panelId}`).setLabel('No').setStyle(ButtonStyle.Danger),
+    );
+    return message.channel.send({ embeds: [embed], components: [row] });
   }
 
-  await processAnswer(message.author, message.channel, session, answer);
+  try {
+    await processAnswer(message.author, message.channel, session, answer);
+  } catch (err) {
+    console.error('[App DM] Error processing answer:', err);
+    message.channel.send({ content: 'Something went wrong. Type `cancel` to cancel and start over.' }).catch(() => {});
+  }
 }
 
 // Handle a yes/no button click in DMs 
@@ -150,7 +170,12 @@ async function handleDMButton(interaction, answer) {
   if (!session) return interaction.reply({ content: 'No active session. Please start a new application.', ephemeral: true });
 
   await interaction.update({ components: [] });
-  await processAnswer(interaction.user, interaction.channel, session, answer);
+  try {
+    await processAnswer(interaction.user, interaction.channel, session, answer);
+  } catch (err) {
+    console.error('[App DM] Error processing button answer:', err);
+    interaction.channel.send({ content: 'Something went wrong. Type `cancel` to cancel and start over.' }).catch(() => {});
+  }
 }
 
 // Process a single answer and advance 
