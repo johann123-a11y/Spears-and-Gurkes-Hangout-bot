@@ -70,7 +70,8 @@ async function startApplication(interaction, panelId) {
         .setDescription(
           `Hey **${interaction.user.username}**! You're applying for **${panel.forWhat}**.\n\n` +
           `I'll ask you **${panel.questions.length}** question(s) one by one. Simply reply here!\n\n` +
-          `Type \`cancel\` at any time to cancel your application.`
+          `Type \`cancel\` at any time to cancel.\n` +
+          `Type \`resend\` if a question doesn't appear.`
         )
         .setFooter({ text: `Question 1 of ${panel.questions.length} coming up...` })
         .setTimestamp()],
@@ -140,6 +141,11 @@ async function handleDMAnswer(message) {
     return message.channel.send({ content: 'Application cancelled.' });
   }
 
+  // Let users re-request the current question if they missed it
+  if (answer.toLowerCase() === 'resend') {
+    return sendQuestion(message.channel, session);
+  }
+
   if (q.type === 'yesno') {
     // Resend the question with fresh buttons (old ones may have stopped working)
     const embed = new EmbedBuilder()
@@ -178,18 +184,26 @@ async function handleDMButton(interaction, answer) {
   }
 }
 
-// Process a single answer and advance 
+// Process a single answer and advance
 async function processAnswer(user, dmChannel, session, answer) {
   const q = session.questions[session.currentIndex];
-  session.answers.push({ question: q.text, answer });
-  session.currentIndex++;
+  const nextIndex   = session.currentIndex + 1;
+  const nextAnswers = [...session.answers, { question: q.text, answer }];
 
-  if (session.currentIndex >= session.questions.length) {
+  if (nextIndex >= session.questions.length) {
+    // Last answer — commit and finalize
+    session.answers      = nextAnswers;
+    session.currentIndex = nextIndex;
     deleteSession(user.id);
     await finalizeApplication(user, dmChannel, session);
   } else {
+    // Send next question FIRST — only save state after the send succeeds.
+    // If the send fails, the session stays at the current index so the user can retry.
+    const nextSession = { ...session, answers: nextAnswers, currentIndex: nextIndex };
+    await sendQuestion(dmChannel, nextSession);
+    session.answers      = nextAnswers;
+    session.currentIndex = nextIndex;
     saveSession(user.id, session);
-    await sendQuestion(dmChannel, session);
   }
 }
 
