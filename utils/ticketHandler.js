@@ -1,14 +1,33 @@
 const {
-  EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
+  EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, AttachmentBuilder,
   ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { readData, writeData, isStaffMember, trackActivity } = require('./index');
-const { saveTranscript, fetchAllMessages } = require('./transcripts');
+const { fetchAllMessages } = require('./transcripts');
 
-function getBaseUrl() {
-  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL;
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-  return null;
+function buildTxt({ ticketId, panelName, openedBy, closedBy, openedAt, closedAt, reason, answers }, messages) {
+  const line = '═'.repeat(52);
+  const fmt  = ts => new Date(ts).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  let txt = `${line}\nTICKET #${ticketId} — ${panelName}\n${line}\n`;
+  txt += `Opened by : ${openedBy?.tag || 'Unknown'}\n`;
+  txt += `Closed by : ${closedBy?.tag || 'Unknown'}\n`;
+  txt += `Opened at : ${fmt(openedAt)}\n`;
+  txt += `Closed at : ${fmt(closedAt)}\n`;
+  txt += `Reason    : ${reason || '—'}\n`;
+  txt += `Messages  : ${messages.length}\n`;
+  if (answers?.length > 0) {
+    txt += `${line}\n`;
+    for (const a of answers) txt += `Q: ${a.question}\nA: ${a.answer}\n`;
+  }
+  txt += `${line}\n\n`;
+  for (const m of messages) {
+    const time   = fmt(m.timestamp);
+    const author = m.bot ? `${m.author} [BOT]` : m.author;
+    if (m.content) txt += `[${time}] ${author}: ${m.content}\n`;
+    for (const att of (m.attachments || []))
+      txt += `[${time}] ${author}: [Attachment: ${att.name} — ${att.url}]\n`;
+  }
+  return txt;
 }
 
 // Button: user clicks a ticket panel button 
@@ -240,27 +259,11 @@ async function closeTicket(channel, reason, closedBy, client) {
   const ticket      = openTickets[channel.id];
   if (!ticket) return false;
 
-  // Fetch all messages for transcript BEFORE deleting channel
-  const messages  = await fetchAllMessages(channel);
-  const ticketId  = ticket.ticketId || 0;
-  const closedAt  = Date.now();
-  const expiresAt = closedAt + 3 * 24 * 60 * 60 * 1000; // 3 days
-
-  // Save transcript
+  // Fetch all messages BEFORE deleting channel
+  const messages     = await fetchAllMessages(channel);
+  const ticketId     = ticket.ticketId || 0;
+  const closedAt     = Date.now();
   const openedByUser = await client.users.fetch(ticket.userId).catch(() => ({ tag: 'Unknown', id: ticket.userId }));
-  await saveTranscript(ticketId, {
-    ticketId,
-    panelName: ticket.panelName,
-    openedBy:  { id: ticket.userId, tag: openedByUser.tag },
-    closedBy:  { id: closedBy.id, tag: closedBy.tag },
-    openedAt:  ticket.openedAt,
-    closedAt,
-    reason,
-    answers:   ticket.answers || [],
-    messages,
-    saved:     false,
-    expiresAt,
-  });
 
   // DM the ticket opener
   try {
@@ -276,7 +279,7 @@ async function closeTicket(channel, reason, closedBy, client) {
     });
   } catch { /* DMs disabled */ }
 
-  // Ticket log with transcript buttons
+  // Ticket log — send embed + txt transcript file
   const tickets = readData('tickets.json');
   if (tickets.logChannelId) {
     const logCh = client.channels.cache.get(tickets.logChannelId);
@@ -284,32 +287,22 @@ async function closeTicket(channel, reason, closedBy, client) {
       const embed = new EmbedBuilder()
         .setColor('#ED4245').setTitle('🔒 Ticket Closed')
         .addFields(
-          { name: '🔢 Ticket ID', value: `#${ticketId}`,                              inline: true },
-          { name: '📋 Panel',     value: ticket.panelName,                             inline: true },
-          { name: '👤 Opened by', value: `<@${ticket.userId}>`,                        inline: true },
-          { name: '🛡️ Closed by', value: `<@${closedBy.id}>`,                          inline: true },
-          { name: '🕐 Open Time', value: `<t:${Math.floor(ticket.openedAt / 1000)}:F>`, inline: true },
-          { name: '🕐 Closed Time', value: `<t:${Math.floor(closedAt / 1000)}:F>`,     inline: true },
-          { name: '📝 Reason',    value: reason },
-        ).setFooter({ text: '📄 Transcript auto-deletes in 3 days' }).setTimestamp();
+          { name: '🔢 Ticket ID',   value: `#${ticketId}`,                               inline: true },
+          { name: '📋 Panel',       value: ticket.panelName,                              inline: true },
+          { name: '👤 Opened by',   value: `<@${ticket.userId}>`,                         inline: true },
+          { name: '🛡️ Closed by',   value: `<@${closedBy.id}>`,                           inline: true },
+          { name: '🕐 Open Time',   value: `<t:${Math.floor(ticket.openedAt / 1000)}:F>`, inline: true },
+          { name: '🕐 Closed Time', value: `<t:${Math.floor(closedAt / 1000)}:F>`,        inline: true },
+          { name: '📝 Reason',      value: reason },
+        ).setTimestamp();
 
-      const baseUrl = getBaseUrl();
-      const btns = [];
-      if (baseUrl) {
-        btns.push(new ButtonBuilder()
-          .setLabel('View Transcript')
-          .setStyle(ButtonStyle.Link)
-          .setURL(`${baseUrl}/transcript/${ticketId}`));
-      }
-      btns.push(new ButtonBuilder()
-        .setCustomId(`transcript_save:${ticketId}`)
-        .setLabel('💾 Save Transcript')
-        .setStyle(ButtonStyle.Secondary));
+      const txt  = buildTxt(
+        { ticketId, panelName: ticket.panelName, openedBy: openedByUser, closedBy, openedAt: ticket.openedAt, closedAt, reason, answers: ticket.answers || [] },
+        messages,
+      );
+      const file = new AttachmentBuilder(Buffer.from(txt, 'utf-8'), { name: `ticket-${ticketId}.txt` });
 
-      logCh.send({
-        embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(btns)],
-      }).catch(() => {});
+      logCh.send({ embeds: [embed], files: [file] }).catch(() => {});
     }
   }
 

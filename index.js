@@ -5,21 +5,9 @@ const http = require('http');
 require('dotenv').config();
 const connectDB = require('./db');
 
-const { getTranscript, renderHTML, cleanupExpired } = require('./utils/transcripts');
-
-// HTTP server — health check + transcript viewer
+// HTTP server — health check
 const PORT = process.env.PORT || 3000;
-http.createServer(async (req, res) => {
-  const match = req.url.match(/^\/transcript\/(\d+)/);
-  if (match) {
-    const transcript = await getTranscript(parseInt(match[1]));
-    if (transcript) {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(renderHTML(transcript));
-    }
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    return res.end('Transcript not found or expired.');
-  }
+http.createServer((req, res) => {
   res.writeHead(200);
   res.end('OK');
 }).listen(PORT);
@@ -155,9 +143,6 @@ process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
 
 connectDB().then(async () => {
   await loadCache();
-  await cleanupExpired();
-  // Re-run cleanup every 6 hours
-  setInterval(cleanupExpired, 6 * 60 * 60 * 1000);
   // Check activity checks every 60 seconds
   setInterval(processExpiredActivityChecks, 60 * 1000);
   // Renew permanent mutes every 24 hours

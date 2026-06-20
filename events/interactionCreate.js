@@ -61,17 +61,6 @@ module.exports = {
       if (interaction.customId === 'ticket_request_close_btn')
         return handleRequestCloseButton(interaction);
 
-      // Save transcript button
-      if (interaction.customId.startsWith('transcript_save:')) {
-        const { markSaved } = require('../utils/transcripts');
-        const ticketId = parseInt(interaction.customId.split(':')[1]);
-        const ok = await markSaved(ticketId);
-        return interaction.reply({
-          content: ok ? 'Transcript saved permanently — it will never be auto-deleted.' : 'Transcript not found.',
-          ephemeral: true,
-        });
-      }
-
       // Strikes buttons 
       if (interaction.customId.startsWith('strikes_add:')) {
         if (!interaction.member.permissions.has('Administrator'))
