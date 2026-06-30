@@ -130,11 +130,12 @@ module.exports = {
         .addUserOption(o => o.setName('user').setDescription('User to add').setRequired(true))
     )
 
-    // /ticket remove 
+    // /ticket remove
     .addSubcommand(sub =>
       sub.setName('remove')
-        .setDescription('Remove a user from the current ticket [Staff]')
-        .addUserOption(o => o.setName('user').setDescription('User to remove').setRequired(true))
+        .setDescription('Remove a user or role from the current ticket [Staff]')
+        .addUserOption(o => o.setName('user').setDescription('User to remove').setRequired(false))
+        .addRoleOption(o => o.setName('role').setDescription('Role to remove').setRequired(false))
     )
 
     // /ticket rename 
@@ -495,22 +496,39 @@ async function handleAdd(interaction) {
   }
 }
 
-// /ticket remove 
+// /ticket remove
 async function handleRemove(interaction) {
   const ticket = readData('openTickets.json')[interaction.channelId];
   if (!ticket) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
 
   const user = interaction.options.getUser('user');
+  const role = interaction.options.getRole('role');
+
+  if (!user && !role)
+    return interaction.reply({ content: 'Please specify a **user** or a **role** to remove.', ephemeral: true });
+
   try {
-    await interaction.channel.permissionOverwrites.delete(user.id);
-    interaction.reply({ content: `**${user.tag}** has been removed from this ticket.` });
-    sendLog(interaction.client, {
-      action: 'Ticket Member Removed',
-      executor: interaction.user.tag,
-      target: user.tag,
-      fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, Channel: `<#${interaction.channelId}>` },
-      color: '#FEE75C',
-    });
+    if (user) {
+      await interaction.channel.permissionOverwrites.delete(user.id);
+      interaction.reply({ content: `**${user.tag}** has been removed from this ticket.` });
+      sendLog(interaction.client, {
+        action: 'Ticket Member Removed',
+        executor: interaction.user.tag,
+        target: user.tag,
+        fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, Channel: `<#${interaction.channelId}>` },
+        color: '#FEE75C',
+      });
+    } else {
+      await interaction.channel.permissionOverwrites.delete(role.id);
+      interaction.reply({ content: `**${role.name}** has been removed from this ticket.` });
+      sendLog(interaction.client, {
+        action: 'Ticket Role Removed',
+        executor: interaction.user.tag,
+        target: role.name,
+        fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, Channel: `<#${interaction.channelId}>` },
+        color: '#FEE75C',
+      });
+    }
   } catch (err) {
     interaction.reply({ content: `Failed: ${err.message}`, ephemeral: true });
   }
