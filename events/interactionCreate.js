@@ -662,51 +662,7 @@ module.exports = {
         return;
       }
 
-      // /send DM modal 
-      if (interaction.customId === 'send_dm_modal' || interaction.customId === 'send_dm_modal_test') {
-        const isTest   = interaction.customId === 'send_dm_modal_test';
-        const title    = interaction.fields.getTextInputValue('title');
-        const subtitle = interaction.fields.getTextInputValue('subtitle') || null;
-        const content  = interaction.fields.getTextInputValue('content');
-        const footer   = interaction.fields.getTextInputValue('footer') || null;
-
-        // Build plain text message (supports links)
-        const lines = [];
-        lines.push(`**${title}**`);
-        if (subtitle) lines.push(`*${subtitle}*`);
-        lines.push('');
-        lines.push(content);
-        if (footer) lines.push(`\n-# ${footer}`);
-        const messageText = lines.join('\n');
-
-        if (isTest) {
-          try {
-            await interaction.user.send({ content: messageText });
-            return interaction.reply({ content: 'Test-DM wurde dir geschickt!', ephemeral: true });
-          } catch {
-            return interaction.reply({ content: 'Konnte dir keine DM schicken — prüf ob deine DMs offen sind.', ephemeral: true });
-          }
-        }
-
-        await interaction.reply({ content: `Sending DMs to all members...`, ephemeral: true });
-
-        const guild = interaction.guild;
-        const members = await guild.members.fetch();
-        let sent = 0, failed = 0;
-        for (const [, member] of members) {
-          if (member.user.bot) continue;
-          const ok = await member.user.send({ content: messageText }).then(() => true).catch(() => false);
-          if (ok) sent++; else failed++;
-          if ((sent + failed) % 10 === 0) await new Promise(r => setTimeout(r, 1000));
-        }
-
-        return interaction.followUp({
-          content: `DM sent to **${sent}** members. (${failed} failed — DMs closed)`,
-          ephemeral: true,
-        });
-      }
-
-      // Review panel modal (send / test) 
+      // Review panel modal (send / test)
       if (interaction.customId === 'review_panel_modal' || interaction.customId === 'review_panel_modal_test') {
         const isTest      = interaction.customId === 'review_panel_modal_test';
         const title       = interaction.fields.getTextInputValue('title');
