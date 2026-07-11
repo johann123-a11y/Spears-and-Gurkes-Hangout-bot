@@ -151,6 +151,11 @@ async function createTicketChannel(interaction, panel, answers) {
     .setLabel('🔒 Close Ticket')
     .setStyle(ButtonStyle.Danger);
 
+  const renameBtn = new ButtonBuilder()
+    .setCustomId('ticket_rename_btn')
+    .setLabel('✏️ Rename')
+    .setStyle(ButtonStyle.Secondary);
+
   const requestCloseBtn = new ButtonBuilder()
     .setCustomId('ticket_request_close_btn')
     .setLabel('📩 Request Close')
@@ -165,7 +170,7 @@ async function createTicketChannel(interaction, panel, answers) {
   await ticketChannel.send({
     content: pingContent,
     embeds: [embed],
-    components: [new ActionRowBuilder().addComponents(closeBtn, requestCloseBtn)],
+    components: [new ActionRowBuilder().addComponents(closeBtn, renameBtn, requestCloseBtn)],
     allowedMentions: { users: [interaction.user.id], roles: pingRoles },
   });
 

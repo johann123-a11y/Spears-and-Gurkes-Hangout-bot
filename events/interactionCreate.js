@@ -1,4 +1,4 @@
-const { parseTime, readData, writeData, checkPerm, formatTime, trackActivity } = require('../utils');
+const { parseTime, readData, writeData, checkPerm, formatTime, trackActivity, isStaffMember } = require('../utils');
 const pingHandlers = require('../utils/pingHandlers');
 const { createGiveaway } = require('../commands/giveaways/gstart');
 const { setPerm, buildSetEmbed, LEVEL_CHOICES } = require('../commands/admin/perms');
@@ -70,6 +70,24 @@ module.exports = {
           content: ok ? 'Transcript saved permanently — it will never be auto-deleted.' : 'Transcript not found.',
           ephemeral: true,
         });
+      }
+
+      // Ticket rename button — staff only
+      if (interaction.customId === 'ticket_rename_btn') {
+        if (!isStaffMember(interaction.member))
+          return interaction.reply({ content: 'Only **Staff** can rename tickets.', ephemeral: true });
+        const modal = new ModalBuilder()
+          .setCustomId('ticket_rename_modal')
+          .setTitle('Rename Ticket')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('new_name')
+              .setLabel('New channel name')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+              .setMaxLength(90)
+          ));
+        return interaction.showModal(modal);
       }
 
       // Strikes buttons 
@@ -955,6 +973,39 @@ module.exports = {
         // Delete pending message so channel stays clean
         await interaction.deferUpdate();
         await interaction.message.delete().catch(() => {});
+      }
+
+      // Ticket rename modal
+      if (interaction.customId === 'ticket_rename_modal') {
+        const openTickets = readData('openTickets.json');
+        const ticket = openTickets[interaction.channelId];
+        if (!ticket)
+          return interaction.reply({ content: 'This is not an active ticket channel.', ephemeral: true });
+        const rawName = interaction.fields.getTextInputValue('new_name');
+        const newName = rawName
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        if (!newName) return interaction.reply({ content: 'Invalid name.', ephemeral: true });
+        const oldName = interaction.channel.name;
+        await interaction.deferReply();
+        try {
+          await interaction.channel.setName(newName);
+          interaction.editReply({ content: `Ticket renamed to **${newName}**.` });
+          const { sendLog } = require('../utils/logger');
+          sendLog(interaction.client, {
+            action: 'Ticket Renamed',
+            executor: interaction.user.tag,
+            target: `<#${interaction.channelId}>`,
+            fields: { 'Ticket ID': `#${ticket.ticketId || '?'}`, 'Old Name': oldName, 'New Name': newName },
+            color: '#5865F2',
+          });
+        } catch (err) {
+          interaction.editReply({ content: `Failed: ${err.message}` });
+        }
+        return;
       }
 
       // Ticket setup modal
