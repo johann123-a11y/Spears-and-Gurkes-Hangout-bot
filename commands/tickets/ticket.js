@@ -14,14 +14,18 @@ function getPanelId(name) {
   return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
 }
 
+const SUPPORT_EMOJI_URL = 'https://cdn.discordapp.com/emojis/1525489447280574595.webp';
+
 function buildDescEmbed(desc) {
   const embed = new EmbedBuilder().setColor('#5865F2').setTimestamp();
   embed.setTitle(desc?.title || 'Create Ticket');
+  embed.setThumbnail(SUPPORT_EMOJI_URL);
   let content = '';
   if (desc?.subtitle) content += `**${desc.subtitle}**\n\n`;
   if (desc?.text)     content += desc.text;
   if (content)        embed.setDescription(content);
   if (desc?.footer)   embed.setFooter({ text: desc.footer });
+  if (desc?.image)    embed.setImage(desc.image);
   return embed;
 }
 
@@ -334,6 +338,15 @@ async function handleDescription(interaction) {
           .setLabel('Footer text (optional)')
           .setStyle(TextInputStyle.Short)
           .setValue(current.footer || '')
+          .setRequired(false)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('desc_image')
+          .setLabel('Banner image URL (optional, shown at bottom)')
+          .setStyle(TextInputStyle.Short)
+          .setValue(current.image || '')
+          .setPlaceholder('https://i.imgur.com/...')
           .setRequired(false)
       ),
     );
