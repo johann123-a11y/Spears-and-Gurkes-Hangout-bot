@@ -673,9 +673,6 @@ module.exports = {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder().setCustomId('desc_footer').setLabel('Footer text (optional)').setStyle(TextInputStyle.Short).setValue(current.footer || '').setRequired(false)
             ),
-            new ActionRowBuilder().addComponents(
-              new TextInputBuilder().setCustomId('desc_image').setLabel('Banner image URL (optional)').setStyle(TextInputStyle.Short).setValue(current.image || '').setPlaceholder('https://i.imgur.com/...').setRequired(false)
-            ),
           );
         return interaction.showModal(modal);
       }
@@ -1183,9 +1180,8 @@ module.exports = {
         const subtitle = interaction.fields.getTextInputValue('desc_subtitle') || null;
         const text     = interaction.fields.getTextInputValue('desc_text')     || null;
         const footer   = interaction.fields.getTextInputValue('desc_footer')   || null;
-        const image    = interaction.fields.getTextInputValue('desc_image')    || null;
         const tickets  = readData('tickets.json');
-        tickets.description = { title, subtitle, text, footer, image };
+        tickets.description = { title, subtitle, text, footer };
         writeData('tickets.json', tickets);
 
         const previewEmbed = buildDescEmbed(tickets.description);
