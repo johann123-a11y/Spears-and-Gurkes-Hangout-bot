@@ -598,6 +598,63 @@ module.exports = {
         return interaction.reply({ content: 'Activity confirmed! You are marked as active.', ephemeral: true });
       }
 
+      // LOA accept button
+      if (interaction.customId.startsWith('loa_accept:')) {
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: 'Only **Administrators** can accept LOA requests.', ephemeral: true });
+        const [, userId, channelId, messageId] = interaction.customId.split(':');
+        const modal = new ModalBuilder()
+          .setCustomId(`loa_accept_modal:${userId}:${channelId}:${messageId}`)
+          .setTitle('Accept LOA Request')
+          .addComponents(
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('duration').setLabel('LOA Duration (e.g. 7d, 2w)').setStyle(TextInputStyle.Short).setRequired(true)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder().setCustomId('reason').setLabel('Reason / Notes (optional)').setStyle(TextInputStyle.Short).setRequired(false)
+            ),
+          );
+        return interaction.showModal(modal);
+      }
+
+      // LOA deny button
+      if (interaction.customId.startsWith('loa_deny:')) {
+        if (!interaction.member.permissions.has('Administrator'))
+          return interaction.reply({ content: 'Only **Administrators** can deny LOA requests.', ephemeral: true });
+        const [, userId, channelId, messageId] = interaction.customId.split(':');
+        await interaction.deferReply({ ephemeral: true });
+
+        // Update request message to denied state
+        try {
+          const reqCh  = interaction.guild.channels.cache.get(channelId);
+          const reqMsg = reqCh ? await reqCh.messages.fetch(messageId).catch(() => null) : null;
+          if (reqMsg) {
+            const updated = EmbedBuilder.from(reqMsg.embeds[0])
+              .setColor('#ED4245')
+              .setFooter({ text: `❌ Denied by ${interaction.user.tag}` });
+            await reqMsg.edit({ embeds: [updated], components: [] });
+          }
+        } catch {}
+
+        // Post to LOA channel
+        const cfg   = readData('loaConfig.json');
+        const loaCh = cfg.loaChannelId ? interaction.guild.channels.cache.get(cfg.loaChannelId) : null;
+        if (loaCh) {
+          await loaCh.send({
+            content: `<@${userId}>`,
+            embeds: [new EmbedBuilder()
+              .setColor('#ED4245')
+              .setTitle('❌ LOA Request Denied')
+              .setDescription(`<@${userId}>'s LOA request got denied.`)
+              .addFields({ name: '🛡️ Denied by', value: `<@${interaction.user.id}>`, inline: true })
+              .setTimestamp()],
+            allowedMentions: { users: [userId] },
+          });
+        }
+
+        return interaction.editReply({ content: 'LOA request denied.' });
+      }
+
       if (interaction.customId === 'ticket_desc_edit_btn') {
         const tickets = readData('tickets.json');
         const current = tickets.description || {};
@@ -973,6 +1030,113 @@ module.exports = {
         // Delete pending message so channel stays clean
         await interaction.deferUpdate();
         await interaction.message.delete().catch(() => {});
+      }
+
+      // LOA request modal — staff submits request
+      if (interaction.customId === 'loa_request_modal') {
+        const reason = interaction.fields.getTextInputValue('reason');
+        const from   = interaction.fields.getTextInputValue('from');
+        const until  = interaction.fields.getTextInputValue('until');
+
+        const cfg = readData('loaConfig.json');
+        if (!cfg.reqChannelId)
+          return interaction.reply({ content: 'No LOA request channel set. Ask an admin to run `/loa reqchannel`.', ephemeral: true });
+
+        const reqCh = interaction.guild.channels.cache.get(cfg.reqChannelId);
+        if (!reqCh)
+          return interaction.reply({ content: 'LOA request channel not found.', ephemeral: true });
+
+        const embed = new EmbedBuilder()
+          .setColor('#5865F2')
+          .setTitle('🏖️ LOA Request')
+          .setThumbnail(interaction.user.displayAvatarURL())
+          .addFields(
+            { name: '👤 Staff Member', value: `<@${interaction.user.id}>`, inline: true },
+            { name: '📅 From',         value: from,                        inline: true },
+            { name: '📅 Until',        value: until,                       inline: true },
+            { name: '📋 Reason',       value: reason },
+          )
+          .setTimestamp();
+
+        // Send without buttons first to get the message ID
+        const msg = await reqCh.send({
+          content: `<@&1069649442828992523>`,
+          embeds: [embed],
+          allowedMentions: { roles: ['1069649442828992523'] },
+        });
+
+        // Edit to add buttons with IDs encoded
+        await msg.edit({
+          components: [new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`loa_accept:${interaction.user.id}:${reqCh.id}:${msg.id}`)
+              .setLabel('✅ Accept')
+              .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+              .setCustomId(`loa_deny:${interaction.user.id}:${reqCh.id}:${msg.id}`)
+              .setLabel('❌ Deny')
+              .setStyle(ButtonStyle.Danger),
+          )],
+        });
+
+        return interaction.reply({ content: '✅ Your LOA request has been submitted!', ephemeral: true });
+      }
+
+      // LOA accept modal — admin sets duration + reason
+      if (interaction.customId.startsWith('loa_accept_modal:')) {
+        const [, userId, channelId, messageId] = interaction.customId.split(':');
+        const durationStr = interaction.fields.getTextInputValue('duration');
+        const reason      = interaction.fields.getTextInputValue('reason') || 'No reason provided.';
+        const ms          = parseTime(durationStr);
+        if (!ms) return interaction.reply({ content: 'Invalid duration. Use e.g. `7d`, `2w`.', ephemeral: true });
+
+        // Set user on LOA
+        const member = await interaction.guild.members.fetch(userId).catch(() => null);
+        const loa = readData('loa.json');
+        loa[userId] = {
+          endTime: Date.now() + ms,
+          reason,
+          by: interaction.user.tag,
+          username: member?.user.tag || userId,
+        };
+        writeData('loa.json', loa);
+
+        // Update request message to accepted state
+        try {
+          const reqCh  = interaction.guild.channels.cache.get(channelId);
+          const reqMsg = reqCh ? await reqCh.messages.fetch(messageId).catch(() => null) : null;
+          if (reqMsg) {
+            const updated = EmbedBuilder.from(reqMsg.embeds[0])
+              .setColor('#57F287')
+              .setFooter({ text: `✅ Accepted by ${interaction.user.tag} • Duration: ${formatTime(ms)}` });
+            await reqMsg.edit({ embeds: [updated], components: [] });
+          }
+        } catch {}
+
+        // Post to LOA channel
+        const cfg   = readData('loaConfig.json');
+        const loaCh = cfg.loaChannelId ? interaction.guild.channels.cache.get(cfg.loaChannelId) : null;
+        if (loaCh) {
+          await loaCh.send({
+            content: `<@${userId}>`,
+            embeds: [new EmbedBuilder()
+              .setColor('#57F287')
+              .setTitle('🏖️ LOA Approved')
+              .addFields(
+                { name: '👤 Staff Member', value: `<@${userId}>`,              inline: true },
+                { name: '🛡️ Approved by',  value: `<@${interaction.user.id}>`, inline: true },
+                { name: '⏳ Duration',      value: formatTime(ms),              inline: true },
+                { name: '📋 Reason',        value: reason },
+              )
+              .setTimestamp()],
+            allowedMentions: { users: [userId] },
+          });
+        }
+
+        return interaction.reply({
+          content: `✅ LOA approved. <@${userId}> is now on LOA for **${formatTime(ms)}**.`,
+          ephemeral: true,
+        });
       }
 
       // Ticket rename modal
