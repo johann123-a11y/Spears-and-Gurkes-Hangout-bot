@@ -20,6 +20,7 @@ function getDefault(filename) {
     'giveaways.json': {},
     'welcome.json': { enabled: true, channel: '1451957422724878529', message: 'Welcome {member} to **{server}**! You are member #{membercount}. Enjoy your stay!' },
     'loa.json': {},
+    'loaConfig.json': { loaChannelId: null, reqChannelId: null },
     'afk.json': {},
     'perms.json': {},
     'leave.json': {},
