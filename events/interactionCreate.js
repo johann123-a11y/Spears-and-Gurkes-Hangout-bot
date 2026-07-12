@@ -1015,9 +1015,9 @@ module.exports = {
 
         // Send without buttons first to get the message ID
         const msg = await reqCh.send({
-          content: `<@&1069649442828992523>`,
+          content: `<@${interaction.user.id}>`,
           embeds: [embed],
-          allowedMentions: { roles: ['1069649442828992523'] },
+          allowedMentions: { users: [interaction.user.id] },
         });
 
         // Edit to add buttons with IDs encoded
