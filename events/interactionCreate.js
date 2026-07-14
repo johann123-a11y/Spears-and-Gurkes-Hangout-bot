@@ -616,42 +616,22 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      // LOA deny button
+      // LOA deny button — show reason modal
       if (interaction.customId.startsWith('loa_deny:')) {
         if (!interaction.member.permissions.has('Administrator'))
           return interaction.reply({ content: 'Only **Administrators** can deny LOA requests.', ephemeral: true });
         const [, userId, channelId, messageId] = interaction.customId.split(':');
-        await interaction.deferReply({ ephemeral: true });
-
-        // Update request message to denied state
-        try {
-          const reqCh  = interaction.guild.channels.cache.get(channelId);
-          const reqMsg = reqCh ? await reqCh.messages.fetch(messageId).catch(() => null) : null;
-          if (reqMsg) {
-            const updated = EmbedBuilder.from(reqMsg.embeds[0])
-              .setColor('#ED4245')
-              .setFooter({ text: `❌ Denied by ${interaction.user.tag}` });
-            await reqMsg.edit({ embeds: [updated], components: [] });
-          }
-        } catch {}
-
-        // Post to LOA channel
-        const cfg   = readData('loaConfig.json');
-        const loaCh = cfg.loaChannelId ? interaction.guild.channels.cache.get(cfg.loaChannelId) : null;
-        if (loaCh) {
-          await loaCh.send({
-            content: `<@${userId}>`,
-            embeds: [new EmbedBuilder()
-              .setColor('#ED4245')
-              .setTitle('❌ LOA Request Denied')
-              .setDescription(`<@${userId}>'s LOA request got denied.`)
-              .addFields({ name: '🛡️ Denied by', value: `<@${interaction.user.id}>`, inline: true })
-              .setTimestamp()],
-            allowedMentions: { users: [userId] },
-          });
-        }
-
-        return interaction.editReply({ content: 'LOA request denied.' });
+        const modal = new ModalBuilder()
+          .setCustomId(`loa_deny_modal:${userId}:${channelId}:${messageId}`)
+          .setTitle('Deny LOA Request')
+          .addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('reason')
+              .setLabel('Reason for denial')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+          ));
+        return interaction.showModal(modal);
       }
 
       if (interaction.customId === 'ticket_desc_edit_btn') {
@@ -1092,6 +1072,45 @@ module.exports = {
           content: `✅ LOA approved. <@${userId}> is now on LOA for **${formatTime(ms)}**.`,
           ephemeral: true,
         });
+      }
+
+      // LOA deny modal — admin submitted reason
+      if (interaction.customId.startsWith('loa_deny_modal:')) {
+        const [, userId, channelId, messageId] = interaction.customId.split(':');
+        const reason = interaction.fields.getTextInputValue('reason');
+
+        // Update request message to denied state
+        try {
+          const reqCh  = interaction.guild.channels.cache.get(channelId);
+          const reqMsg = reqCh ? await reqCh.messages.fetch(messageId).catch(() => null) : null;
+          if (reqMsg) {
+            const updated = EmbedBuilder.from(reqMsg.embeds[0])
+              .setColor('#ED4245')
+              .setFooter({ text: `❌ Denied by ${interaction.user.tag}` });
+            await reqMsg.edit({ embeds: [updated], components: [] });
+          }
+        } catch {}
+
+        // Post to LOA channel
+        const cfg   = readData('loaConfig.json');
+        const loaCh = cfg.loaChannelId ? interaction.guild.channels.cache.get(cfg.loaChannelId) : null;
+        if (loaCh) {
+          await loaCh.send({
+            content: `<@${userId}>`,
+            embeds: [new EmbedBuilder()
+              .setColor('#ED4245')
+              .setTitle('❌ LOA Request Denied')
+              .addFields(
+                { name: '👤 Staff Member', value: `<@${userId}>`,              inline: true },
+                { name: '🛡️ Denied by',   value: `<@${interaction.user.id}>`, inline: true },
+                { name: '📋 Reason',       value: reason },
+              )
+              .setTimestamp()],
+            allowedMentions: { users: [userId] },
+          });
+        }
+
+        return interaction.reply({ content: 'LOA request denied.', ephemeral: true });
       }
 
       // Ticket rename modal
