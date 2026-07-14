@@ -62,6 +62,7 @@ module.exports = {
               { name: '🆔 Bot ID',          value: member.id,                                                            inline: true },
               { name: '📅 Account Created', value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,           inline: true },
               { name: '👤 Added by',        value: addedBy ? `${addedBy.tag} (<@${addedBy.id}>)` : 'Unknown',           inline: true },
+              { name: '🕐 Gekickt um',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`,                             inline: true },
               { name: '⚡ Actions taken',   value: '✅ Bot gekickt\n✅ Alle Rollen des Adders entfernt',                inline: false },
             )
             .setTimestamp()],
