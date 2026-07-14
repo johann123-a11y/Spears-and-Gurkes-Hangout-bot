@@ -14,6 +14,7 @@ module.exports = {
     if (member.user.bot) {
       const cfg = readData('antiraid.json');
       if (cfg.enabled === false) return;
+      if (Array.isArray(cfg.exemptUsers) && cfg.exemptUsers.includes(member.id)) return;
 
       const antiraidCh = cfg.channelId ? member.guild.channels.cache.get(cfg.channelId) : null;
 
