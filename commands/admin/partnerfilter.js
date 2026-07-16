@@ -2,9 +2,9 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('disc
 const { readData, writeData } = require('../../utils');
 
 module.exports = {
-  name: 'partner',
+  name: 'partnerfilter',
   data: new SlashCommandBuilder()
-    .setName('partner')
+    .setName('partnerfilter')
     .setDescription('Discord invite filter settings [Admin]')
     .addSubcommand(sub => sub.setName('on').setDescription('Enable Discord invite filter [Admin]'))
     .addSubcommand(sub => sub.setName('off').setDescription('Disable Discord invite filter [Admin]'))
