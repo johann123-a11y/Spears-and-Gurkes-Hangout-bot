@@ -777,7 +777,17 @@ module.exports = {
         return interaction.reply({ content: `Message posted in <#${data.channel}>!`, ephemeral: true });
       }
 
-      // Review: improvement modal submitted 
+      // /send modal
+      if (interaction.customId.startsWith('send_modal:')) {
+        const channelId = interaction.customId.split(':')[1];
+        const text = interaction.fields.getTextInputValue('text');
+        const ch = interaction.guild.channels.cache.get(channelId);
+        if (!ch) return interaction.reply({ content: 'Channel not found.', ephemeral: true });
+        await ch.send({ content: text });
+        return interaction.reply({ content: '✅ Message sent.', ephemeral: true });
+      }
+
+      // Review: improvement modal submitted
       if (interaction.customId.startsWith('review_improve_modal:')) {
         const stars   = parseInt(interaction.customId.split(':')[1]);
         const improve = interaction.fields.getTextInputValue('improve') || null;
@@ -1702,6 +1712,7 @@ module.exports = {
 
       // ticket perms remove view role
       if (interaction.customId === 'ticket_perms_removeview_select') {
+
         const roleId  = interaction.values[0];
         const tickets = readData('tickets.json');
         tickets.perms.viewRoles = (tickets.perms?.viewRoles || []).filter(id => id !== roleId);
