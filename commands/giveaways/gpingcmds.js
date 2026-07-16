@@ -2,9 +2,9 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 // /partnerping — simple hardcoded partner ping
 module.exports = [{
-  name: 'partnerping',
+  name: 'partner',
   data: new SlashCommandBuilder()
-    .setName('partnerping')
+    .setName('partner')
     .setDescription('Send a partner ping')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
   async executeSlash(interaction) {

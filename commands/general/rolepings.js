@@ -6,7 +6,7 @@ const { readData, writeData } = require('../../utils');
 // Config stored in pingRoles.json:
 //   { marketping: { targetRoleId, permRoleId }, spawnerping: { ... } }
 
-const ROLE_PING_COMMANDS = ['marketping', 'spawnerping'];
+const ROLE_PING_COMMANDS = ['market', 'spawner'];
 
 function getCfg(cmdName) {
   const data = readData('pingRoles.json');

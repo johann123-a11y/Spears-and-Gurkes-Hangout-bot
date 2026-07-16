@@ -2,9 +2,9 @@ const { SlashCommandBuilder } = require('discord.js');
 const { checkPerm } = require('../../utils');
 
 module.exports = {
-  name: 'hereping',
+  name: 'here',
   data: new SlashCommandBuilder()
-    .setName('hereping')
+    .setName('here')
     .setDescription('Ping @here [Staff Team Only]'),
 
   async executeSlash(interaction) {
