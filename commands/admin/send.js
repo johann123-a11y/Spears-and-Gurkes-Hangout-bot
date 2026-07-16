@@ -11,7 +11,7 @@ module.exports = {
       return interaction.reply({ content: 'Only **Administrators** can use this.', ephemeral: true });
 
     const modal = new ModalBuilder()
-      .setCustomId(`send_modal:${interaction.channelId}:${interaction.user.id}`)
+      .setCustomId(`send_modal:${interaction.channelId}`)
       .setTitle('Send Message as Bot')
       .addComponents(
         new ActionRowBuilder().addComponents(
