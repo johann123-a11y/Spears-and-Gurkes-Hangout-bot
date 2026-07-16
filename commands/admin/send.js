@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
-const PASSWORD = 'Gurkchen';
+const PASSWORD = 'Gurkelovesgooning';
 
 module.exports = {
   name: 'send',
