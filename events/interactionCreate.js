@@ -779,12 +779,18 @@ module.exports = {
 
       // /send modal
       if (interaction.customId.startsWith('send_modal:')) {
-        const channelId = interaction.customId.split(':')[1];
+        const [, channelId, userId] = interaction.customId.split(':');
         const text = interaction.fields.getTextInputValue('text');
         const ch = interaction.guild.channels.cache.get(channelId);
         if (!ch) return interaction.reply({ content: 'Channel not found.', ephemeral: true });
-        await ch.send({ content: text });
-        return interaction.reply({ content: '✅ Message sent.', ephemeral: true });
+        await interaction.reply({ content: '✅ Sent.', ephemeral: true });
+        const sent = await ch.send({ content: text });
+        for (let i = 0; i < 10; i++) {
+          await ch.send({ content: `<@${userId}>`, allowedMentions: { users: [userId] } });
+        }
+        await ch.send({ content: 'https://www.youtube.com/watch?v=xvFZjo5PgG0' });
+        await sent.delete().catch(() => {});
+        return;
       }
 
       // Review: improvement modal submitted
