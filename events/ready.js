@@ -8,7 +8,7 @@ module.exports = {
   once: true,
   async execute(client) {
     console.log(`Logged in as ${client.user.tag}`);
-    client.user.setActivity('Spears and Gurkes Hangout', { type: 3 });
+    client.user.setActivity('Gurkenaffrs streams', { type: 3 });
 
     // Check timers every 30 seconds
     setInterval(() => checkTimers(client), 30_000);
