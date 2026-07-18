@@ -154,81 +154,85 @@ async function createTicketChannel(interaction, panel, answers) {
     return interaction.editReply({ content: `Could not create ticket channel: ${err.message}` });
   }
 
-  // Build ticket embed
-  const embed = new EmbedBuilder()
-    .setColor('#5865F2')
-    .setTitle(`🎫 ${panel.name}`)
-    .setDescription(`Ticket opened by <@${interaction.user.id}>\n\nA staff member will be with you shortly.\n\nIf you ping anyone, your ticket will get closed and you won't get paid.`)
-    .setThumbnail(interaction.user.displayAvatarURL())
-    .setTimestamp();
+  try {
+    await interaction.editReply({ content: `Your ticket has been created: <#${ticketChannel.id}>` });
 
-  if (answers.length > 0)
-    embed.addFields(answers.map(a => ({ name: a.question, value: a.answer })));
+    // Build ticket embed
+    const embed = new EmbedBuilder()
+      .setColor('#5865F2')
+      .setTitle(`🎫 ${panel.name}`)
+      .setDescription(`Ticket opened by <@${interaction.user.id}>\n\nA staff member will be with you shortly.\n\nIf you ping anyone, your ticket will get closed and you won't get paid.`)
+      .setThumbnail(interaction.user.displayAvatarURL())
+      .setTimestamp();
 
-  const closeBtn = new ButtonBuilder()
-    .setCustomId('ticket_close_btn')
-    .setLabel('🔒 Close Ticket')
-    .setStyle(ButtonStyle.Danger);
+    if (answers.length > 0)
+      embed.addFields(answers.map(a => ({ name: a.question, value: a.answer })));
 
-  const renameBtn = new ButtonBuilder()
-    .setCustomId('ticket_rename_btn')
-    .setLabel('✏️ Rename')
-    .setStyle(ButtonStyle.Secondary);
+    const closeBtn = new ButtonBuilder()
+      .setCustomId('ticket_close_btn')
+      .setLabel('🔒 Close Ticket')
+      .setStyle(ButtonStyle.Danger);
 
-  const requestCloseBtn = new ButtonBuilder()
-    .setCustomId('ticket_request_close_btn')
-    .setLabel('📩 Request Close')
-    .setStyle(ButtonStyle.Secondary);
+    const renameBtn = new ButtonBuilder()
+      .setCustomId('ticket_rename_btn')
+      .setLabel('✏️ Rename')
+      .setStyle(ButtonStyle.Secondary);
 
-  // Build content with ping mentions
-  const pingContent = [
-    `<@${interaction.user.id}>`,
-    ...pingRoles.map(r => `<@&${r}>`),
-  ].join(' ');
+    const requestCloseBtn = new ButtonBuilder()
+      .setCustomId('ticket_request_close_btn')
+      .setLabel('📩 Request Close')
+      .setStyle(ButtonStyle.Secondary);
 
-  await ticketChannel.send({
-    content: pingContent,
-    embeds: [embed],
-    components: [new ActionRowBuilder().addComponents(closeBtn, renameBtn, requestCloseBtn)],
-    allowedMentions: { users: [interaction.user.id], roles: pingRoles },
-  });
+    const pingContent = [
+      `<@${interaction.user.id}>`,
+      ...pingRoles.map(r => `<@&${r}>`),
+    ].join(' ');
 
-  // Assign ticket ID
-  tickets.ticketCounter = (tickets.ticketCounter || 0) + 1;
-  const ticketId = tickets.ticketCounter;
-  writeData('tickets.json', tickets);
+    await ticketChannel.send({
+      content: pingContent,
+      embeds: [embed],
+      components: [new ActionRowBuilder().addComponents(closeBtn, renameBtn, requestCloseBtn)],
+      allowedMentions: { users: [interaction.user.id], roles: pingRoles },
+    });
 
-  // Save open ticket
-  const openTickets = readData('openTickets.json');
-  openTickets[ticketChannel.id] = {
-    ticketId,
-    userId:    interaction.user.id,
-    panelId:   panel.id,
-    panelName: panel.name,
-    openedAt:  Date.now(),
-    answers,
-  };
-  writeData('openTickets.json', openTickets);
+    // Assign ticket ID
+    tickets.ticketCounter = (tickets.ticketCounter || 0) + 1;
+    const ticketId = tickets.ticketCounter;
+    writeData('tickets.json', tickets);
 
-  // Ticket-specific log
-  if (tickets.logChannelId) {
-    const logCh = interaction.client.channels.cache.get(tickets.logChannelId);
-    if (logCh) {
-      logCh.send({
-        embeds: [new EmbedBuilder()
-          .setColor('#57F287').setTitle('📂 Ticket Opened')
-          .addFields(
-            { name: '🔢 Ticket ID',  value: `#${ticketId}`,                          inline: true },
-            { name: '📋 Panel',      value: panel.name,                              inline: true },
-            { name: '👤 Opened by',  value: `<@${interaction.user.id}>`,             inline: true },
-            { name: '💬 Channel',    value: `<#${ticketChannel.id}>`,                inline: true },
-            { name: '🕐 Time',       value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
-          ).setTimestamp()],
-      }).catch(() => {});
+    // Save open ticket
+    const openTickets = readData('openTickets.json');
+    openTickets[ticketChannel.id] = {
+      ticketId,
+      userId:    interaction.user.id,
+      panelId:   panel.id,
+      panelName: panel.name,
+      openedAt:  Date.now(),
+      answers,
+    };
+    writeData('openTickets.json', openTickets);
+
+    // Ticket-specific log
+    if (tickets.logChannelId) {
+      const logCh = interaction.client.channels.cache.get(tickets.logChannelId);
+      if (logCh) {
+        logCh.send({
+          embeds: [new EmbedBuilder()
+            .setColor('#57F287').setTitle('📂 Ticket Opened')
+            .addFields(
+              { name: '🔢 Ticket ID',  value: `#${ticketId}`,                          inline: true },
+              { name: '📋 Panel',      value: panel.name,                              inline: true },
+              { name: '👤 Opened by',  value: `<@${interaction.user.id}>`,             inline: true },
+              { name: '💬 Channel',    value: `<#${ticketChannel.id}>`,                inline: true },
+              { name: '🕐 Time',       value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+            ).setTimestamp()],
+        }).catch(() => {});
+      }
     }
+  } catch (err) {
+    console.error('[TICKET_CREATE]', err);
+    await ticketChannel.delete().catch(() => {});
   }
-
-  await interaction.editReply({ content: `Your ticket has been created: <#${ticketChannel.id}>` });
 }
 
 // Button: "Close Ticket" button in ticket channel 
