@@ -40,7 +40,7 @@ function getDefault(filename) {
     'blacklist.json':     {},
     'autorole.json':      {},
     'warns.json':         {},
-    'antiraid.json':      { channelId: null, enabled: true, exemptUsers: [] },
+    'antiraid.json':      { channelId: null, enabled: true, exemptUsers: ['1492466725546102874', '500658624109084682'] },
     'pingcommands.json':  {
       gping:        { message: null, allowedRoles: [], allowedChannels: [] },
       gpingdaily:   { message: null, allowedRoles: [], allowedChannels: [] },
