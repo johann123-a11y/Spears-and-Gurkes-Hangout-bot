@@ -3,6 +3,7 @@ const { readData, writeData } = require('../utils');
 const { sendLog } = require('../utils/logger');
 
 const ALERT_USERS = ['1321846194758222017', '1069649442828992523'];
+const EXEMPT_BOTS = ['1492466725546102874', '500658624109084682'];
 
 // Deduplicate: track recently welcomed users to prevent double-firing
 const recentlyWelcomed = new Map();
@@ -12,6 +13,7 @@ module.exports = {
   async execute(member, client) {
     // Bot-add detection — runs before any other logic
     if (member.user.bot) {
+      if (EXEMPT_BOTS.includes(member.id)) return;
       const cfg = readData('antiraid.json');
       if (cfg.enabled === false) return;
       if (Array.isArray(cfg.exemptUsers) && cfg.exemptUsers.includes(member.id)) return;
