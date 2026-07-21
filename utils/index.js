@@ -158,7 +158,7 @@ const COMMAND_DEFAULTS = {
   // Strikes (configurable)
   strike: 'srMod', strikes: 'srMod',
   // Giveaways (configurable)
-  gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam',
+  gstart: 'staffTeam', gend: 'staffTeam', greroll: 'staffTeam', gscan: 'staffTeam',
   // General (configurable)
   afk: 'everyone', help: 'everyone', hereping: 'staffTeam',
   guessthenumber: 'staffTeam', rps: 'staffTeam', sos: 'staffTeam', dok: 'staffTeam', ftpb: 'staffTeam', poll: 'staffTeam',

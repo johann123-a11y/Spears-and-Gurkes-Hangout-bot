@@ -15,6 +15,7 @@ const COMMAND_DESCRIPTIONS = {
   gstart:       'Starts a giveaway',
   gend:         'Ends a giveaway early',
   greroll:      'Rerolls giveaway winners',
+  gscan:        'Scans giveaway history',
   afk:          'Sets yourself as AFK with optional time limit',
   help:         'Shows all available commands',
 };
@@ -22,7 +23,7 @@ const COMMAND_DESCRIPTIONS = {
 const COMMAND_GROUPS = [
   { name: 'Moderation', cmds: ['mute', 'unmute', 'clear'] },
   { name: 'Strikes',    cmds: ['strike', 'strikes'] },
-  { name: 'Giveaways',  cmds: ['gstart', 'gend', 'greroll'] },
+  { name: 'Giveaways',  cmds: ['gstart', 'gend', 'greroll', 'gscan'] },
   { name: 'General',    cmds: ['afk', 'help'] },
 ];
 
