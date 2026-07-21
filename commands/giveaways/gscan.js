@@ -36,8 +36,12 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     const targetUser  = interaction.options.getUser('winner');
-    const prizeQuery  = interaction.options.getString('prize').toLowerCase();
     const hostUser    = interaction.options.getUser('host');
+
+    if (!targetUser || !hostUser)
+      return interaction.editReply('Could not resolve one or more users. Please try again.');
+
+    const prizeQuery  = interaction.options.getString('prize').toLowerCase();
     const filterWinners = interaction.options.getInteger('winners');
     const filterEntries = interaction.options.getInteger('entries');
 
