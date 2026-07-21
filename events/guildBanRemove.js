@@ -17,11 +17,11 @@ module.exports = {
     } catch {}
 
     sendLog(client, {
-      action: '✅ Ban Aufgehoben',
+      action: '✅ Ban Removed',
       executor: exec?.tag ?? 'Unknown',
       target: `<@${ban.user.id}> (${ban.user.tag})`,
       fields: {
-        '👮 Ungebannt von': exec ? `<@${exec.id}>` : 'Unknown',
+        'Unbanned by': exec ? `<@${exec.id}>` : 'Unknown',
       },
       color: '#57F287',
     });

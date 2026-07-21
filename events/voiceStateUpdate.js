@@ -17,16 +17,15 @@ module.exports = {
 
     if (joined) {
       sendLog(client, {
-        action: '🔊 Voice Channel Beigetreten',
+        action: '🔊 Voice Channel Joined',
         executor: tag,
         target: `<@${member.id}>`,
-        fields: { '📢 Channel': `<#${newState.channelId}>` },
+        fields: { 'Channel': `<#${newState.channelId}>` },
         color: '#57F287',
       });
       return;
     }
 
-    // For leave / move: check if it was server-initiated via audit log
     let kickExec = null;
     let moveExec = null;
     try {
@@ -46,45 +45,45 @@ module.exports = {
     if (left) {
       if (kickExec) {
         sendLog(client, {
-          action: '🔇 Aus Voice Channel Gekickt',
+          action: '🔇 Disconnected from Voice',
           executor: kickExec.tag,
           target: `<@${member.id}> (${tag})`,
           fields: {
-            '📢 Channel': `<#${oldState.channelId}>`,
-            '👮 Gekickt von': `<@${kickExec.id}>`,
+            'Channel': `<#${oldState.channelId}>`,
+            'Disconnected by': `<@${kickExec.id}>`,
           },
           color: '#ED4245',
         });
       } else {
         sendLog(client, {
-          action: '🔇 Voice Channel Verlassen',
+          action: '🔇 Voice Channel Left',
           executor: tag,
           target: `<@${member.id}>`,
-          fields: { '📢 Channel': `<#${oldState.channelId}>` },
+          fields: { 'Channel': `<#${oldState.channelId}>` },
           color: '#FEE75C',
         });
       }
     } else if (moved) {
       if (moveExec) {
         sendLog(client, {
-          action: '↔️ In Voice Channel Verschoben',
+          action: '↔️ Moved to Voice Channel',
           executor: moveExec.tag,
           target: `<@${member.id}> (${tag})`,
           fields: {
-            '📢 Von': `<#${oldState.channelId}>`,
-            '📢 Nach': `<#${newState.channelId}>`,
-            '👮 Verschoben von': `<@${moveExec.id}>`,
+            'From': `<#${oldState.channelId}>`,
+            'To': `<#${newState.channelId}>`,
+            'Moved by': `<@${moveExec.id}>`,
           },
           color: '#5865F2',
         });
       } else {
         sendLog(client, {
-          action: '↔️ Voice Channel Gewechselt',
+          action: '↔️ Switched Voice Channel',
           executor: tag,
           target: `<@${member.id}>`,
           fields: {
-            '📢 Von': `<#${oldState.channelId}>`,
-            '📢 Nach': `<#${newState.channelId}>`,
+            'From': `<#${oldState.channelId}>`,
+            'To': `<#${newState.channelId}>`,
           },
           color: '#5865F2',
         });

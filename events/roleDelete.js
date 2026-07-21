@@ -12,12 +12,12 @@ module.exports = {
     } catch {}
 
     sendLog(client, {
-      action: '🗑️ Rolle Gelöscht',
+      action: '🗑️ Role Deleted',
       executor: exec?.tag ?? 'Unknown',
       target: role.name,
       fields: {
-        '👮 Gelöscht von': exec ? `<@${exec.id}>` : 'Unknown',
-        '🆔 Rollen-ID': role.id,
+        'Deleted by': exec ? `<@${exec.id}>` : 'Unknown',
+        'Role ID': role.id,
       },
       color: '#ED4245',
     });

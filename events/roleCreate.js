@@ -12,14 +12,14 @@ module.exports = {
     } catch {}
 
     sendLog(client, {
-      action: '🎨 Rolle Erstellt',
+      action: '🎨 Role Created',
       executor: exec?.tag ?? 'Unknown',
       target: `<@&${role.id}> (${role.name})`,
       fields: {
-        '👮 Erstellt von': exec ? `<@${exec.id}>` : 'Unknown',
-        '🎨 Farbe': role.hexColor,
-        '📌 Angeheftet': role.hoist ? 'Ja' : 'Nein',
-        '💬 Erwähnbar': role.mentionable ? 'Ja' : 'Nein',
+        'Created by': exec ? `<@${exec.id}>` : 'Unknown',
+        'Color': role.hexColor,
+        'Hoisted': role.hoist ? 'Yes' : 'No',
+        'Mentionable': role.mentionable ? 'Yes' : 'No',
       },
       color: '#57F287',
     });

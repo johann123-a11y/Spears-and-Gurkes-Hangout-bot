@@ -25,7 +25,7 @@ module.exports = {
       const exec  = entry?.executor;
 
       if (exec && recordAction(exec.id, 'mute')) {
-        triggerAntiRaid(newMember.guild, exec.id, '15 Mutes in 5 Minuten', client);
+        triggerAntiRaid(newMember.guild, exec.id, '15 mutes in 5 minutes', client);
       }
 
       sendLog(client, {
@@ -33,8 +33,8 @@ module.exports = {
         executor: exec?.tag ?? 'Unknown',
         target: `<@${newMember.id}> (${newMember.user.tag})`,
         fields: {
-          '👮 Ausgeführt von': exec ? `<@${exec.id}>` : 'Unknown',
-          '⏰ Bis': `<t:${Math.floor(newMember.communicationDisabledUntilTimestamp / 1000)}:F>`,
+          'By': exec ? `<@${exec.id}>` : 'Unknown',
+          'Until': `<t:${Math.floor(newMember.communicationDisabledUntilTimestamp / 1000)}:F>`,
         },
         color: '#FEE75C',
       });
@@ -44,11 +44,11 @@ module.exports = {
       const exec  = entry?.executor;
 
       sendLog(client, {
-        action: '🔈 Timeout Entfernt',
+        action: '🔈 Timeout Removed',
         executor: exec?.tag ?? 'Unknown',
         target: `<@${newMember.id}> (${newMember.user.tag})`,
         fields: {
-          '👮 Ausgeführt von': exec ? `<@${exec.id}>` : 'Unknown',
+          'By': exec ? `<@${exec.id}>` : 'Unknown',
         },
         color: '#57F287',
       });
@@ -62,14 +62,17 @@ module.exports = {
       const entry = await fetchEntry(newMember.guild, AuditLogEvent.MemberRoleUpdate, newMember.id);
       const exec  = entry?.executor;
 
+      // Skip logging if the bot itself added/removed the role (e.g. autorole, antiraid)
+      if (exec && exec.id === client.user.id) return;
+
       if (addedRoles.size > 0) {
         sendLog(client, {
-          action: '✅ Rolle Hinzugefügt',
+          action: '✅ Role Added',
           executor: exec?.tag ?? 'Unknown',
           target: `<@${newMember.id}> (${newMember.user.tag})`,
           fields: {
-            '🎖️ Rolle(n)': addedRoles.map(r => `<@&${r.id}>`).join(', '),
-            '👮 Ausgeführt von': exec ? `<@${exec.id}>` : 'Unknown',
+            'Role(s)': addedRoles.map(r => `<@&${r.id}>`).join(', '),
+            'By': exec ? `<@${exec.id}>` : 'Unknown',
           },
           color: '#57F287',
         });
@@ -77,12 +80,12 @@ module.exports = {
 
       if (removedRoles.size > 0) {
         sendLog(client, {
-          action: '❌ Rolle Entfernt',
+          action: '❌ Role Removed',
           executor: exec?.tag ?? 'Unknown',
           target: `<@${newMember.id}> (${newMember.user.tag})`,
           fields: {
-            '🎖️ Rolle(n)': removedRoles.map(r => `<@&${r.id}>`).join(', '),
-            '👮 Ausgeführt von': exec ? `<@${exec.id}>` : 'Unknown',
+            'Role(s)': removedRoles.map(r => `<@&${r.id}>`).join(', '),
+            'By': exec ? `<@${exec.id}>` : 'Unknown',
           },
           color: '#ED4245',
         });
@@ -95,13 +98,13 @@ module.exports = {
       const exec  = entry?.executor;
 
       sendLog(client, {
-        action: '✏️ Nickname Geändert',
+        action: '✏️ Nickname Changed',
         executor: exec?.tag ?? newMember.user.tag,
         target: `<@${newMember.id}> (${newMember.user.tag})`,
         fields: {
-          '📝 Alt': oldMember.nickname ?? '*(kein Nickname)*',
-          '📝 Neu': newMember.nickname ?? '*(kein Nickname)*',
-          '👮 Ausgeführt von': exec ? `<@${exec.id}>` : `<@${newMember.id}>`,
+          'Old': oldMember.nickname ?? '*(none)*',
+          'New': newMember.nickname ?? '*(none)*',
+          'By': exec ? `<@${exec.id}>` : `<@${newMember.id}>`,
         },
         color: '#5865F2',
       });

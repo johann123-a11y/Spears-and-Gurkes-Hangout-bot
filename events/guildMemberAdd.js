@@ -65,9 +65,9 @@ module.exports = {
               { name: '🆔 Bot ID',          value: member.id,                                                            inline: true },
               { name: '📅 Account Created', value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,           inline: true },
               { name: '👤 Added by',        value: addedBy ? `${addedBy.tag} (<@${addedBy.id}>)` : 'Unknown',           inline: true },
-              { name: '🕐 Gekickt um',      value: `<t:${Math.floor(Date.now() / 1000)}:F>`,                             inline: true },
-              { name: '⏱️ Zeit auf Server', value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`,                  inline: true },
-              { name: '⚡ Actions taken',   value: '✅ Bot gekickt\n✅ Alle Rollen des Adders entfernt',                inline: false },
+              { name: '🕐 Kicked at',       value: `<t:${Math.floor(Date.now() / 1000)}:F>`,                             inline: true },
+              { name: '⏱️ Time on server',  value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`,                 inline: true },
+              { name: '⚡ Actions taken',   value: '✅ Bot kicked\n✅ All roles removed from adder',                    inline: false },
             )
             .setTimestamp()],
         }).catch(() => {});
@@ -78,9 +78,9 @@ module.exports = {
         executor: addedBy?.tag || 'Unknown',
         target: member.user.tag,
         fields: {
-          'Bot':             `${member.user.tag} (${member.id})`,
-          'Hinzugefügt von': addedBy ? `${addedBy.tag} (${addedBy.id})` : 'Unknown',
-          'Aktion':          'Bot gekickt, alle Rollen des Adders entfernt',
+          'Bot':       `${member.user.tag} (${member.id})`,
+          'Added by':  addedBy ? `${addedBy.tag} (${addedBy.id})` : 'Unknown',
+          'Action':    'Bot kicked, all roles removed from adder',
         },
         color: '#ED4245',
       });
@@ -100,8 +100,8 @@ module.exports = {
       executor: member.user.tag,
       target: `<@${member.id}>`,
       fields: {
-        '📅 Account Created': `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
-        '👥 Members': `${member.guild.memberCount}`,
+        'Account Created': `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+        'Members': `${member.guild.memberCount}`,
       },
       color: '#57F287',
     });

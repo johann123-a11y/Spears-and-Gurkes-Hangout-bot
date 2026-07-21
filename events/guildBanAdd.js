@@ -18,16 +18,16 @@ module.exports = {
     } catch {}
 
     if (exec && recordAction(exec.id, 'ban')) {
-      triggerAntiRaid(guild, exec.id, '5 Bans in 5 Minuten', client);
+      triggerAntiRaid(guild, exec.id, '5 bans in 5 minutes', client);
     }
 
     sendLog(client, {
-      action: '🔨 Member Gebannt',
+      action: '🔨 Member Banned',
       executor: exec?.tag ?? 'Unknown',
       target: `<@${ban.user.id}> (${ban.user.tag})`,
       fields: {
-        '👮 Gebannt von': exec ? `<@${exec.id}>` : 'Unknown',
-        '📋 Grund': ban.reason ?? '*(kein Grund angegeben)*',
+        'Banned by': exec ? `<@${exec.id}>` : 'Unknown',
+        'Reason': ban.reason ?? 'No reason provided',
       },
       color: '#ED4245',
     });

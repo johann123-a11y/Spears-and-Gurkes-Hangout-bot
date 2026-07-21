@@ -14,12 +14,12 @@ module.exports = {
     } catch {}
 
     sendLog(client, {
-      action: '📢 Channel Erstellt',
+      action: '📢 Channel Created',
       executor: exec?.tag ?? 'Unknown',
       target: `<#${channel.id}> (${channel.name})`,
       fields: {
-        '👮 Erstellt von': exec ? `<@${exec.id}>` : 'Unknown',
-        '📁 Typ': channel.type.toString(),
+        'Created by': exec ? `<@${exec.id}>` : 'Unknown',
+        'Type': channel.type.toString(),
       },
       color: '#57F287',
     });

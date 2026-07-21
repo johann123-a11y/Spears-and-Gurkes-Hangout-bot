@@ -5,10 +5,10 @@ module.exports = {
   name: 'roleUpdate',
   async execute(oldRole, newRole, client) {
     const changes = [];
-    if (oldRole.name       !== newRole.name)        changes.push(`Name: **${oldRole.name}** → **${newRole.name}**`);
-    if (oldRole.hexColor   !== newRole.hexColor)    changes.push(`Farbe: **${oldRole.hexColor}** → **${newRole.hexColor}**`);
-    if (oldRole.hoist      !== newRole.hoist)       changes.push(`Angeheftet: **${oldRole.hoist}** → **${newRole.hoist}**`);
-    if (oldRole.mentionable !== newRole.mentionable) changes.push(`Erwähnbar: **${oldRole.mentionable}** → **${newRole.mentionable}**`);
+    if (oldRole.name        !== newRole.name)        changes.push(`Name: **${oldRole.name}** → **${newRole.name}**`);
+    if (oldRole.hexColor    !== newRole.hexColor)    changes.push(`Color: **${oldRole.hexColor}** → **${newRole.hexColor}**`);
+    if (oldRole.hoist       !== newRole.hoist)       changes.push(`Hoisted: **${oldRole.hoist}** → **${newRole.hoist}**`);
+    if (oldRole.mentionable !== newRole.mentionable) changes.push(`Mentionable: **${oldRole.mentionable}** → **${newRole.mentionable}**`);
     if (!changes.length) return;
 
     let exec = null;
@@ -19,12 +19,12 @@ module.exports = {
     } catch {}
 
     sendLog(client, {
-      action: '✏️ Rolle Bearbeitet',
+      action: '✏️ Role Edited',
       executor: exec?.tag ?? 'Unknown',
       target: `<@&${newRole.id}> (${newRole.name})`,
       fields: {
-        '👮 Bearbeitet von': exec ? `<@${exec.id}>` : 'Unknown',
-        '📝 Änderungen': changes.join('\n'),
+        'Edited by': exec ? `<@${exec.id}>` : 'Unknown',
+        'Changes': changes.join('\n'),
       },
       color: '#5865F2',
     });

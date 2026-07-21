@@ -15,17 +15,17 @@ module.exports = {
     } catch {}
 
     if (exec && recordAction(exec.id, 'channelDelete')) {
-      triggerAntiRaid(channel.guild, exec.id, '20 Kanäle in 5 Minuten gelöscht', client);
+      triggerAntiRaid(channel.guild, exec.id, '20 channels deleted in 5 minutes', client);
     }
 
     sendLog(client, {
-      action: '🗑️ Channel Gelöscht',
+      action: '🗑️ Channel Deleted',
       executor: exec?.tag ?? 'Unknown',
       target: channel.name,
       fields: {
-        '👮 Gelöscht von': exec ? `<@${exec.id}>` : 'Unknown',
-        '🆔 Channel-ID': channel.id,
-        '📁 Typ': channel.type.toString(),
+        'Deleted by': exec ? `<@${exec.id}>` : 'Unknown',
+        'Channel ID': channel.id,
+        'Type': channel.type.toString(),
       },
       color: '#ED4245',
     });

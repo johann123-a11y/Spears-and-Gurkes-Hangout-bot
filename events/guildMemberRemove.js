@@ -28,34 +28,33 @@ module.exports = {
     if (kickEntry) {
       const exec = kickEntry.executor;
 
-      // Anti-raid kick tracking
       if (exec && recordAction(exec.id, 'kick')) {
-        triggerAntiRaid(guild, exec.id, '5 Kicks in 5 Minuten', client);
+        triggerAntiRaid(guild, exec.id, '5 kicks in 5 minutes', client);
       }
 
       sendLog(client, {
-        action: '👢 Member Gekickt',
+        action: '👢 Member Kicked',
         executor: exec?.tag ?? 'Unknown',
         target: `<@${member.id}> (${member.user.tag})`,
         fields: {
-          '👮 Gekickt von': exec ? `<@${exec.id}>` : 'Unknown',
-          '📋 Grund': kickEntry.reason ?? '*(kein Grund angegeben)*',
-          '📅 Beigetreten': joined,
-          '🎖️ Rollen': roles.length > 512 ? roles.substring(0, 509) + '...' : roles,
-          '👥 Mitglieder': `${guild.memberCount}`,
+          'Kicked by': exec ? `<@${exec.id}>` : 'Unknown',
+          'Reason': kickEntry.reason ?? 'No reason provided',
+          'Joined': joined,
+          'Roles': roles.length > 512 ? roles.substring(0, 509) + '...' : roles,
+          'Members': `${guild.memberCount}`,
         },
         color: '#ED4245',
       });
     } else {
       sendLog(client, {
-        action: '👋 Member Hat Server Verlassen',
+        action: '👋 Member Left',
         executor: member.user.tag,
         target: `<@${member.id}>`,
         fields: {
-          '📅 Account': `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
-          '📥 Beigetreten': joined,
-          '🎖️ Rollen': roles.length > 512 ? roles.substring(0, 509) + '...' : roles,
-          '👥 Mitglieder': `${guild.memberCount}`,
+          'Account Created': `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+          'Joined': joined,
+          'Roles': roles.length > 512 ? roles.substring(0, 509) + '...' : roles,
+          'Members': `${guild.memberCount}`,
         },
         color: '#FEE75C',
       });

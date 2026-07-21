@@ -61,7 +61,7 @@ async function triggerAntiRaid(guild, userId, reason, client) {
         ch.send({
           content: i < 2
             ? `@everyone`
-            : `@everyone ⚠️ **RAID DETECTED!** <@${userId}> wurde automatisch gemutet und alle Rollen wurden entfernt.\n**Grund:** ${reason}`,
+            : `@everyone ⚠️ **RAID DETECTED!** <@${userId}> was automatically muted and all roles removed.\n**Reason:** ${reason}`,
           allowedMentions: { parse: ['everyone'] },
         }).catch(() => {});
       }
@@ -69,12 +69,12 @@ async function triggerAntiRaid(guild, userId, reason, client) {
   }
 
   sendLog(client, {
-    action: '🚨 AntiRaid — Automatische Aktion',
+    action: '🚨 AntiRaid — Automatic Action',
     executor: 'AntiRaid',
     target: `<@${userId}>`,
     fields: {
-      'Grund': reason,
-      'Aktion': 'Alle Rollen entfernt + 28 Tage gemuted',
+      'Reason': reason,
+      'Action': 'All roles removed + muted 28 days',
     },
     color: '#ED4245',
   });

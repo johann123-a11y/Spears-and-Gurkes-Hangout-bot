@@ -9,7 +9,7 @@ module.exports = {
 
     const changes = [];
     if (oldChannel.name  !== newChannel.name)  changes.push(`Name: **${oldChannel.name}** → **${newChannel.name}**`);
-    if (oldChannel.topic !== newChannel.topic) changes.push(`Thema: **${oldChannel.topic ?? '—'}** → **${newChannel.topic ?? '—'}**`);
+    if (oldChannel.topic !== newChannel.topic) changes.push(`Topic: **${oldChannel.topic ?? '—'}** → **${newChannel.topic ?? '—'}**`);
     if (oldChannel.nsfw  !== newChannel.nsfw)  changes.push(`NSFW: **${oldChannel.nsfw}** → **${newChannel.nsfw}**`);
     if (oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser)
       changes.push(`Slowmode: **${oldChannel.rateLimitPerUser}s** → **${newChannel.rateLimitPerUser}s**`);
@@ -23,12 +23,12 @@ module.exports = {
     } catch {}
 
     sendLog(client, {
-      action: '✏️ Channel Bearbeitet',
+      action: '✏️ Channel Edited',
       executor: exec?.tag ?? 'Unknown',
       target: `<#${newChannel.id}> (${newChannel.name})`,
       fields: {
-        '👮 Bearbeitet von': exec ? `<@${exec.id}>` : 'Unknown',
-        '📝 Änderungen': changes.join('\n'),
+        'Edited by': exec ? `<@${exec.id}>` : 'Unknown',
+        'Changes': changes.join('\n'),
       },
       color: '#5865F2',
     });

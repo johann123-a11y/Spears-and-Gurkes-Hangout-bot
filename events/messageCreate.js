@@ -68,7 +68,7 @@ async function checkCrossChannelSpam(message, client) {
     fields: {
       'Message':  key.substring(0, 300),
       'Channels': [...channelsForKey].map(id => `<#${id}>`).join(', '),
-      'Action':   'All messages deleted + muted 28 days',
+      'Action': 'All messages deleted + muted 28 days',
     },
     color: '#ED4245',
   });
@@ -99,17 +99,17 @@ module.exports = {
         executor: message.author.tag,
         target: `<#${message.channel.id}>`,
         fields: {
-          '👤 Autor': `<@${message.author.id}> (${message.author.tag})`,
-          '✅ Erfolgreich': successful ? 'Ja (hatte Permission)' : 'Nein (keine Permission)',
-          '💬 Inhalt': message.content.length > 512 ? message.content.substring(0, 509) + '...' : message.content,
+          'Author': `<@${message.author.id}> (${message.author.tag})`,
+          'Successful': successful ? 'Yes (had permission)' : 'No (no permission)',
+          'Content': message.content.length > 512 ? message.content.substring(0, 509) + '...' : message.content,
         },
         color: '#FEE75C',
       });
 
       if (isEvery && recordAction(message.author.id, 'everyone')) {
-        triggerAntiRaid(message.guild, message.author.id, '5x @everyone in 5 Minuten', client);
+        triggerAntiRaid(message.guild, message.author.id, '5x @everyone in 5 minutes', client);
       } else if (isHere && recordAction(message.author.id, 'here')) {
-        triggerAntiRaid(message.guild, message.author.id, '5x @here in 5 Minuten', client);
+        triggerAntiRaid(message.guild, message.author.id, '5x @here in 5 minutes', client);
       }
     }
 
