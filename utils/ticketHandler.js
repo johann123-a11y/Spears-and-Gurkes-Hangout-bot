@@ -4,6 +4,7 @@ const {
 } = require('discord.js');
 const { readData, writeData, isStaffMember, trackActivity } = require('./index');
 const { fetchAllMessages } = require('./transcripts');
+const { sendLog } = require('./logger');
 
 function buildTxt({ ticketId, panelName, openedBy, closedBy, openedAt, closedAt, reason, answers }, messages) {
   const line = '═'.repeat(52);
@@ -318,6 +319,19 @@ async function closeTicket(channel, reason, closedBy, client) {
   delete openTickets[channel.id];
   writeData('openTickets.json', openTickets);
   trackActivity(closedBy.id, closedBy.tag, 'ticket_closed');
+
+  sendLog(client, {
+    action: '🔒 Ticket Closed',
+    executor: closedBy.tag,
+    target: `#${ticketId} — ${ticket.panelName}`,
+    fields: {
+      'Closed by': `<@${closedBy.id}>`,
+      'Opened by': `<@${ticket.userId}>`,
+      'Reason': reason,
+    },
+    color: '#ED4245',
+  });
+
   setTimeout(() => channel.delete().catch(() => {}), 5000);
   return true;
 }
