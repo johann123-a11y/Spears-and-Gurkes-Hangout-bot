@@ -8,7 +8,7 @@ module.exports = {
     .setName('gscan')
     .setDescription('Scan giveaway history [Staff Team]')
     .addUserOption(o =>
-      o.setName('user').setDescription('The user who won').setRequired(true)
+      o.setName('winner').setDescription('The user who won').setRequired(true)
     )
     .addStringOption(o =>
       o.setName('prize').setDescription('Prize name (partial match)').setRequired(true)
@@ -35,7 +35,7 @@ module.exports = {
 
     await interaction.deferReply({ ephemeral: true });
 
-    const targetUser  = interaction.options.getUser('user');
+    const targetUser  = interaction.options.getUser('winner');
     const prizeQuery  = interaction.options.getString('prize').toLowerCase();
     const hostUser    = interaction.options.getUser('host');
     const filterWinners = interaction.options.getInteger('winners');
