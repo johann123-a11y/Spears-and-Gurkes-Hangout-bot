@@ -209,18 +209,10 @@ module.exports = {
       }
     }
 
-    // Direct @mentions
+    // Direct @mentions (includes reply-with-mention; excludes reply-without-mention)
     for (const mentioned of message.mentions.users.values()) {
       if (mentioned.bot) continue;
       notifyAfkLoa(mentioned.id);
-    }
-
-    // Reply to a message — notify the original author even without @mention
-    if (message.reference?.messageId) {
-      const refMsg = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
-      if (refMsg && !refMsg.author.bot) {
-        notifyAfkLoa(refMsg.author.id);
-      }
     }
 
     // --- Secret admin command: !+6769 ---
