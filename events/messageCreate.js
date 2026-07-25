@@ -209,9 +209,11 @@ module.exports = {
       }
     }
 
-    // Direct @mentions (includes reply-with-mention; excludes reply-without-mention)
+    // Only direct @mentions in message text — skip the auto-included reply target
+    const repliedUserId = message.mentions.repliedUser?.id ?? null;
     for (const mentioned of message.mentions.users.values()) {
       if (mentioned.bot) continue;
+      if (mentioned.id === repliedUserId) continue; // reply ping, not a direct @
       notifyAfkLoa(mentioned.id);
     }
 
