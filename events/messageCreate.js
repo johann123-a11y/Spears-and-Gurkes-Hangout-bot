@@ -165,22 +165,24 @@ module.exports = {
       });
     }
 
-    // --- AFK / LOA: check mentions ---
+    // --- AFK / LOA: check mentions and replies ---
     const loa = readData('loa.json');
     const freshAfk = readData('afk.json');
+    const notifiedAfk = new Set();
 
-    for (const mentioned of message.mentions.users.values()) {
-      if (mentioned.bot) continue;
+    function notifyAfkLoa(userId) {
+      if (notifiedAfk.has(userId)) return;
+      if (userId === message.author.id) return;
+      notifiedAfk.add(userId);
 
-      // LOA check
-      if (loa[mentioned.id]) {
-        const data = loa[mentioned.id];
+      if (loa[userId]) {
+        const data = loa[userId];
         const remaining = data.endTime - Date.now();
         if (remaining > 0) {
           const embed = new EmbedBuilder()
             .setColor('#5865F2')
             .setTitle('🏖️ User is on LOA')
-            .setDescription(`<@${mentioned.id}> is currently on **Leave of Absence**.`)
+            .setDescription(`<@${userId}> is currently on **Leave of Absence**.`)
             .addFields(
               { name: '📋 Reason', value: data.reason },
               { name: '⏳ Returns in', value: formatTime(remaining) }
@@ -190,14 +192,13 @@ module.exports = {
         }
       }
 
-      // AFK check
-      if (freshAfk[mentioned.id]) {
-        const data = freshAfk[mentioned.id];
+      if (freshAfk[userId]) {
+        const data = freshAfk[userId];
         const awayFor = formatTime(Date.now() - data.since);
         const embed = new EmbedBuilder()
           .setColor('#FEE75C')
           .setTitle('💤 User is AFK')
-          .setDescription(`<@${mentioned.id}> is currently AFK.`)
+          .setDescription(`<@${userId}> is currently AFK.`)
           .addFields(
             { name: '📋 Reason', value: data.reason },
             { name: '⏳ Away for', value: awayFor },
@@ -205,6 +206,20 @@ module.exports = {
           )
           .setTimestamp();
         message.channel.send({ embeds: [embed] }).then(m => setTimeout(() => m.delete().catch(() => {}), 10000));
+      }
+    }
+
+    // Direct @mentions
+    for (const mentioned of message.mentions.users.values()) {
+      if (mentioned.bot) continue;
+      notifyAfkLoa(mentioned.id);
+    }
+
+    // Reply to a message — notify the original author even without @mention
+    if (message.reference?.messageId) {
+      const refMsg = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
+      if (refMsg && !refMsg.author.bot) {
+        notifyAfkLoa(refMsg.author.id);
       }
     }
 
