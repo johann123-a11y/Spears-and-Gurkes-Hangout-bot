@@ -1141,7 +1141,8 @@ module.exports = {
         await interaction.deferReply({ ephemeral: true });
         try {
           await interaction.channel.setName(newName);
-          await interaction.editReply({ content: `Ticket renamed to **${newName}**.` });
+          await interaction.deleteReply().catch(() => {});
+          await interaction.channel.send({ content: `✏️ Ticket renamed from **${oldName}** to **${newName}** by ${interaction.user}.` });
           const { sendLog } = require('../utils/logger');
           sendLog(interaction.client, {
             action: 'Ticket Renamed',
