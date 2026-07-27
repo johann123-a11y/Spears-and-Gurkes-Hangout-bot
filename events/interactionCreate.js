@@ -1138,10 +1138,10 @@ module.exports = {
           .replace(/^-|-$/g, '');
         if (!newName) return interaction.reply({ content: 'Invalid name.', ephemeral: true });
         const oldName = interaction.channel.name;
-        await interaction.deferReply();
+        await interaction.deferReply({ ephemeral: true });
         try {
           await interaction.channel.setName(newName);
-          interaction.editReply({ content: `Ticket renamed to **${newName}**.` });
+          await interaction.editReply({ content: `Ticket renamed to **${newName}**.` });
           const { sendLog } = require('../utils/logger');
           sendLog(interaction.client, {
             action: 'Ticket Renamed',
@@ -1151,7 +1151,7 @@ module.exports = {
             color: '#5865F2',
           });
         } catch (err) {
-          interaction.editReply({ content: `Failed: ${err.message}` });
+          await interaction.editReply({ content: `Failed: ${err.message}` }).catch(() => {});
         }
         return;
       }
