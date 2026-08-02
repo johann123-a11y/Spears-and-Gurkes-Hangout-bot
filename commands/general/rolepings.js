@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData, writeData } = require('../../utils');
-const { COOLDOWN_MS, pingCooldowns } = require('../../utils/pingCooldowns');
+const { COOLDOWN_MS, getCooldown, setCooldown } = require('../../utils/pingCooldowns');
 
 // Configurable role-ping commands.
 // Each entry becomes a slash command: /market and /spawner.
@@ -86,7 +86,7 @@ function makeCommand(cmdName) {
 
         // Cooldown check (admins bypass)
         if (!isAdmin) {
-          const lastUsed = pingCooldowns.get(cmdName);
+          const lastUsed = getCooldown(cmdName);
           if (lastUsed) {
             const expiresAt = lastUsed + COOLDOWN_MS;
             if (Date.now() < expiresAt) {
@@ -103,7 +103,7 @@ function makeCommand(cmdName) {
           content: `<@&${cfg.targetRoleId}>`,
           allowedMentions: { roles: [cfg.targetRoleId] },
         });
-        pingCooldowns.set(cmdName, Date.now());
+        setCooldown(cmdName);
       }
     },
   };

@@ -4,7 +4,7 @@ const {
   ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { readData, writeData } = require('./index');
-const { COOLDOWN_MS, pingCooldowns } = require('./pingCooldowns');
+const { COOLDOWN_MS, getCooldown, setCooldown } = require('./pingCooldowns');
 
 const PING_COMMANDS = ['gping', 'gpingdaily', 'gpingweekly', 'qping', 'qpingstream', 'gpingmassive'];
 const COOLDOWN_COMMANDS = new Set(['gping', 'qping']);
@@ -93,7 +93,7 @@ async function handleSend(interaction, cmdName) {
 
   // Cooldown check — only for gping and qping, admins bypass
   if (COOLDOWN_COMMANDS.has(cmdName) && !interaction.member.permissions.has('Administrator')) {
-    const lastUsed = pingCooldowns.get(cmdName);
+    const lastUsed = getCooldown(cmdName);
     if (lastUsed) {
       const expiresAt = lastUsed + COOLDOWN_MS;
       if (Date.now() < expiresAt) {
@@ -107,7 +107,7 @@ async function handleSend(interaction, cmdName) {
   }
 
   await interaction.reply({ content: cfg.message, allowedMentions: { parse: ['roles', 'users', 'everyone'] } });
-  if (COOLDOWN_COMMANDS.has(cmdName)) pingCooldowns.set(cmdName, Date.now());
+  if (COOLDOWN_COMMANDS.has(cmdName)) setCooldown(cmdName);
 }
 
 // Button: ping_edit_msg:cmdname → open modal pre-filled with current message

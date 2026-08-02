@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { COOLDOWN_MS, pingCooldowns } = require('../../utils/pingCooldowns');
+const { COOLDOWN_MS, getCooldown } = require('../../utils/pingCooldowns');
 const { isStaffMember } = require('../../utils');
 
 const TRACKED = ['gping', 'qping', 'market', 'spawner'];
@@ -16,7 +16,7 @@ module.exports = {
 
     const now = Date.now();
     const fields = TRACKED.map(cmd => {
-      const lastUsed = pingCooldowns.get(cmd);
+      const lastUsed = getCooldown(cmd);
       if (!lastUsed) return { name: `/${cmd}`, value: '✅ Available', inline: true };
       const expiresAt = lastUsed + COOLDOWN_MS;
       if (now >= expiresAt) return { name: `/${cmd}`, value: '✅ Available', inline: true };
