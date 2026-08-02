@@ -100,7 +100,7 @@ async function handleSend(interaction, cmdName) {
       if (Date.now() < expiresAt) {
         const unixExpiry = Math.floor(expiresAt / 1000);
         return interaction.reply({
-          content: `❌ **/${cmdName}** ist noch im Cooldown — verfügbar <t:${unixExpiry}:R> (um <t:${unixExpiry}:t>).`,
+          content: `❌ **/${cmdName}** is on cooldown — available <t:${unixExpiry}:R> (at <t:${unixExpiry}:t>).`,
           ephemeral: true,
         });
       }
