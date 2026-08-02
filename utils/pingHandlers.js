@@ -106,8 +106,8 @@ async function handleSend(interaction, cmdName) {
     }
   }
 
+  await interaction.reply({ content: cfg.message, allowedMentions: { parse: ['roles', 'users', 'everyone'] } });
   if (COOLDOWN_COMMANDS.has(cmdName)) pingCooldowns.set(cmdName, Date.now());
-  return interaction.reply({ content: cfg.message, allowedMentions: { parse: ['roles', 'users', 'everyone'] } });
 }
 
 // Button: ping_edit_msg:cmdname → open modal pre-filled with current message

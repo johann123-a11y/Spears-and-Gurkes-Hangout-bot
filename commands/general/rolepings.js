@@ -99,11 +99,11 @@ function makeCommand(cmdName) {
           }
         }
 
-        pingCooldowns.set(cmdName, Date.now());
-        return interaction.reply({
+        await interaction.reply({
           content: `<@&${cfg.targetRoleId}>`,
           allowedMentions: { roles: [cfg.targetRoleId] },
         });
+        pingCooldowns.set(cmdName, Date.now());
       }
     },
   };
