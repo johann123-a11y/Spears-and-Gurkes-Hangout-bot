@@ -8,6 +8,9 @@ const { readData, writeData } = require('../../utils');
 
 const ROLE_PING_COMMANDS = ['market', 'spawner'];
 
+const COOLDOWN_MS = 90 * 60 * 1000;
+const rolePingCooldowns = new Map(); // cmdName → Date.now() when last sent
+
 function getCfg(cmdName) {
   const data = readData('pingRoles.json');
   return data[cmdName] ?? { targetRoleId: null, permRoleId: null };
@@ -78,11 +81,27 @@ function makeCommand(cmdName) {
         if (!cfg.targetRoleId)
           return interaction.reply({ content: `⚠️ No ping role set. An admin must run \`/${cmdName} set\` first.`, ephemeral: true });
 
-        const hasPermRole = interaction.member.roles.cache.has(cfg.permRoleId)
-          || interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+        const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+        const hasPermRole = interaction.member.roles.cache.has(cfg.permRoleId) || isAdmin;
         if (!hasPermRole)
           return interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
 
+        // Cooldown check (admins bypass)
+        if (!isAdmin) {
+          const lastUsed = rolePingCooldowns.get(cmdName);
+          if (lastUsed) {
+            const expiresAt = lastUsed + COOLDOWN_MS;
+            if (Date.now() < expiresAt) {
+              const unixExpiry = Math.floor(expiresAt / 1000);
+              return interaction.reply({
+                content: `❌ **/${cmdName} ping** is on cooldown — available <t:${unixExpiry}:R> (at <t:${unixExpiry}:t>).`,
+                ephemeral: true,
+              });
+            }
+          }
+        }
+
+        rolePingCooldowns.set(cmdName, Date.now());
         return interaction.reply({
           content: `<@&${cfg.targetRoleId}>`,
           allowedMentions: { roles: [cfg.targetRoleId] },

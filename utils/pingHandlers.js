@@ -24,33 +24,33 @@ function saveCfg(cmdName, cfg) {
 function buildPanel(cmdName) {
   const cfg = getCfg(cmdName);
 
-  const rolesText    = cfg.allowedRoles.length    > 0 ? cfg.allowedRoles.map(id    => `<@&${id}>`).join(', ') : '*(Alle)*';
-  const channelsText = cfg.allowedChannels.length > 0 ? cfg.allowedChannels.map(id => `<#${id}>`).join(', ')  : '*(Alle)*';
+  const rolesText    = cfg.allowedRoles.length    > 0 ? cfg.allowedRoles.map(id    => `<@&${id}>`).join(', ') : '*(Everyone)*';
+  const channelsText = cfg.allowedChannels.length > 0 ? cfg.allowedChannels.map(id => `<#${id}>`).join(', ')  : '*(Everywhere)*';
 
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle(`⚙️ Konfiguration: /${cmdName}`)
+    .setTitle(`⚙️ Configuration: /${cmdName}`)
     .addFields(
-      { name: '📝 Nachricht', value: cfg.message ? cfg.message.substring(0, 1000) : '*(Nicht gesetzt)*' },
-      { name: '🎖️ Erlaubte Rollen',  value: rolesText,    inline: true },
-      { name: '💬 Erlaubte Kanäle', value: channelsText, inline: true },
+      { name: '📝 Message', value: cfg.message ? cfg.message.substring(0, 1000) : '*(Not set)*' },
+      { name: '🎖️ Allowed Roles',    value: rolesText,    inline: true },
+      { name: '💬 Allowed Channels', value: channelsText, inline: true },
     )
-    .setFooter({ text: 'Rollen/Kanäle leer lassen = keine Einschränkung' });
+    .setFooter({ text: 'Leave roles/channels empty = no restriction' });
 
   const editBtn = new ButtonBuilder()
     .setCustomId(`ping_edit_msg:${cmdName}`)
-    .setLabel('✏️ Nachricht bearbeiten')
+    .setLabel('✏️ Edit Message')
     .setStyle(ButtonStyle.Primary);
 
   const roleSelect = new RoleSelectMenuBuilder()
     .setCustomId(`ping_roles:${cmdName}`)
-    .setPlaceholder('Erlaubte Rollen (leer = alle dürfen)')
+    .setPlaceholder('Allowed roles (empty = everyone)')
     .setMinValues(0)
     .setMaxValues(25);
 
   const channelSelect = new ChannelSelectMenuBuilder()
     .setCustomId(`ping_channels:${cmdName}`)
-    .setPlaceholder('Erlaubte Kanäle (leer = überall)')
+    .setPlaceholder('Allowed channels (empty = everywhere)')
     .setMinValues(0)
     .setMaxValues(25);
 
@@ -68,7 +68,7 @@ function buildPanel(cmdName) {
 // /gping aktion:edit → show panel
 async function handleEdit(interaction, cmdName) {
   if (!interaction.member.permissions.has('Administrator'))
-    return interaction.reply({ content: 'Nur **Admins** können das konfigurieren.', ephemeral: true });
+    return interaction.reply({ content: 'Only **Admins** can configure this.', ephemeral: true });
   return interaction.reply(buildPanel(cmdName));
 }
 
@@ -77,19 +77,19 @@ async function handleSend(interaction, cmdName) {
   const cfg = getCfg(cmdName);
 
   if (!cfg.message)
-    return interaction.reply({ content: `⚠️ Kein Text gesetzt. Nutze \`/${cmdName} aktion:edit\` zum Konfigurieren.`, ephemeral: true });
+    return interaction.reply({ content: `⚠️ No message set. Use \`/${cmdName} aktion:edit\` to configure.`, ephemeral: true });
 
   // Role check (admins bypass)
   if (!interaction.member.permissions.has('Administrator') && cfg.allowedRoles.length > 0) {
     const hasRole = cfg.allowedRoles.some(id => interaction.member.roles.cache.has(id));
     if (!hasRole)
-      return interaction.reply({ content: '❌ Du hast keine Berechtigung diesen Command zu nutzen.', ephemeral: true });
+      return interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
   }
 
   // Channel check (admins bypass)
   if (!interaction.member.permissions.has('Administrator') && cfg.allowedChannels.length > 0) {
     if (!cfg.allowedChannels.includes(interaction.channelId))
-      return interaction.reply({ content: '❌ Dieser Command kann hier nicht genutzt werden.', ephemeral: true });
+      return interaction.reply({ content: '❌ This command cannot be used here.', ephemeral: true });
   }
 
   // Cooldown check (admins bypass)
@@ -119,7 +119,7 @@ async function handleButton(interaction) {
   const cfg = getCfg(cmdName);
   const input = new TextInputBuilder()
     .setCustomId('message')
-    .setLabel('Nachricht (Pings wie @everyone erlaubt)')
+    .setLabel('Message (@everyone pings allowed)')
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(true)
     .setMaxLength(2000);
@@ -127,7 +127,7 @@ async function handleButton(interaction) {
 
   const modal = new ModalBuilder()
     .setCustomId(`ping_modal:${cmdName}`)
-    .setTitle(`Nachricht: /${cmdName}`)
+    .setTitle(`Message: /${cmdName}`)
     .addComponents(new ActionRowBuilder().addComponents(input));
 
   return interaction.showModal(modal);
