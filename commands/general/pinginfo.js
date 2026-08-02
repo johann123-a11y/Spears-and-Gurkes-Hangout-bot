@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { COOLDOWN_MS, pingCooldowns } = require('../../utils/pingCooldowns');
+const { isStaffMember } = require('../../utils');
 
 const TRACKED = ['gping', 'qping', 'market', 'spawner'];
 
@@ -10,6 +11,9 @@ module.exports = {
     .setDescription('Shows the current cooldown status for all ping commands'),
 
   async executeSlash(interaction) {
+    if (!isStaffMember(interaction.member))
+      return interaction.reply({ content: 'Only **Staff** can use this command.', ephemeral: true });
+
     const now = Date.now();
     const fields = TRACKED.map(cmd => {
       const lastUsed = pingCooldowns.get(cmd);
