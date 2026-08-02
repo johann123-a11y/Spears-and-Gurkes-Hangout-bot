@@ -5,6 +5,10 @@ const { sendLog } = require('../utils/logger');
 const ALERT_USERS = ['1321846194758222017', '1069649442828992523'];
 const EXEMPT_BOTS = ['1492466725546102874', '500658624109084682'];
 
+// Members who just received autorole — used to suppress guildMemberUpdate log
+const pendingAutorole = new Set();
+module.exports.pendingAutorole = pendingAutorole;
+
 // Deduplicate: track recently welcomed users to prevent double-firing
 const recentlyWelcomed = new Map();
 
@@ -109,6 +113,8 @@ module.exports = {
     // Auto-role
     const autorole = readData('autorole.json');
     if (autorole.roleId) {
+      pendingAutorole.add(member.id);
+      setTimeout(() => pendingAutorole.delete(member.id), 15_000);
       member.roles.add(autorole.roleId).catch(() => {});
     }
 

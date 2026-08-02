@@ -1,15 +1,13 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData, writeData } = require('../../utils');
+const { COOLDOWN_MS, pingCooldowns } = require('../../utils/pingCooldowns');
 
 // Configurable role-ping commands.
-// Each entry becomes a slash command: /marketping and /spawnerping.
+// Each entry becomes a slash command: /market and /spawner.
 // Config stored in pingRoles.json:
-//   { marketping: { targetRoleId, permRoleId }, spawnerping: { ... } }
+//   { market: { targetRoleId, permRoleId }, spawner: { ... } }
 
 const ROLE_PING_COMMANDS = ['market', 'spawner'];
-
-const COOLDOWN_MS = 90 * 60 * 1000;
-const rolePingCooldowns = new Map(); // cmdName → Date.now() when last sent
 
 function getCfg(cmdName) {
   const data = readData('pingRoles.json');
@@ -88,7 +86,7 @@ function makeCommand(cmdName) {
 
         // Cooldown check (admins bypass)
         if (!isAdmin) {
-          const lastUsed = rolePingCooldowns.get(cmdName);
+          const lastUsed = pingCooldowns.get(cmdName);
           if (lastUsed) {
             const expiresAt = lastUsed + COOLDOWN_MS;
             if (Date.now() < expiresAt) {
@@ -101,7 +99,7 @@ function makeCommand(cmdName) {
           }
         }
 
-        rolePingCooldowns.set(cmdName, Date.now());
+        pingCooldowns.set(cmdName, Date.now());
         return interaction.reply({
           content: `<@&${cfg.targetRoleId}>`,
           allowedMentions: { roles: [cfg.targetRoleId] },

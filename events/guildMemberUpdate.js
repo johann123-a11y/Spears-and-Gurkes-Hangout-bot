@@ -1,6 +1,7 @@
 const { AuditLogEvent } = require('discord.js');
 const { sendLog } = require('../utils/logger');
 const { recordAction, triggerAntiRaid } = require('../utils/antiRaid');
+const { pendingAutorole } = require('./guildMemberAdd');
 
 async function fetchEntry(guild, type, targetId, maxAgeMs = 5000) {
   try {
@@ -59,10 +60,13 @@ module.exports = {
     const removedRoles = oldMember.roles.cache.filter(r => r.id !== newMember.guild.id && !newMember.roles.cache.has(r.id));
 
     if (addedRoles.size > 0 || removedRoles.size > 0) {
+      // Skip autorole given on join (audit log timing is unreliable for this)
+      if (pendingAutorole.has(newMember.id) && addedRoles.size > 0 && removedRoles.size === 0) return;
+
       const entry = await fetchEntry(newMember.guild, AuditLogEvent.MemberRoleUpdate, newMember.id);
       const exec  = entry?.executor;
 
-      // Skip logging if the bot itself added/removed the role (e.g. autorole, antiraid)
+      // Skip logging if the bot itself added/removed the role (e.g. antiraid)
       if (exec && exec.id === client.user.id) return;
 
       if (addedRoles.size > 0) {

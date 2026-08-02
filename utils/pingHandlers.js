@@ -4,11 +4,10 @@ const {
   ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { readData, writeData } = require('./index');
+const { COOLDOWN_MS, pingCooldowns } = require('./pingCooldowns');
 
 const PING_COMMANDS = ['gping', 'gpingdaily', 'gpingweekly', 'qping', 'qpingstream', 'gpingmassive'];
-
-const COOLDOWN_MS = 90 * 60 * 1000; // 90 minutes per ping command, server-wide
-const pingCooldowns = new Map(); // cmdName → Date.now() when last sent
+const COOLDOWN_COMMANDS = new Set(['gping', 'qping']);
 
 function getCfg(cmdName) {
   const data = readData('pingcommands.json');
@@ -92,8 +91,8 @@ async function handleSend(interaction, cmdName) {
       return interaction.reply({ content: '❌ This command cannot be used here.', ephemeral: true });
   }
 
-  // Cooldown check (admins bypass)
-  if (!interaction.member.permissions.has('Administrator')) {
+  // Cooldown check — only for gping and qping, admins bypass
+  if (COOLDOWN_COMMANDS.has(cmdName) && !interaction.member.permissions.has('Administrator')) {
     const lastUsed = pingCooldowns.get(cmdName);
     if (lastUsed) {
       const expiresAt = lastUsed + COOLDOWN_MS;
@@ -107,7 +106,7 @@ async function handleSend(interaction, cmdName) {
     }
   }
 
-  pingCooldowns.set(cmdName, Date.now());
+  if (COOLDOWN_COMMANDS.has(cmdName)) pingCooldowns.set(cmdName, Date.now());
   return interaction.reply({ content: cfg.message, allowedMentions: { parse: ['roles', 'users', 'everyone'] } });
 }
 
