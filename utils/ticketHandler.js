@@ -189,17 +189,11 @@ async function createTicketChannel(interaction, panel, answers) {
       ...pingRoles.map(r => `<@&${r}>`),
     ].join(' ');
 
-    await ticketChannel.send({
-      content: pingContent,
-      embeds: [embed],
-      components: [new ActionRowBuilder().addComponents(closeBtn, renameBtn, requestCloseBtn)],
-      allowedMentions: { users: [interaction.user.id], roles: pingRoles },
-    });
-
-    // Auto-scan: for claim/giveaway panels, show wins in last 48h
+    // Auto-scan: for claim/giveaway panels, build scan embed to include in the opening message
     const isClaimPanel = ['claim', 'giveaway'].some(kw =>
       panel.id?.toLowerCase().includes(kw) || panel.name?.toLowerCase().includes(kw)
     );
+    const extraEmbeds = [];
     if (isClaimPanel) {
       const giveaways = readData('giveaways.json');
       const cutoff = Date.now() - 48 * 60 * 60 * 1000;
@@ -233,8 +227,15 @@ async function createTicketChannel(interaction, panel, answers) {
         });
       }
 
-      await ticketChannel.send({ embeds: [scanEmbed] }).catch(() => {});
+      extraEmbeds.push(scanEmbed);
     }
+
+    await ticketChannel.send({
+      content: pingContent,
+      embeds: [embed, ...extraEmbeds],
+      components: [new ActionRowBuilder().addComponents(closeBtn, renameBtn, requestCloseBtn)],
+      allowedMentions: { users: [interaction.user.id], roles: pingRoles },
+    });
 
     // Assign ticket ID
     tickets.ticketCounter = (tickets.ticketCounter || 0) + 1;
