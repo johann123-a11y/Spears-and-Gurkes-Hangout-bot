@@ -196,6 +196,46 @@ async function createTicketChannel(interaction, panel, answers) {
       allowedMentions: { users: [interaction.user.id], roles: pingRoles },
     });
 
+    // Auto-scan: for claim/giveaway panels, show wins in last 48h
+    const isClaimPanel = ['claim', 'giveaway'].some(kw =>
+      panel.id?.toLowerCase().includes(kw) || panel.name?.toLowerCase().includes(kw)
+    );
+    if (isClaimPanel) {
+      const giveaways = readData('giveaways.json');
+      const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+      const userId = interaction.user.id;
+
+      const wins = Object.entries(giveaways).filter(([, gw]) =>
+        gw.ended &&
+        Array.isArray(gw.winnerIds) &&
+        gw.winnerIds.includes(userId) &&
+        gw.endTime > cutoff
+      );
+
+      const scanEmbed = new EmbedBuilder()
+        .setColor(wins.length > 0 ? '#57F287' : '#ED4245')
+        .setTitle('🔍 Auto-Scan: Wins in Last 48h')
+        .setDescription(wins.length === 0
+          ? `❌ No giveaway wins found in the last 48 hours for <@${userId}>.`
+          : `✅ Found **${wins.length}** win(s) in the last 48 hours for <@${userId}>:`
+        )
+        .setTimestamp();
+
+      for (const [msgId, gw] of wins) {
+        const jumpUrl = `https://discord.com/channels/${gw.guildId}/${gw.channelId}/${msgId}`;
+        const endedAt = gw.endTime ? `<t:${Math.floor(gw.endTime / 1000)}:F>` : 'Unknown';
+        const host = gw.hostId ? `<@${gw.hostId}>` : 'Unknown';
+        const entries = gw.participants?.length ?? '?';
+        const winnerMentions = gw.winnerIds.map(id => `<@${id}>`).join(', ');
+        scanEmbed.addFields({
+          name: `🎉 ${gw.prize}`,
+          value: `Ended: ${endedAt}\nHost: ${host}\nEntries: **${entries}** | Winners: **${gw.winnerIds.length}**\nAll winners: ${winnerMentions}\n[Jump to giveaway](${jumpUrl})`,
+        });
+      }
+
+      await ticketChannel.send({ embeds: [scanEmbed] }).catch(() => {});
+    }
+
     // Assign ticket ID
     tickets.ticketCounter = (tickets.ticketCounter || 0) + 1;
     const ticketId = tickets.ticketCounter;
