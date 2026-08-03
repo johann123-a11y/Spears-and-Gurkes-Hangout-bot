@@ -25,9 +25,11 @@ async function syncTagRoles(client) {
   const guild = client.guilds.cache.get(config.guildId);
   if (!guild) return;
   try {
+    const exempt  = readData('tagExempt.json');
     const members = await guild.members.fetch();
     for (const [, member] of members) {
       if (member.user.bot) continue;
+      if (exempt[member.id]) continue;
       const hasTag  = member.user.primaryGuild?.identityGuildId === guild.id;
       const hasRole = member.roles.cache.has(TAG_ROLE_ID);
       if (hasTag && !hasRole)  await member.roles.add(TAG_ROLE_ID).catch(() => {});

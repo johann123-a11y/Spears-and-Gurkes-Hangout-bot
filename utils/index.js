@@ -42,6 +42,7 @@ function getDefault(filename) {
     'warns.json':         {},
     'antiraid.json':      { channelId: null, enabled: true, exemptUsers: ['1492466725546102874', '500658624109084682'] },
     'pingCooldowns.json': {},
+    'tagExempt.json':    {},
     'pingcommands.json':  {
       gping:        { message: null, allowedRoles: [], allowedChannels: [] },
       gpingdaily:   { message: null, allowedRoles: [], allowedChannels: [] },

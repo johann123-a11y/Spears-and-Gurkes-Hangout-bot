@@ -1,5 +1,6 @@
 const { AuditLogEvent } = require('discord.js');
 const { sendLog } = require('../utils/logger');
+const { readData } = require('../utils');
 const { recordAction, triggerAntiRaid } = require('../utils/antiRaid');
 const { pendingAutorole } = require('./guildMemberAdd');
 
@@ -98,11 +99,13 @@ module.exports = {
 
     // ── Server tag role ───────────────────────────────────────────────────────
     const TAG_ROLE_ID = '1533940896436060410';
-    const hadTag = oldMember.user.primaryGuild?.identityGuildId === newMember.guild.id;
-    const hasTag = newMember.user.primaryGuild?.identityGuildId === newMember.guild.id;
-    if (hadTag !== hasTag) {
-      if (hasTag) await newMember.roles.add(TAG_ROLE_ID).catch(() => {});
-      else        await newMember.roles.remove(TAG_ROLE_ID).catch(() => {});
+    if (!readData('tagExempt.json')[newMember.id]) {
+      const hadTag = oldMember.user.primaryGuild?.identityGuildId === newMember.guild.id;
+      const hasTag = newMember.user.primaryGuild?.identityGuildId === newMember.guild.id;
+      if (hadTag !== hasTag) {
+        if (hasTag) await newMember.roles.add(TAG_ROLE_ID).catch(() => {});
+        else        await newMember.roles.remove(TAG_ROLE_ID).catch(() => {});
+      }
     }
 
     // ── Nickname changed ──────────────────────────────────────────────────────
