@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { COOLDOWN_MS, getCooldown } = require('../../utils/pingCooldowns');
 const { isStaffMember } = require('../../utils');
 
-const TRACKED = ['gping', 'qping', 'market', 'spawner'];
+const TRACKED = ['gping', 'qping', 'market', 'spawner', 'here'];
 
 module.exports = {
   name: 'pinginfo',
