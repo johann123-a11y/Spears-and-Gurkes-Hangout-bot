@@ -13,8 +13,30 @@ module.exports = {
     // Check timers every 30 seconds
     setInterval(() => checkTimers(client), 30_000);
 
+    // Sync server-tag role on startup and every 30 minutes
+    syncTagRoles(client);
+    setInterval(() => syncTagRoles(client), 30 * 60 * 1000);
+
   },
 };
+
+async function syncTagRoles(client) {
+  const TAG_ROLE_ID = '1533940896436060410';
+  const guild = client.guilds.cache.get(config.guildId);
+  if (!guild) return;
+  try {
+    const members = await guild.members.fetch();
+    for (const [, member] of members) {
+      if (member.user.bot) continue;
+      const hasTag  = member.user.primaryGuild?.identityGuildId === guild.id;
+      const hasRole = member.roles.cache.has(TAG_ROLE_ID);
+      if (hasTag && !hasRole)  await member.roles.add(TAG_ROLE_ID).catch(() => {});
+      else if (!hasTag && hasRole) await member.roles.remove(TAG_ROLE_ID).catch(() => {});
+    }
+  } catch (err) {
+    console.error('[TagRole] sync error:', err);
+  }
+}
 
 async function checkTimers(client) {
   const now = Date.now();

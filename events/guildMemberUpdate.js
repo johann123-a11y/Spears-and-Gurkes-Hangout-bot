@@ -96,6 +96,15 @@ module.exports = {
       }
     }
 
+    // ── Server tag role ───────────────────────────────────────────────────────
+    const TAG_ROLE_ID = '1533940896436060410';
+    const hadTag = oldMember.user.primaryGuild?.identityGuildId === newMember.guild.id;
+    const hasTag = newMember.user.primaryGuild?.identityGuildId === newMember.guild.id;
+    if (hadTag !== hasTag) {
+      if (hasTag) await newMember.roles.add(TAG_ROLE_ID).catch(() => {});
+      else        await newMember.roles.remove(TAG_ROLE_ID).catch(() => {});
+    }
+
     // ── Nickname changed ──────────────────────────────────────────────────────
     if (oldMember.nickname !== newMember.nickname) {
       const entry = await fetchEntry(newMember.guild, AuditLogEvent.MemberUpdate, newMember.id);
