@@ -3,6 +3,7 @@ const {
   ActionRowBuilder, ButtonBuilder, ButtonStyle,
 } = require('discord.js');
 const { checkPerm, parseTime, formatTime, trackActivity } = require('../../utils');
+const { recordWin } = require('../../utils/recordWin');
 
 // Active lobbies: messageId → { participants: [], prize, channelId, guildId, endsAt, ended }
 const lobbies = new Map();
@@ -311,6 +312,7 @@ module.exports = {
           `It's a tie! No winner this time.`;
       } else {
         const winnerId = result === 'player1' ? duel.player1 : duel.player2;
+        recordWin(winnerId, duel.hostUser?.id, duel.prize, duel.channelId, interaction.guildId, 'RPS');
         const loserId  = result === 'player1' ? duel.player2 : duel.player1;
         const winPick  = result === 'player1' ? duel.pick1   : duel.pick2;
         const losPick  = result === 'player1' ? duel.pick2   : duel.pick1;

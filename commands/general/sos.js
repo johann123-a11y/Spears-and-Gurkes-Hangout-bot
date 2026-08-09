@@ -3,6 +3,7 @@ const {
   ActionRowBuilder, ButtonBuilder, ButtonStyle,
 } = require('discord.js');
 const { checkPerm, parseTime, trackActivity } = require('../../utils');
+const { recordWin } = require('../../utils/recordWin');
 
 // Active lobbies: messageId → { participants, prize, channelId, endsAt, ended }
 const lobbies = new Map();
@@ -77,6 +78,7 @@ async function sosTimeout(gameId) {
   const winner  = game.pick1 ? game.player1 : game.player2;
 
   if (onlyOne) {
+    recordWin(winner, game.hostUser?.id, game.prize, game.channelId, ch?.guild?.id, 'SOS');
     ch?.send({ content: `<@${winner}> is the only one who responded and wins the full prize: **${game.prize}**!` }).catch(() => {});
   } else {
     ch?.send({ content: `No one claimed the prize! The **${game.prize}** Split or Steal event has ended.` }).catch(() => {});
@@ -266,6 +268,9 @@ module.exports = {
     if (p1Pick === 'split' && p2Pick === 'split') {
       const half    = halfPrize(game.prize);
       const halfStr = half ? `**${half}**` : `**half of ${game.prize}**`;
+      const halfLabel = half || `half of ${game.prize}`;
+      recordWin(game.player1, game.hostUser?.id, halfLabel, game.channelId, interaction.guildId, 'SOS');
+      recordWin(game.player2, game.hostUser?.id, halfLabel, game.channelId, interaction.guildId, 'SOS');
       color = '#57F287';
       title = 'Both Split!';
       desc  =
@@ -284,6 +289,7 @@ module.exports = {
     } else {
       const stealerId  = p1Pick === 'steal' ? game.player1 : game.player2;
       const splitterId = p1Pick === 'split' ? game.player1 : game.player2;
+      recordWin(stealerId, game.hostUser?.id, game.prize, game.channelId, interaction.guildId, 'SOS');
       color = '#FEE75C';
       title = 'Stolen!';
       desc  =

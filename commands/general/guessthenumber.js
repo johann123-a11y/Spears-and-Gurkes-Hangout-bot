@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
 const { checkPerm, trackActivity } = require('../../utils');
+const { recordWin } = require('../../utils/recordWin');
 
 // Active games: channelId → { number, max }
 const activeGames = new Map();
@@ -122,6 +123,7 @@ module.exports = {
 
     if (guess === game.number) {
       activeGames.delete(message.channel.id);
+      if (game.prize) recordWin(message.author.id, game.hostId, game.prize, message.channelId, message.guildId, 'GTN');
       const embed = new EmbedBuilder()
         .setColor('#57F287')
         .setTitle('🎉 Correct!')

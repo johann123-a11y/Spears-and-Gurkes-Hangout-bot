@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { checkPerm, readData } = require('../../utils');
+const { checkPerm, readData, writeData } = require('../../utils');
 
 module.exports = {
   name: 'greroll',
@@ -68,6 +68,10 @@ async function rerollGiveaway(msgId, count, guild, replyChannel, interaction) {
   }
 
   const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
+
+  // Save rerolled winners so gscan can find them
+  giveaways[msgId].winnerIds = [...new Set([...(giveaways[msgId].winnerIds || []), ...winners])];
+  writeData('giveaways.json', giveaways);
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')

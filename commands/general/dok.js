@@ -4,6 +4,7 @@ const {
   ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { checkPerm, parseTime, trackActivity } = require('../../utils');
+const { recordWin } = require('../../utils/recordWin');
 
 // Active lobbies:  messageId → { participants, prize, channelId, channel, duration, round, ended }
 const lobbies = new Map();
@@ -174,6 +175,7 @@ async function dokTimeout(gameId) {
   game.msg?.edit({ components: [disabledRow] }).catch(() => {});
 
   if (game.previousWinner) {
+    recordWin(game.previousWinner, game.hostUser?.id, game.prize, game.channelId, game.channel?.guild?.id, 'DOK');
     game.channel.send({
       content: `<@${game.winner}> didn't respond in time. The previous winner <@${game.previousWinner}> takes the prize: **${game.prize}**!`,
     }).catch(() => {});
@@ -267,6 +269,8 @@ module.exports = {
     interaction.message.edit({ components: [disabledRow] }).catch(() => {});
 
     if (pick === 'keep') {
+      recordWin(game.winner, game.hostUser?.id, game.prize, game.channelId, interaction.guildId, 'DOK');
+
       const embed = new EmbedBuilder()
         .setColor('#57F287')
         .setTitle('Double or Keep — Result')

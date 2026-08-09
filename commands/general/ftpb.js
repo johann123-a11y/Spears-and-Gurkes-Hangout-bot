@@ -4,6 +4,7 @@ const {
   ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
 const { checkPerm, parseTime, trackActivity } = require('../../utils');
+const { recordWin } = require('../../utils/recordWin');
 
 // Already-claimed message IDs (prevents double-claim race condition)
 const claimed = new Set();
@@ -89,7 +90,7 @@ module.exports = {
     const activate = async () => {
       const activeRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`ftpb_claim:${msg.id}`)
+          .setCustomId(`ftpb_claim:${msg.id}:${interaction.user.id}`)
           .setLabel('🎯 Press!')
           .setStyle(ButtonStyle.Success),
       );
@@ -112,7 +113,9 @@ module.exports = {
   },
 
   async handleClaim(interaction) {
-    const msgId = interaction.customId.split(':')[1];
+    const parts  = interaction.customId.split(':');
+    const msgId  = parts[1];
+    const hostId = parts[2] ?? null;
 
     // Prevent double-claim
     if (claimed.has(msgId))
@@ -130,10 +133,12 @@ module.exports = {
     );
     await interaction.message.edit({ components: [disabledRow] }).catch(() => {});
 
-    // Extract prize and host from embed
+    // Extract prize from embed
     const prizeMatch = interaction.message.embeds[0]?.description?.match(/\*\*Prize:\*\* (.+)/);
     const prize = prizeMatch ? prizeMatch[1].trim() : 'the prize';
     const existingFooter = interaction.message.embeds[0]?.footer?.text || null;
+
+    recordWin(interaction.user.id, hostId, prize, interaction.channelId, interaction.guildId, 'FTPB');
 
     const winEmbed = new EmbedBuilder()
       .setColor('#57F287')
