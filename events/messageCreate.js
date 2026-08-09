@@ -113,33 +113,44 @@ module.exports = {
       }
     }
 
-    // Auto-Mod: link filter 
+    // Auto-Mod: link filter
     const isStaff = message.member?.permissions.has(PermissionFlagsBits.ManageMessages);
 
     if (!isStaff) {
-      const urlRegex = /https?:\/\/\S+/gi;
+      const urlRegex    = /https?:\/\/\S+/gi;
       const inviteRegex = /discord(?:\.gg|app\.com\/invite)\/\S+/gi;
-      const hasLink   = urlRegex.test(message.content);
-      const hasInvite = inviteRegex.test(message.content);
+      const hasLink     = urlRegex.test(message.content);
+      const hasInvite   = inviteRegex.test(message.content);
 
-      // Link filter 
       const openTickets = readData('openTickets.json') || {};
       const isTicket    = !!openTickets[message.channel.id];
 
-      // Link filter (skip if message only contains Discord invites) 
-      const mRaw = readData('mediaFilter.json');
-      const mediaFilter = { enabled: mRaw?.enabled ?? false, allowedChannels: Array.isArray(mRaw?.allowedChannels) ? mRaw.allowedChannels : [] };
-      if (hasLink && !hasInvite && mediaFilter.enabled && !isTicket && !mediaFilter.allowedChannels.includes(message.channel.id)) {
+      // Link filter — always active; allowedChannels from mediaFilter config = link-allowed channels
+      const allowedLinkChannels = Array.isArray(readData('mediaFilter.json')?.allowedChannels)
+        ? readData('mediaFilter.json').allowedChannels : [];
+
+      if (hasLink && !hasInvite && !isTicket && !allowedLinkChannels.includes(message.channel.id)) {
         await message.delete().catch(() => {});
-        const warn = await message.channel.send({
-          content: `<@${message.author.id}> Links are not allowed here!`,
-          allowedMentions: { users: [message.author.id] },
+        // 1-minute timeout — skip if already timed out to avoid redundant API calls
+        const alreadyTimedOut = message.member?.communicationDisabledUntilTimestamp > Date.now();
+        if (message.member && !alreadyTimedOut) {
+          await message.member.timeout(60_000, 'AutoMod: link spam').catch(() => {});
+        }
+        sendLog(client, {
+          action: '🔗 AutoMod — Link Deleted',
+          executor: 'AutoMod',
+          target: `<@${message.author.id}> (${message.author.tag})`,
+          fields: {
+            'Channel': `<#${message.channel.id}>`,
+            'Content': message.content.substring(0, 300),
+            'Action': alreadyTimedOut ? 'Message deleted (already timed out)' : 'Message deleted + 1 min timeout',
+          },
+          color: '#FEE75C',
         });
-        setTimeout(() => warn.delete().catch(() => {}), 8000);
         return;
       }
 
-      // Invite filter 
+      // Invite filter
       const pRaw = readData('partnerFilter.json');
       const partnerFilter = { enabled: pRaw?.enabled ?? false, allowedChannels: Array.isArray(pRaw?.allowedChannels) ? pRaw.allowedChannels : [] };
       if (hasInvite && partnerFilter.enabled && !isTicket && !partnerFilter.allowedChannels.includes(message.channel.id)) {
