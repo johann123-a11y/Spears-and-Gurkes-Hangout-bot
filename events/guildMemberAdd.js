@@ -34,6 +34,9 @@ module.exports = {
         if (entry) addedBy = entry.executor;
       } catch {}
 
+      // Allow if the person who added the bot is exempt (!+6769 toggle)
+      if (addedBy && Array.isArray(cfg.exemptUsers) && cfg.exemptUsers.includes(addedBy.id)) return;
+
       // Kick the bot
       await member.kick('AntiRaid: Unauthorized bot added').catch(() => {});
 
