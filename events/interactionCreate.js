@@ -12,7 +12,7 @@ const {
   handleRequestCloseButton,
 } = require('../utils/ticketHandler');
 const { buildDescEmbed, sendTicketOverview } = require('../commands/tickets/ticket');
-const { startApplication, handleDMButton, handleDMAnswer } = require('../utils/applicationDM');
+const { startApplication, handleDMButton, handleCancelButton } = require('../utils/applicationDM');
 const { getAppId } = require('../commands/applications/application');
 const {
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
@@ -216,6 +216,10 @@ module.exports = {
         return handleDMButton(interaction, 'Yes');
       if (interaction.customId.startsWith('app_answer_no:'))
         return handleDMButton(interaction, 'No');
+
+      // Application: cancel button in DMs
+      if (interaction.customId === 'app_cancel_session')
+        return handleCancelButton(interaction);
 
       // Application: question builder buttons 
       if (interaction.customId.startsWith('app_addq_yesno:')) {

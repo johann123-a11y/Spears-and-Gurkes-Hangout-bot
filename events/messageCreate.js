@@ -2,7 +2,7 @@ const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { readData, writeData, formatTime } = require('../utils');
 const config = require('../config.json');
 const { setStick } = require('../commands/admin/stick');
-const { handleDMAnswer } = require('../utils/applicationDM');
+const { handleDMAnswer, handleAppCommand } = require('../utils/applicationDM');
 const { sendLog } = require('../utils/logger');
 const { handleGuess } = require('../commands/general/guessthenumber');
 const { recordAction, triggerAntiRaid } = require('../utils/antiRaid');
@@ -79,9 +79,13 @@ module.exports = {
   async execute(message, client) {
     if (message.author.bot) return;
 
-    // DM: handle application answers
+    // DM: handle application commands and answers
     if (!message.guild) {
-      await handleDMAnswer(message);
+      if (message.content.trim().toLowerCase() === '!app') {
+        await handleAppCommand(message);
+      } else {
+        await handleDMAnswer(message);
+      }
       return;
     }
 

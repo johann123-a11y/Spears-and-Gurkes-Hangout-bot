@@ -98,7 +98,14 @@ async function startApplication(interaction, panelId) {
   await sendQuestion(dmChannel, session);
 }
 
-// Send the current question 
+const cancelRow = () => new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId('app_cancel_session')
+    .setLabel('Cancel Application')
+    .setStyle(ButtonStyle.Danger)
+);
+
+// Send the current question
 async function sendQuestion(dmChannel, session) {
   const q     = session.questions[session.currentIndex];
   const num   = session.currentIndex + 1;
@@ -112,13 +119,13 @@ async function sendQuestion(dmChannel, session) {
     .setTimestamp();
 
   if (q.type === 'yesno') {
-    const row = new ActionRowBuilder().addComponents(
+    const answerRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`app_answer_yes:${session.panelId}`).setLabel('Yes').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId(`app_answer_no:${session.panelId}`).setLabel('No').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId(`app_answer_no:${session.panelId}`).setLabel('No').setStyle(ButtonStyle.Secondary),
     );
-    await dmChannel.send({ embeds: [embed], components: [row] });
+    await dmChannel.send({ embeds: [embed], components: [answerRow, cancelRow()] });
   } else {
-    await dmChannel.send({ embeds: [embed] });
+    await dmChannel.send({ embeds: [embed], components: [cancelRow()] });
   }
 }
 
@@ -126,47 +133,44 @@ async function sendQuestion(dmChannel, session) {
 async function handleDMAnswer(message) {
   let session = sessions.get(message.author.id);
   if (!session) session = await restoreSession(message.author.id, message.client);
-  if (!session) {
-    if (message.content.trim().toLowerCase() === 'cancel')
-      message.channel.send({ content: 'You don\'t have an active application to cancel.' }).catch(() => {});
-    return;
-  }
+  if (!session) return;
   if (message.channel.id !== session.dmChannelId) return;
 
-  const q = session.questions[session.currentIndex];
-
+  const q      = session.questions[session.currentIndex];
   const answer = message.content.trim();
-  if (answer.toLowerCase() === 'cancel') {
-    deleteSession(message.author.id);
-    return message.channel.send({ content: 'Application cancelled.' });
-  }
-
-  // Let users re-request the current question if they missed it
-  if (answer.toLowerCase() === 'resend') {
-    return sendQuestion(message.channel, session);
-  }
 
   if (q.type === 'yesno') {
-    // Resend the question with fresh buttons (old ones may have stopped working)
-    const embed = new EmbedBuilder()
-      .setColor('#FEE75C')
-      .setTitle(`Question ${session.currentIndex + 1}/${session.questions.length}`)
-      .setDescription(q.text)
-      .setFooter({ text: 'Click Yes or No below, or type cancel to cancel' })
-      .setTimestamp();
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`app_answer_yes:${session.panelId}`).setLabel('Yes').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId(`app_answer_no:${session.panelId}`).setLabel('No').setStyle(ButtonStyle.Danger),
-    );
-    return message.channel.send({ embeds: [embed], components: [row] });
+    // User typed text instead of clicking — resend the question with fresh buttons
+    return sendQuestion(message.channel, session);
   }
 
   try {
     await processAnswer(message.author, message.channel, session, answer);
   } catch (err) {
     console.error('[App DM] Error processing answer:', err);
-    message.channel.send({ content: 'Something went wrong. Type `cancel` to cancel and start over.' }).catch(() => {});
+    message.channel.send({ content: 'Something went wrong. Use `!app` to resend the question.' }).catch(() => {});
   }
+}
+
+// Handle the Cancel Application button in DMs
+async function handleCancelButton(interaction) {
+  let session = sessions.get(interaction.user.id);
+  if (!session) session = await restoreSession(interaction.user.id, interaction.client);
+  if (!session) return interaction.update({ components: [] });
+
+  deleteSession(interaction.user.id);
+  await interaction.update({ components: [] });
+  await interaction.channel.send({ content: 'Application cancelled.' }).catch(() => {});
+}
+
+// Handle !app command in DMs — resends the current question
+async function handleAppCommand(message) {
+  let session = sessions.get(message.author.id);
+  if (!session) session = await restoreSession(message.author.id, message.client);
+  if (!session) {
+    return message.channel.send({ content: 'You don\'t have an active application.' }).catch(() => {});
+  }
+  await sendQuestion(message.channel, session);
 }
 
 // Handle a yes/no button click in DMs 
@@ -180,7 +184,7 @@ async function handleDMButton(interaction, answer) {
     await processAnswer(interaction.user, interaction.channel, session, answer);
   } catch (err) {
     console.error('[App DM] Error processing button answer:', err);
-    interaction.channel.send({ content: 'Something went wrong. Type `cancel` to cancel and start over.' }).catch(() => {});
+    interaction.channel.send({ content: 'Something went wrong. Use `!app` to resend the question.' }).catch(() => {});
   }
 }
 
@@ -271,4 +275,4 @@ async function finalizeApplication(user, dmChannel, session) {
   }).catch(() => {});
 }
 
-module.exports = { startApplication, handleDMAnswer, handleDMButton, deleteSession };
+module.exports = { startApplication, handleDMAnswer, handleDMButton, handleCancelButton, handleAppCommand, deleteSession };
