@@ -1,11 +1,10 @@
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const { readData, writeData } = require('./index');
 
-// In-memory sessions: userId → { panelId, panelName, forWhat, questions, answers, currentIndex, dmChannelId }
+// In-memory sessions: userId → { panelId, panelName, forWhat, questions, answers, currentIndex, dmChannelId, lastQuestionMessageId }
 const sessions = new Map();
 
 function saveSession(userId, session) {
-  // strip non-serialisable client ref before saving
   const { client, ...rest } = session;
   const stored = readData('appSessions.json');
   stored[userId] = rest;
@@ -28,7 +27,7 @@ async function restoreSession(userId, client) {
   return s;
 }
 
-// Start a DM application session 
+// Start a DM application session
 async function startApplication(interaction, panelId) {
   const apps  = readData('applications.json');
   const panel = apps.panels?.[panelId];
@@ -40,10 +39,10 @@ async function startApplication(interaction, panelId) {
   if (bl?.application || bl?.all)
     return interaction.reply({ content: 'You are not allowed to submit applications.', ephemeral: true });
 
-  // Check if user already has an active session (application in progress)
+  // Check if user already has an active session
   const activeSessions = readData('appSessions.json');
   if (activeSessions[interaction.user.id])
-    return interaction.reply({ content: 'You already have an application in progress! Check your DMs and finish it first. Type `cancel` in the DM to cancel.', ephemeral: true });
+    return interaction.reply({ content: 'You already have an application in progress! Check your DMs. Type `!app` to resend the current question or click **Cancel Application** to cancel.', ephemeral: true });
 
   // Check duplicate pending
   const results = readData('applicationResults.json');
@@ -56,10 +55,8 @@ async function startApplication(interaction, panelId) {
   if (panel.questions.length === 0)
     return interaction.reply({ content: 'This application has no questions configured yet.', ephemeral: true });
 
-  // Defer immediately so the interaction doesn't expire while we open DMs
   await interaction.deferReply({ ephemeral: true });
 
-  // Try to open DMs
   let dmChannel;
   try {
     dmChannel = await interaction.user.createDM();
@@ -70,8 +67,8 @@ async function startApplication(interaction, panelId) {
         .setDescription(
           `Hey **${interaction.user.username}**! You're applying for **${panel.forWhat}**.\n\n` +
           `I'll ask you **${panel.questions.length}** question(s) one by one. Simply reply here!\n\n` +
-          `Type \`cancel\` at any time to cancel.\n` +
-          `Type \`resend\` if a question doesn't appear.`
+          `Click **Cancel Application** at any time to cancel.\n` +
+          `Type \`!app\` if a question doesn't appear.`
         )
         .setFooter({ text: `Question 1 of ${panel.questions.length} coming up...` })
         .setTimestamp()],
@@ -88,25 +85,27 @@ async function startApplication(interaction, panelId) {
     answers:   [],
     currentIndex: 0,
     dmChannelId: dmChannel.id,
+    lastQuestionMessageId: null,
     guildId: interaction.guildId,
     client: interaction.client,
   };
   sessions.set(interaction.user.id, session);
-  saveSession(interaction.user.id, session);
 
   await interaction.editReply({ content: 'Check your DMs! I\'ve sent you the application questions.' });
-  await sendQuestion(dmChannel, session);
+  const msgId = await sendQuestion(dmChannel, session);
+  session.lastQuestionMessageId = msgId;
+  saveSession(interaction.user.id, session);
 }
 
-const cancelRow = () => new ActionRowBuilder().addComponents(
-  new ButtonBuilder()
-    .setCustomId('app_cancel_session')
-    .setLabel('Cancel Application')
-    .setStyle(ButtonStyle.Danger)
-);
-
-// Send the current question
+// Send the current question, delete the previous one, return the new message ID
 async function sendQuestion(dmChannel, session) {
+  // Delete the previous question message
+  if (session.lastQuestionMessageId) {
+    dmChannel.messages.fetch(session.lastQuestionMessageId)
+      .then(m => m.delete())
+      .catch(() => {});
+  }
+
   const q     = session.questions[session.currentIndex];
   const num   = session.currentIndex + 1;
   const total = session.questions.length;
@@ -118,15 +117,24 @@ async function sendQuestion(dmChannel, session) {
     .setFooter({ text: q.type === 'yesno' ? 'Click Yes or No below' : 'Type your answer and send it' })
     .setTimestamp();
 
+  const cancelBtn = new ButtonBuilder()
+    .setCustomId('app_cancel_session')
+    .setLabel('Cancel Application')
+    .setStyle(ButtonStyle.Danger);
+
+  let sent;
   if (q.type === 'yesno') {
     const answerRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`app_answer_yes:${session.panelId}`).setLabel('Yes').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId(`app_answer_no:${session.panelId}`).setLabel('No').setStyle(ButtonStyle.Secondary),
     );
-    await dmChannel.send({ embeds: [embed], components: [answerRow, cancelRow()] });
+    const cancelBtnRow = new ActionRowBuilder().addComponents(cancelBtn);
+    sent = await dmChannel.send({ embeds: [embed], components: [answerRow, cancelBtnRow] });
   } else {
-    await dmChannel.send({ embeds: [embed], components: [cancelRow()] });
+    sent = await dmChannel.send({ embeds: [embed], components: [new ActionRowBuilder().addComponents(cancelBtn)] });
   }
+
+  return sent.id;
 }
 
 // Handle a text answer from DMs
@@ -140,8 +148,10 @@ async function handleDMAnswer(message) {
   const answer = message.content.trim();
 
   if (q.type === 'yesno') {
-    // User typed text instead of clicking — resend the question with fresh buttons
-    return sendQuestion(message.channel, session);
+    // User typed instead of clicking — send a brief hint and auto-delete it
+    const hint = await message.channel.send({ content: 'Please answer by clicking the buttons above.' });
+    setTimeout(() => hint.delete().catch(() => {}), 5000);
+    return;
   }
 
   try {
@@ -156,10 +166,10 @@ async function handleDMAnswer(message) {
 async function handleCancelButton(interaction) {
   let session = sessions.get(interaction.user.id);
   if (!session) session = await restoreSession(interaction.user.id, interaction.client);
-  if (!session) return interaction.update({ components: [] });
 
-  deleteSession(interaction.user.id);
-  await interaction.update({ components: [] });
+  await interaction.deferUpdate();
+  if (session) deleteSession(interaction.user.id);
+  await interaction.message.delete().catch(() => {});
   await interaction.channel.send({ content: 'Application cancelled.' }).catch(() => {});
 }
 
@@ -170,16 +180,18 @@ async function handleAppCommand(message) {
   if (!session) {
     return message.channel.send({ content: 'You don\'t have an active application.' }).catch(() => {});
   }
-  await sendQuestion(message.channel, session);
+  const msgId = await sendQuestion(message.channel, session);
+  session.lastQuestionMessageId = msgId;
+  saveSession(message.author.id, session);
 }
 
-// Handle a yes/no button click in DMs 
+// Handle a yes/no button click in DMs
 async function handleDMButton(interaction, answer) {
   let session = sessions.get(interaction.user.id);
   if (!session) session = await restoreSession(interaction.user.id, interaction.client);
   if (!session) return interaction.reply({ content: 'No active session. Please start a new application.', ephemeral: true });
 
-  await interaction.update({ components: [] });
+  await interaction.deferUpdate();
   try {
     await processAnswer(interaction.user, interaction.channel, session, answer);
   } catch (err) {
@@ -190,28 +202,33 @@ async function handleDMButton(interaction, answer) {
 
 // Process a single answer and advance
 async function processAnswer(user, dmChannel, session, answer) {
-  const q = session.questions[session.currentIndex];
-  const nextIndex   = session.currentIndex + 1;
+  const q          = session.questions[session.currentIndex];
+  const nextIndex  = session.currentIndex + 1;
   const nextAnswers = [...session.answers, { question: q.text, answer }];
 
   if (nextIndex >= session.questions.length) {
-    // Last answer — commit and finalize
+    // Last answer — delete last question message, finalize
+    if (session.lastQuestionMessageId) {
+      dmChannel.messages.fetch(session.lastQuestionMessageId)
+        .then(m => m.delete())
+        .catch(() => {});
+    }
     session.answers      = nextAnswers;
     session.currentIndex = nextIndex;
     deleteSession(user.id);
     await finalizeApplication(user, dmChannel, session);
   } else {
-    // Send next question FIRST — only save state after the send succeeds.
-    // If the send fails, the session stays at the current index so the user can retry.
+    // Send next question first; if it fails the session stays at current index
     const nextSession = { ...session, answers: nextAnswers, currentIndex: nextIndex };
-    await sendQuestion(dmChannel, nextSession);
-    session.answers      = nextAnswers;
-    session.currentIndex = nextIndex;
+    const msgId = await sendQuestion(dmChannel, nextSession);
+    session.answers               = nextAnswers;
+    session.currentIndex          = nextIndex;
+    session.lastQuestionMessageId = msgId;
     saveSession(user.id, session);
   }
 }
 
-// Save result, confirm to applicant, post to pending channel 
+// Save result, confirm to applicant, post to pending channel
 async function finalizeApplication(user, dmChannel, session) {
   const results  = readData('applicationResults.json');
   const resultId = `${user.id}_${session.panelId}_${Date.now()}`;
@@ -228,7 +245,6 @@ async function finalizeApplication(user, dmChannel, session) {
   };
   writeData('applicationResults.json', results);
 
-  // Confirm to applicant
   await dmChannel.send({
     embeds: [new EmbedBuilder()
       .setColor('#57F287')
@@ -241,9 +257,8 @@ async function finalizeApplication(user, dmChannel, session) {
       .setTimestamp()],
   }).catch(() => {});
 
-  // Post to pending channel
-  const apps          = readData('applications.json');
-  const pendingChId   = apps.channels?.pending;
+  const apps        = readData('applications.json');
+  const pendingChId = apps.channels?.pending;
 
   if (!pendingChId || !session.client) return;
   const pendingChannel = session.client.channels.cache.get(pendingChId);
@@ -269,10 +284,7 @@ async function finalizeApplication(user, dmChannel, session) {
     new ButtonBuilder().setCustomId(`app_openticket:${user.id}`).setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary),
   );
 
-  await pendingChannel.send({
-    embeds:  [embed],
-    components: [row],
-  }).catch(() => {});
+  await pendingChannel.send({ embeds: [embed], components: [row] }).catch(() => {});
 }
 
 module.exports = { startApplication, handleDMAnswer, handleDMButton, handleCancelButton, handleAppCommand, deleteSession };
