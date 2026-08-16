@@ -240,7 +240,6 @@ async function finalizeApplication(user, dmChannel, session) {
   // Post to pending channel
   const apps          = readData('applications.json');
   const pendingChId   = apps.channels?.pending;
-  const pingTarget    = apps.pingTarget;
 
   if (!pendingChId || !session.client) return;
   const pendingChannel = session.client.channels.cache.get(pendingChId);
@@ -266,13 +265,9 @@ async function finalizeApplication(user, dmChannel, session) {
     new ButtonBuilder().setCustomId(`app_openticket:${user.id}`).setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Primary),
   );
 
-  const pingContent = pingTarget ? `<@${pingTarget}>` : null;
-
   await pendingChannel.send({
-    content: pingContent,
     embeds:  [embed],
     components: [row],
-    allowedMentions: pingTarget ? { users: [pingTarget], roles: [pingTarget] } : {},
   }).catch(() => {});
 }
 
