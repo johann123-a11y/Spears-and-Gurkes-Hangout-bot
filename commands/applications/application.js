@@ -108,11 +108,25 @@ module.exports = {
       if (!interaction.member.permissions.has('Administrator'))
         return interaction.reply({ content: 'Only **Administrators** can clear sessions.', ephemeral: true });
       const user = interaction.options.getUser('user');
-      const stored = readData('appSessions.json');
-      if (!stored[user.id])
-        return interaction.reply({ content: `<@${user.id}> has no active application session.`, ephemeral: true });
+
+      // Clear active session
       deleteSession(user.id);
-      return interaction.reply({ content: `Session cleared for <@${user.id}>. They can now start a new application.`, ephemeral: true });
+
+      // Clear all pending results so the panel dropdown works again
+      const results = readData('applicationResults.json');
+      let cleared = 0;
+      for (const [id, r] of Object.entries(results)) {
+        if (r.userId === user.id && r.status === 'pending') {
+          delete results[id];
+          cleared++;
+        }
+      }
+      writeData('applicationResults.json', results);
+
+      return interaction.reply({
+        content: `Cleared for <@${user.id}>: session reset, ${cleared} pending application(s) removed. They can now use the panel again.`,
+        ephemeral: true,
+      });
     }
 
     // Blacklist subcommands — staff only
