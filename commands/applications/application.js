@@ -5,6 +5,7 @@ const {
 } = require('discord.js');
 const { readData, writeData } = require('../../utils');
 const { blacklistAdd, blacklistRemove } = require('../admin/blacklist');
+const { deleteSession } = require('../../utils/applicationDM');
 
 function getAppId(name) {
   return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -45,6 +46,13 @@ module.exports = {
     // /application info
     .addSubcommand(sub =>
       sub.setName('info').setDescription('Show all configured application panels and settings [Admin]')
+    )
+
+    // /application clear
+    .addSubcommand(sub =>
+      sub.setName('clear')
+        .setDescription('Force-cancel a stuck application session for a user [Admin]')
+        .addUserOption(o => o.setName('user').setDescription('User whose session to clear').setRequired(true))
     )
 
     // /application blacklist & unblacklist
@@ -95,6 +103,17 @@ module.exports = {
   async executeSlash(interaction) {
     const group = interaction.options.getSubcommandGroup(false);
     const sub   = interaction.options.getSubcommand();
+
+    if (sub === 'clear') {
+      if (!interaction.member.permissions.has('Administrator'))
+        return interaction.reply({ content: 'Only **Administrators** can clear sessions.', ephemeral: true });
+      const user = interaction.options.getUser('user');
+      const stored = readData('appSessions.json');
+      if (!stored[user.id])
+        return interaction.reply({ content: `<@${user.id}> has no active application session.`, ephemeral: true });
+      deleteSession(user.id);
+      return interaction.reply({ content: `Session cleared for <@${user.id}>. They can now start a new application.`, ephemeral: true });
+    }
 
     // Blacklist subcommands — staff only
     if (sub === 'blacklist' || sub === 'unblacklist') {

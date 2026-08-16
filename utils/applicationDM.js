@@ -271,4 +271,4 @@ async function finalizeApplication(user, dmChannel, session) {
   }).catch(() => {});
 }
 
-module.exports = { startApplication, handleDMAnswer, handleDMButton };
+module.exports = { startApplication, handleDMAnswer, handleDMButton, deleteSession };
