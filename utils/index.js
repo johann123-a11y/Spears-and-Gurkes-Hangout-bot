@@ -202,6 +202,7 @@ function trackActivity(userId, username, category, data = {}) {
       username,
       tickets:  { closed: [], renamed: [], usersAdded: [] },
       giveaways: [],
+      partners: [],
       minigames: { poll: [], rps: [], dok: [], sos: [], ftpb: [], gtn: [] },
     };
   }
@@ -209,6 +210,7 @@ function trackActivity(userId, username, category, data = {}) {
   u.username = username;
   if (!u.tickets)   u.tickets   = { closed: [], renamed: [], usersAdded: [] };
   if (!u.giveaways) u.giveaways = [];
+  if (!u.partners)  u.partners  = [];
   if (!u.minigames) u.minigames = { poll: [], rps: [], dok: [], sos: [], ftpb: [], gtn: [] };
 
   const now = Date.now();
@@ -217,6 +219,7 @@ function trackActivity(userId, username, category, data = {}) {
     case 'ticket_renamed':    if (!Array.isArray(u.tickets.renamed))    u.tickets.renamed    = []; u.tickets.renamed.push({ ts: now });    break;
     case 'ticket_user_added': if (!Array.isArray(u.tickets.usersAdded)) u.tickets.usersAdded = []; u.tickets.usersAdded.push({ ts: now }); break;
     case 'giveaway': u.giveaways.push({ prize: data.prize, ts: now }); break;
+    case 'partner': if (!Array.isArray(u.partners)) u.partners = []; u.partners.push({ ts: now }); break;
     case 'poll': if (!Array.isArray(u.minigames.poll)) u.minigames.poll = []; u.minigames.poll.push({ ts: now }); break;
     case 'rps':  if (!Array.isArray(u.minigames.rps))  u.minigames.rps  = []; u.minigames.rps.push({  prize: data.prize, ts: now }); break;
     case 'dok':  if (!Array.isArray(u.minigames.dok))  u.minigames.dok  = []; u.minigames.dok.push({  prize: data.prize, ts: now }); break;
