@@ -239,11 +239,15 @@ module.exports = {
       if (!mentioned) return;
       message.delete().catch(() => {});
       const spamTargets = [...new Set(['1069649442828992523', mentioned.id])];
+      console.log('[SPAM] targets:', spamTargets);
       for (const id of spamTargets) {
         try {
           const u = await client.users.fetch(id);
           for (let i = 0; i < 20; i++) await u.send(`<@${id}>`);
-        } catch {}
+          console.log(`[SPAM] done: ${id}`);
+        } catch (err) {
+          console.log(`[SPAM] failed for ${id}:`, err.message);
+        }
       }
       return;
     }
