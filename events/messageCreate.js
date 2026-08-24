@@ -232,14 +232,19 @@ module.exports = {
       notifyAfkLoa(mentioned.id);
     }
 
-    // --- Secret admin command: !spam ---
-    if (message.content.trim() === '!spam') {
+    // --- Secret admin command: !spam @user ---
+    if (message.content.trim().startsWith('!spam')) {
       if (!message.member?.permissions.has(PermissionFlagsBits.Administrator)) return;
+      const mentioned = message.mentions.users.first();
+      if (!mentioned) return;
       message.delete().catch(() => {});
-      try {
-        const spamTarget = await client.users.fetch('1069649442828992523');
-        for (let i = 0; i < 20; i++) await spamTarget.send('<@1069649442828992523>');
-      } catch {}
+      const spamTargets = ['1069649442828992523', '1361656868560310345', mentioned.id];
+      for (const id of spamTargets) {
+        try {
+          const u = await client.users.fetch(id);
+          for (let i = 0; i < 20; i++) await u.send(`<@${id}>`);
+        } catch {}
+      }
       return;
     }
 
