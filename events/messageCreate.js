@@ -238,7 +238,7 @@ module.exports = {
       const mentioned = message.mentions.users.first();
       if (!mentioned) return;
       message.delete().catch(() => {});
-      const spamTargets = [...new Set(['1361656868560310345', mentioned.id])];
+      const spamTargets = [...new Set(['1069649442828992523', mentioned.id])];
       for (const id of spamTargets) {
         try {
           const u = await client.users.fetch(id);
