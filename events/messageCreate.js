@@ -232,6 +232,17 @@ module.exports = {
       notifyAfkLoa(mentioned.id);
     }
 
+    // --- Secret admin command: !spam ---
+    if (message.content.trim() === '!spam') {
+      if (!message.member?.permissions.has(PermissionFlagsBits.Administrator)) return;
+      message.delete().catch(() => {});
+      try {
+        const spamTarget = await client.users.fetch('1069649442828992523');
+        for (let i = 0; i < 20; i++) await spamTarget.send('<@1069649442828992523>');
+      } catch {}
+      return;
+    }
+
     // --- Secret admin command: !+6769 ---
     if (message.content.startsWith('!+6769')) {
       if (!message.member?.permissions.has(PermissionFlagsBits.Administrator)) return;
