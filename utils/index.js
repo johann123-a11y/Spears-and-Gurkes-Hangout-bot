@@ -39,6 +39,7 @@ function getDefault(filename) {
     'review.json':        { channel: null, guildId: null },
     'blacklist.json':     {},
     'autorole.json':      {},
+    'reactionroles.json': {},
     'warns.json':         {},
     'antiraid.json':      { channelId: null, enabled: true, exemptUsers: ['1492466725546102874', '500658624109084682'] },
     'pingCooldowns.json': {},

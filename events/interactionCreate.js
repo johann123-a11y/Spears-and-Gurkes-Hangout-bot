@@ -43,7 +43,18 @@ module.exports = {
       return;
     }
 
-    // Buttons 
+    // Reaction role setup (buttons, role select, modals)
+    if ((interaction.isMessageComponent() || interaction.isModalSubmit()) && interaction.customId.startsWith('rr_')) {
+      const { handleInteraction } = require('../commands/admin/reactionrole');
+      return handleInteraction(interaction).catch(err => {
+        console.error('Error in reaction role setup:', err);
+        const msg = { content: `❌ **Error:** \`${err.message}\``, ephemeral: true };
+        if (interaction.replied || interaction.deferred) interaction.followUp(msg).catch(() => {});
+        else interaction.reply(msg).catch(() => {});
+      });
+    }
+
+    // Buttons
     if (interaction.isButton()) {
       // Ping command: edit message button
       if (interaction.customId.startsWith('ping_edit_msg:'))
